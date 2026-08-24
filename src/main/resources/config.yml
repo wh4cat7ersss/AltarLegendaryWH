@@ -1,0 +1,203 @@
+lang: en_US  # en_US for English, ru_RU для русского языка
+
+limits:
+  enabled: false
+  # for the "on" type — true, for the "off" type — false
+  # для выключения пишите - true, для выключения - false
+
+  max-y-height: 200.0
+  # A setting that specifies the altitude above which legendary weapons will not function (designed for high-altitude FFA spawn points).
+  # Настройка которая указывает начиная какой высоты не будут работать легендарные оружия (сделано для спавнов которые находятся высоко для ффа)
+
+  max-legendary-weapons: 4
+  # the maximum number of weapons a player can carry in their inventory
+  # максимум оружий которые игрок может носить в инвентаре
+
+  max-copper-armor: 2
+  # maximum wearable copper armor
+  # максимум ношения медной брони
+
+  # Next comes the configuration of the legendary weapons themselves; to configure the items or the copper armor, go to `items.yml`.
+  # дальше идет настройка самих легендарных оружий, чтобы настроить предметы или медную броню то заходите в items.yml
+bone-blade:
+  dash:
+    cooldown: 15
+    velocity: 1.5
+    speed-duration: 3
+    speed-amplifier: 3
+    damage: 4.0
+    knockback-y: 0.6
+  cage:
+    cooldown: 45
+    stun-duration: 4
+
+bloodlust:
+  infection:
+    cooldown: 15
+    damage: 2.0
+    hits: 6
+  blood-trail:
+    cooldown: 60
+    duration: 20
+  blood-hook:
+    damage: 8
+    cooldown: 30
+    range: 15.0
+    speed: 1.3
+  passive:
+    speed-amplifier: 1
+    strength-amplifier: 0
+
+nightpiercer:
+  bite:
+    cooldown: 45
+    damage: 4.0
+    health-steal: 4.0
+    duration: 10
+  transformation:
+    cooldown: 20
+    duration: 2
+    speed: 1.0
+    damage: 4.0
+
+vulcan_crossbow:
+  damage: 18.0
+  magma-attack:
+    auto-reset: false
+    reset-delay: 20
+    cooldown: 25
+    explosion-power: 2.5
+    radius: 4
+    spread-chance: 0.8
+
+pale-gun:
+  shoot:
+    cooldown: 10
+    projectile-speed: 1.3
+    gravity-per-tick: 0.03
+    lifetime-ticks: 150
+    explosion-power: 3.2
+    blast-radius: 3.5
+    cloud-duration-ticks: 600
+    cloud-radius: 3.0
+    effect-duration-ticks: 1000
+    effect-amplifier: 1
+  pale-roots:
+    cooldown: 25
+    damage: 2.0
+    duration-seconds: 18
+    root-count: 7
+    spawn-interval-ticks: 2
+    step-distance: 1.05
+    contact-hit-cooldown-ticks: 10
+
+frost-scythe:
+  throw:
+    cooldown: 45
+    damage: 20.0
+    flight-speed: 1.65
+    return-speed: 1.55
+    interpolation-ticks: 2
+  ice-command:
+    cooldown: 65
+    radius: 50.0
+    damage: 15.0
+    speed: 1.25
+  freeze:
+    damage: 3.5
+
+pure-blade:
+  shade-soul:
+    cooldown: 45
+    damage: 4.0
+    effect-duration: 5
+    slowness-amplifier: 1
+  cyclone-slash:
+    cooldown: 30
+    damage: 12.0
+    speed-duration: 3
+    speed-amplifier: 6
+
+knightfall:
+  chain:
+    segment-length: 0.12
+  cloak:
+    chance: 0.10
+    duration: 3
+    cooldown: 8
+  grapple:
+    cooldown: 10
+    max-charges: 3
+    range: 30.0
+  throw:
+    cooldown: 20
+    damage: 7.0
+    range: 45.0
+    flight-speed: 1.7
+    return-speed: 1.7
+    interpolation-ticks: 2
+
+shadow-blade:
+  leap:
+    cooldown: 30
+  daggers:
+    cooldown: 45
+    damage: 2.0
+  passive:
+    backstab-chance: 0.25
+
+hyperion:
+  scorching-blade:
+    cooldown: 30
+    pure-damage: 2.0
+    magma-chance: 0.30
+  holy-lance:
+    cooldown: 60
+    radius-damage: 2.5
+    center-damage: 6.0
+
+wither-blade:
+  dash:
+    cooldown: 30
+    velocity: 1.5
+    speed-duration: 4
+    speed-amplifier: 1
+  aura:
+    cooldown: 50
+    max-damage: 10.0
+
+earth-gauntlet:
+  meteor_strike:
+    cooldown: 35
+    active_window: 30
+    damage: 4.0
+    knockback: 3.5
+    stun_duration_ticks: 15
+  mudslide:
+    cooldown: 40
+    delay_ticks: 15
+    range: 50.0
+    speed: 0.9
+    damage: 4.0
+    knockback: 2.0
+    debuff_time_seconds: 4
+    pull_speed: 1.5
+
+cutlass:
+  base:
+    damage: 8.0
+    attack-speed: 1.6
+  thousand-cuts:
+    cooldown: 45
+    duration-ticks: 42
+    hit-damage: 1.5
+    attack-speed-bonus: 5.0
+    slowness-amplifier: 1
+    slowness-duration: 3
+    speed-amplifier: 4
+  parry:
+    cooldown: 30
+    max-duration-seconds: 7
+    max-charges: 3
+    slowness-amplifier: 0
+    knockback-power: 0.8

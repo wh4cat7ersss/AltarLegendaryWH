@@ -1,0 +1,67 @@
+# Item and copper armor configuration: here you can customize item crafting and
+# drop rates for specific mobs (including enabling or disabling their crafting or drops),
+# as well as configure the copper armor itself.
+
+# Настройка предметов и медной брони, тут можно настроить крафт предметов,
+# количество дропов с убийств определенных мобов также включить и выключить
+# их крафт или дроп, а также сама настройка медной брони
+
+
+# Item configuration
+# Настройка предметов
+
+items:
+  warden-heart:
+    drop:
+      enabled: true
+      amount: 1
+  recipes:
+    weapon-handle:
+      enabled: true
+      shape:
+        - " N "
+        - " S "
+        - " N "
+      ingredients:
+        N: NETHERITE_INGOT
+        S: NETHER_STAR
+    illusion-core:
+      enabled: true
+      shape:
+        - "DSD"
+        - "SHS"
+        - "DSD"
+      ingredients:
+        D: ANCIENT_DEBRIS
+        S: SKELETON_SKULL
+        H: HEAVY_CORE
+    vulcan-skull:
+      enabled: true
+      shape:
+        - "DMD"
+        - "MSM"
+        - "DMD"
+      ingredients:
+        D: ANCIENT_DEBRIS
+        M: MAGMA_BLOCK
+        S: WITHER_SKELETON_SKULL
+
+# Copper Armor configuration
+# Настройка медной брони
+
+copper-armor:
+  helmet:
+    glowing-duration-ticks: 0
+  boots:
+    speed-level: 3
+    copper-speed-level: 5
+  leggings:
+    min-fall-distance: 2.0
+    max-fall-distance: 300.0
+    min-explosion-power: 1.0
+    max-explosion-power: 100.0
+  chestplate:
+    hits-for-lightning: 7
+    ring-radius: 10.0
+    lightning-count: 10
+    lightning-damage: 6.0

@@ -1,0 +1,9 @@
+/target/
+/.idea/
+/.m2/
+/.agents/
+/.codex/
+*.iml
+*.log
+*.jar
+dependency-reduced-pom.xml

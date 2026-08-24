@@ -1,0 +1,20 @@
+name: AltarLegendaryWH
+version: '${project.version}'
+main: dev.whersss.altarLegendaryWH.AltarLegendaryWH
+api-version: '1.21'
+authors: [WHersss]
+description: Legendary weapons, copper armor and combat abilities for Paper 1.21.11
+commands:
+  altarlegendary:
+    description: Manage legendary items, menus and cooldowns
+    usage: /altarlegendary <give|show|reload|cooldownreset>
+    aliases: [al]
+    permission: altarlegendary.admin
+  friendlist:
+    description: Manage players ignored by friendly legendary abilities
+    usage: /friendlist <add|remove|list>
+    aliases: [fl]
+permissions:
+  altarlegendary.admin:
+    description: Access to AltarLegendaryWH administration commands
+    default: op
