@@ -17,6 +17,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDamageAbortEvent;
+import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -84,6 +86,36 @@ public class CopperPickaxeListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         lastFace.remove(event.getPlayer().getUniqueId());
     }
+    @EventHandler
+    public void onBlockDamage(BlockDamageEvent event) {
+        Player player = event.getPlayer();
+        ItemStack tool = player.getInventory().getItemInMainHand();
+
+        if (!CopperPickaxeItem.isCopperPickaxe(tool) || !CopperPickaxeItem.isModeEnabled(tool)) {
+            return;
+        }
+
+        BlockFace face = lastFace.getOrDefault(player.getUniqueId(), BlockFace.SELF);
+        List<Block> area = computeArea(event.getBlock(), face);
+        Set<Material> blocked = getBlockedMaterials();
+
+        for (Block block : area) {
+            if (block.getType().isAir() || blocked.contains(block.getType())) {
+                continue;
+            }
+            player.sendBlockDamage(block.getLocation(), 0.5f, block.hashCode());
+        }
+    }
+    @EventHandler
+    public void onBlockDamageAbort(BlockDamageAbortEvent event) {
+        Player player = event.getPlayer();
+        BlockFace face = lastFace.getOrDefault(player.getUniqueId(), BlockFace.SELF);
+        List<Block> area = computeArea(event.getBlock(), face);
+
+        for (Block block : area) {
+            player.sendBlockDamage(block.getLocation(), 0.0f, block.hashCode());
+        }
+    }
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
@@ -100,6 +132,8 @@ public class CopperPickaxeListener implements Listener {
         Set<Material> blocked = getBlockedMaterials();
 
         for (Block block : area) {
+            player.sendBlockDamage(block.getLocation(), 0.0f, block.hashCode());
+
             if (block.getType().isAir() || blocked.contains(block.getType())) {
                 continue;
             }
@@ -134,18 +168,16 @@ public class CopperPickaxeListener implements Listener {
         }
 
         BlockFace digDirection = face.getOppositeFace();
-
         int[] perp1;
         int[] perp2;
 
-        // Определяем оси на основе модификаторов BlockFace
-        if (face.getModY() != 0) { // Ось Y
+        if (face.getModY() != 0) {
             perp1 = new int[]{1, 0, 0};
             perp2 = new int[]{0, 0, 1};
-        } else if (face.getModX() != 0) { // Ось X
+        } else if (face.getModX() != 0) {
             perp1 = new int[]{0, 1, 0};
             perp2 = new int[]{0, 0, 1};
-        } else { // Ось Z
+        } else {
             perp1 = new int[]{1, 0, 0};
             perp2 = new int[]{0, 1, 0};
         }
