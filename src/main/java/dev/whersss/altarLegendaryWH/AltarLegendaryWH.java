@@ -50,6 +50,8 @@ import dev.whersss.altarLegendaryWH.weapons.cutlass.listeners.CutlassListener;
 import dev.whersss.altarLegendaryWH.items.copperarmor.listeners.CopperArmorListener;
 import dev.whersss.altarLegendaryWH.items.copperarmor.tasks.CopperArmorTask;
 
+import dev.whersss.altarLegendaryWH.items.copperpickaxe.listeners.CopperPickaxeListener;
+
 import dev.whersss.altarLegendaryWH.items.weaponshandle.WeaponsHandleItem;
 import dev.whersss.altarLegendaryWH.items.illusioncore.IllusionCoreItem;
 import dev.whersss.altarLegendaryWH.items.vulcanskull.VulcanSkullItem;
@@ -183,6 +185,8 @@ public class AltarLegendaryWH extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EarthGauntletListener(this, earthGauntletManager), this);
 
         getServer().getPluginManager().registerEvents(new CutlassListener(cutlassManager), this);
+
+        getServer().getPluginManager().registerEvents(new CopperPickaxeListener(this), this);
 
         registerRecipes();
 

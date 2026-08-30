@@ -4,6 +4,7 @@ import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.utils.InventoryUtils;
 import dev.whersss.altarLegendaryWH.items.copperarmor.utils.CopperArmorFactory;
+import dev.whersss.altarLegendaryWH.items.copperpickaxe.CopperPickaxeItem;
 import dev.whersss.altarLegendaryWH.items.illusioncore.IllusionCoreItem;
 import dev.whersss.altarLegendaryWH.items.vulcanskull.VulcanSkullItem;
 import dev.whersss.altarLegendaryWH.items.wardenheart.WardenHeartItem;
@@ -149,6 +150,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                     case "copper_chestplate" -> CopperArmorFactory.getChestplate();
                     case "copper_leggings" -> CopperArmorFactory.getLeggings();
                     case "copper_boots" -> CopperArmorFactory.getBoots();
+                    case "copper_pickaxe" -> CopperPickaxeItem.create();
                     default -> null;
                 };
 

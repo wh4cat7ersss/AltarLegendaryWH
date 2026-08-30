@@ -28,7 +28,8 @@ public class AltarLegendaryTabCompleter implements TabCompleter {
                     "pale_gun", "pure_blade", "knightfall", "shadow_blade", "hyperion",
                     "wither_blade", "earth_gauntlet", "cutlass",
                     "warden_heart", "vulcan_skull", "weapons_handle", "illusion_core",
-                    "copper_helmet", "copper_chestplate", "copper_leggings", "copper_boots"
+                    "copper_helmet", "copper_chestplate", "copper_leggings", "copper_boots",
+                    "copper_pickaxe"
             ));
         }
         else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {

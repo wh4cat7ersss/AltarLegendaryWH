@@ -3,6 +3,7 @@ package dev.whersss.altarLegendaryWH.listeners;
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.items.copperarmor.utils.CopperArmorFactory;
+import dev.whersss.altarLegendaryWH.items.copperpickaxe.CopperPickaxeItem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -188,6 +189,7 @@ public class ItemProtectionListener implements Listener {
         if (item == null || !item.hasItemMeta()) return false;
         if (isLegendaryWeapon(item)) return true;
         if (isCopperArmor(item)) return true;
+        if (CopperPickaxeItem.isCopperPickaxe(item)) return true;
 
         ItemMeta meta = item.getItemMeta();
         if (meta.hasCustomModelData()) {
