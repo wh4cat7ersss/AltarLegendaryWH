@@ -47,8 +47,8 @@ public class CopperArmorFactory {
 
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));
-        lore.add(c(ORANGE + tr("Медное Зрение: &f Удерживайте Shift, чтобы дать", "Copper Sight: &f Hold Crouch to give")));
-        lore.add(c(tr("&f игрокам Свечение", "&f players Glowing")));
+        lore.add(c(ORANGE + tr("Медное Зрение: &f Удерживайте Shift 5 секунд, чтобы дать", "Copper Sight: &f Hold Crouch for 5 seconds to give")));
+        lore.add(c(tr("&f игрокам Свечение в радиусе 1000 блоков", "&f players Glowing in a 1000 block radius")));
         lore.add(c(CYAN + tr("Бесконечное Подводное Дыхание", "Infinite Water Breathing")));
         meta.lore(lore);
 

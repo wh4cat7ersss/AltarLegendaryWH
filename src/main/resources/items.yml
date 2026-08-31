@@ -51,7 +51,9 @@ items:
 
 copper-armor:
   helmet:
-    glowing-duration-ticks: 0
+    charge-hold-ticks: 100
+    glowing-duration-seconds: 10
+    glowing-radius-blocks: 1000.0
   boots:
     speed-level: 3
     copper-speed-level: 5

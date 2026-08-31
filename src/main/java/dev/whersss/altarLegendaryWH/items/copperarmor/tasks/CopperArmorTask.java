@@ -18,14 +18,17 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public class CopperArmorTask extends BukkitRunnable implements Listener {
 
     private final AltarLegendaryWH plugin;
     private final Map<UUID, Integer> sneakTicks = new HashMap<>();
-    private final Map<UUID, Boolean> glowingActive = new HashMap<>();
+    private final Map<UUID, Integer> activeTicks = new HashMap<>();
+    private final Map<UUID, Set<UUID>> glowingTargets = new HashMap<>();
     private final Map<UUID, Map<PotionEffectType, Integer>> managedEffects = new HashMap<>();
 
     public CopperArmorTask(AltarLegendaryWH plugin) {
@@ -75,6 +78,88 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                 && effect.getAmplifier() == amplifier;
     }
 
+    private int getChargeHoldTicks() {
+        return Math.max(10, plugin.getItemsConfig().getInt("copper-armor.helmet.charge-hold-ticks", 100));
+    }
+
+    private int getGlowDurationTicks() {
+        int ticks = plugin.getItemsConfig().getInt("copper-armor.helmet.glowing-duration-ticks", 0);
+        if (ticks > 0) {
+            return ticks;
+        }
+
+        int seconds = plugin.getItemsConfig().getInt("copper-armor.helmet.glowing-duration-seconds", 10);
+        return Math.max(1, seconds * 20);
+    }
+
+    private double getGlowRadiusSquared() {
+        double radius = Math.max(1.0, plugin.getItemsConfig().getDouble("copper-armor.helmet.glowing-radius-blocks", 1000.0));
+        return radius * radius;
+    }
+
+    private boolean hasActiveGlow(UUID playerId) {
+        return activeTicks.containsKey(playerId);
+    }
+
+    private void stopCharging(Player player) {
+        sneakTicks.remove(player.getUniqueId());
+    }
+
+    private void updateVisibleGlows(Player owner) {
+        Set<UUID> currentTargets = glowingTargets.computeIfAbsent(owner.getUniqueId(), ignored -> new HashSet<>());
+        Set<UUID> nextTargets = new HashSet<>();
+        double radiusSquared = getGlowRadiusSquared();
+
+        for (Player target : Bukkit.getOnlinePlayers()) {
+            if (target.equals(owner) || !target.getWorld().equals(owner.getWorld())) continue;
+            if (owner.getLocation().distanceSquared(target.getLocation()) > radiusSquared) continue;
+
+            nextTargets.add(target.getUniqueId());
+            if (!currentTargets.contains(target.getUniqueId())) {
+                setGlowingForPlayer(owner, target, true);
+            }
+        }
+
+        for (UUID targetId : new HashSet<>(currentTargets)) {
+            if (nextTargets.contains(targetId)) continue;
+            Player target = Bukkit.getPlayer(targetId);
+            if (target != null) {
+                setGlowingForPlayer(owner, target, false);
+            }
+            currentTargets.remove(targetId);
+        }
+
+        currentTargets.addAll(nextTargets);
+    }
+
+    private void startHelmetAbility(Player player) {
+        UUID playerId = player.getUniqueId();
+        activeTicks.put(playerId, getGlowDurationTicks());
+        glowingTargets.put(playerId, new HashSet<>());
+        stopCharging(player);
+
+        Location loc = player.getLocation();
+        player.playSound(loc, Sound.ENTITY_WARDEN_SONIC_CHARGE, 1f, 1.0f);
+        player.getWorld().strikeLightningEffect(loc);
+        player.getWorld().spawnParticle(Particle.SONIC_BOOM, player.getEyeLocation(), 1, 0, 0, 0, 0);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 60, 0, false, false, true));
+    }
+
+    private void endHelmetAbility(Player player) {
+        UUID playerId = player.getUniqueId();
+        Set<UUID> targets = glowingTargets.remove(playerId);
+        if (targets != null) {
+            for (UUID targetId : targets) {
+                Player target = Bukkit.getPlayer(targetId);
+                if (target != null) {
+                    setGlowingForPlayer(player, target, false);
+                }
+            }
+        }
+        activeTicks.remove(playerId);
+        player.removePotionEffect(PotionEffectType.DARKNESS);
+    }
+
     private void removeIfInfinite(Player player, PotionEffectType type) {
         Map<PotionEffectType, Integer> playerEffects = managedEffects.get(player.getUniqueId());
         if (playerEffects == null) return;
@@ -108,7 +193,10 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                 removeIfInfinite(player, PotionEffectType.RESISTANCE);
                 removeIfInfinite(player, PotionEffectType.FIRE_RESISTANCE);
                 removeBootsSpeed(player);
-                handleSneakRelease(player);
+                if (hasActiveGlow(player.getUniqueId())) {
+                    endHelmetAbility(player);
+                }
+                stopCharging(player);
                 continue;
             }
 
@@ -119,55 +207,34 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                     removeIfInfinite(player, PotionEffectType.WATER_BREATHING);
                 }
 
-                if (player.isSneaking()) {
-                    int ticks = sneakTicks.getOrDefault(player.getUniqueId(), 0) + 1;
-                    sneakTicks.put(player.getUniqueId(), ticks);
-
-                    if (ticks == 20) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 2.0f);
-                    } else if (ticks == 40) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1.8f);
-                    } else if (ticks == 80) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1.6f);
-                    } else if (ticks == 120) {
-                        player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1f, 1.3f);
-                    } else if (ticks == 180) {
-                        player.playSound(player.getLocation(), Sound.ITEM_TRIDENT_THUNDER, 1.5f, 0.3f);
-                        player.playSound(player.getLocation(), Sound.BLOCK_SCULK_SHRIEKER_SHRIEK, 1f, 1.7f);
-
-                        player.getWorld().strikeLightningEffect(player.getLocation());
-
-                        Location baseLoc = player.getLocation().add(0, 0.1, 0);
-                        for (int i = 0; i < 36; i++) {
-                            double angle = i * Math.PI / 18;
-                            double dx = Math.cos(angle);
-                            double dz = Math.sin(angle);
-                            player.getWorld().spawnParticle(Particle.SCULK_SOUL, baseLoc, 0, dx, 0.0, dz, 0.15);
-                        }
-
-                        applyInfinite(player, PotionEffectType.DARKNESS);
-                        glowingActive.put(player.getUniqueId(), true);
-
-                        for (Player target : Bukkit.getOnlinePlayers()) {
-                            if (!target.equals(player) && !plugin.isAboveLegendaryHeight(target)) {
-                                setGlowingForPlayer(player, target, true);
-                            }
-                        }
+                UUID playerId = player.getUniqueId();
+                if (hasActiveGlow(playerId)) {
+                    int remaining = activeTicks.get(playerId) - 1;
+                    if (remaining <= 0) {
+                        endHelmetAbility(player);
+                    } else {
+                        activeTicks.put(playerId, remaining);
+                        updateVisibleGlows(player);
                     }
+                } else if (player.isSneaking()) {
+                    int ticks = sneakTicks.getOrDefault(playerId, 0) + 1;
+                    sneakTicks.put(playerId, ticks);
 
-                    if (glowingActive.getOrDefault(player.getUniqueId(), false) && ticks % 20 == 0) {
-                        for (Player target : Bukkit.getOnlinePlayers()) {
-                            if (!target.equals(player) && !plugin.isAboveLegendaryHeight(target)) {
-                                setGlowingForPlayer(player, target, true);
-                            }
-                        }
+                    if (ticks >= getChargeHoldTicks()) {
+                        startHelmetAbility(player);
+                        updateVisibleGlows(player);
+                    } else if (ticks % 10 == 0) {
+                        player.playSound(player.getLocation(), Sound.BLOCK_TRIAL_SPAWNER_CLOSE_SHUTTER, 1f, 1.0f);
                     }
                 } else {
-                    handleSneakRelease(player);
+                    stopCharging(player);
                 }
             } else {
                 removeIfInfinite(player, PotionEffectType.WATER_BREATHING);
-                handleSneakRelease(player);
+                stopCharging(player);
+                if (hasActiveGlow(player.getUniqueId())) {
+                    endHelmetAbility(player);
+                }
             }
 
             if (isCopperArmor(player.getInventory().getChestplate(), "chestplate")) {
@@ -196,22 +263,6 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
         }
     }
 
-    private void handleSneakRelease(Player player) {
-        if (sneakTicks.containsKey(player.getUniqueId())) {
-            if (glowingActive.getOrDefault(player.getUniqueId(), false)) {
-                player.playSound(player.getLocation(), Sound.BLOCK_CONDUIT_DEACTIVATE, 1f, 1f);
-                removeIfInfinite(player, PotionEffectType.DARKNESS);
-                for (Player target : Bukkit.getOnlinePlayers()) {
-                    if (!target.equals(player)) {
-                        setGlowingForPlayer(player, target, false);
-                    }
-                }
-            }
-            sneakTicks.remove(player.getUniqueId());
-            glowingActive.remove(player.getUniqueId());
-        }
-    }
-
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         cleanupPlayer(event.getPlayer());
@@ -223,11 +274,15 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
         }
         managedEffects.clear();
         sneakTicks.clear();
-        glowingActive.clear();
+        activeTicks.clear();
+        glowingTargets.clear();
     }
 
     private void cleanupPlayer(Player player) {
-        handleSneakRelease(player);
+        stopCharging(player);
+        if (hasActiveGlow(player.getUniqueId())) {
+            endHelmetAbility(player);
+        }
         Map<PotionEffectType, Integer> playerEffects = managedEffects.get(player.getUniqueId());
         if (playerEffects != null) {
             for (PotionEffectType type : playerEffects.keySet().toArray(PotionEffectType[]::new)) {
@@ -235,7 +290,8 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
             }
         }
         sneakTicks.remove(player.getUniqueId());
-        glowingActive.remove(player.getUniqueId());
+        activeTicks.remove(player.getUniqueId());
+        glowingTargets.remove(player.getUniqueId());
     }
     private void removeBootsSpeed(Player player) {
         removeIfInfinite(player, PotionEffectType.SPEED);
