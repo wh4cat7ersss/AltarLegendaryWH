@@ -11,7 +11,7 @@ import dev.whersss.altarLegendaryWH.items.wardenheart.WardenHeartItem;
 import dev.whersss.altarLegendaryWH.items.weaponshandle.WeaponsHandleItem;
 import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -23,7 +23,11 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.List;
+
 public class AltarLegendaryCommand implements CommandExecutor {
+
+    private static final int MENU_SIZE = 18;
 
     private final AltarLegendaryWH plugin;
 
@@ -31,39 +35,70 @@ public class AltarLegendaryCommand implements CommandExecutor {
         this.plugin = plugin;
     }
 
-    public static void openLegendaryMenu(Player player) {
-        AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        String titleText = plugin.tr("Легендарные оружия", "Legendary weapons");
-        Component title = TextUtils.shadow(MiniMessage.miniMessage()
-                .deserialize("<!italic><gradient:#AAAAAA:#FFFFFF:#AAAAAA>" + titleText + "</gradient>"));
-        Inventory inv = Bukkit.createInventory(null, 27, title);
-
-        ItemStack glass = new ItemStack(Material.WHITE_STAINED_GLASS_PANE);
+    private static ItemStack filler() {
+        ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = glass.getItemMeta();
         if (meta != null) {
             meta.displayName(TextUtils.legacy(" "));
             glass.setItemMeta(meta);
         }
+        return glass;
+    }
 
-        for (int i = 0; i < 27; i++) {
-            inv.setItem(i, glass);
+    private static void openMenu(Player player, String titleText, List<ItemStack> items) {
+        Component title = TextUtils.shadow(Component.text(titleText, NamedTextColor.GRAY));
+        Inventory inv = Bukkit.createInventory(null, MENU_SIZE, title);
+
+        for (int i = 0; i < MENU_SIZE; i++) {
+            inv.setItem(i, filler());
         }
 
-        inv.setItem(0, WeaponFactory.getBoneBlade());
-        inv.setItem(2, WeaponFactory.getKnightfall(0));
-        inv.setItem(4, WeaponFactory.getShadowBlade());
-        inv.setItem(6, WeaponFactory.getWitherBlade());
-        inv.setItem(8, WeaponFactory.getHyperion());
-        inv.setItem(10, WeaponFactory.getEarthGauntlet());
-        inv.setItem(12, WeaponFactory.getFrostScythe());
-        inv.setItem(14, WeaponFactory.getVulcanCrossbow());
-        inv.setItem(16, WeaponFactory.getPureBlade());
-        inv.setItem(18, WeaponFactory.getPaleGun());
-        inv.setItem(20, WeaponFactory.getNightpiercer());
-        inv.setItem(22, WeaponFactory.getCutlass());
-        inv.setItem(24, WeaponFactory.getBloodLust(0));
+        for (int i = 0; i < items.size() && i < MENU_SIZE; i++) {
+            inv.setItem(i, items.get(i));
+        }
 
         player.openInventory(inv);
+    }
+
+    public static void openWeaponsMenu(Player player) {
+        openMenu(player,
+                "Weapons",
+                List.of(
+                        WeaponFactory.getBoneBlade(),
+                        WeaponFactory.getBloodLust(0),
+                        WeaponFactory.getNightpiercer(),
+                        WeaponFactory.getVulcanCrossbow(),
+                        WeaponFactory.getPaleGun(),
+                        WeaponFactory.getFrostScythe(),
+                        WeaponFactory.getPureBlade(),
+                        WeaponFactory.getKnightfall(0),
+                        WeaponFactory.getShadowBlade(),
+                        WeaponFactory.getWindWeaver(),
+                        WeaponFactory.getHyperion(),
+                        WeaponFactory.getWitherBlade(),
+                        WeaponFactory.getEarthGauntlet(),
+                        WeaponFactory.getCutlass()
+                ));
+    }
+
+    public static void openItemsMenu(Player player) {
+        openMenu(player,
+                "Items",
+                List.of(
+                        WeaponsHandleItem.create(),
+                        IllusionCoreItem.create(),
+                        WardenHeartItem.create(),
+                        VulcanSkullItem.create(),
+                        CopperArmorFactory.getHelmet(),
+                        CopperArmorFactory.getChestplate(),
+                        CopperArmorFactory.getLeggings(),
+                        CopperArmorFactory.getBoots(),
+                        CopperPickaxeItem.create()
+                ));
+    }
+
+    public static void openLegendaryMenu(Player player) {
+        openWeaponsMenu(player);
     }
 
     @Override
@@ -74,13 +109,14 @@ public class AltarLegendaryCommand implements CommandExecutor {
         }
 
         if (args.length == 0) {
-            sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show|reload|cooldownreset> ...", "Usage: /al <give|show|reload|cooldownreset> ...")));
+            sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset> ...")));
             return true;
         }
 
         switch (args[0].toLowerCase()) {
             case "reload" -> {
                 plugin.reloadConfig();
+                plugin.reloadWeaponsConfig();
                 plugin.reloadItemsConfig();
                 plugin.registerRecipes();
                 sender.sendMessage(TextUtils.legacy("§2" + plugin.tr("Конфиг был перезагружен!", "Config reloaded!")));
@@ -102,7 +138,13 @@ public class AltarLegendaryCommand implements CommandExecutor {
             }
             case "show" -> {
                 if (sender instanceof Player player) {
-                    openLegendaryMenu(player);
+                    if (args.length >= 2 && args[1].equalsIgnoreCase("items")) {
+                        openItemsMenu(player);
+                    } else if (args.length >= 2 && args[1].equalsIgnoreCase("weapons")) {
+                        openWeaponsMenu(player);
+                    } else {
+                        sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al show weapons|items", "Usage: /al show weapons|items")));
+                    }
                 } else {
                     sender.sendMessage(TextUtils.legacy(plugin.tr("§cКоманда доступна только игроку.", "§cThis command is only available to players.")));
                 }
@@ -138,6 +180,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                     case "pure_blade" -> WeaponFactory.getPureBlade();
                     case "knightfall" -> WeaponFactory.getKnightfall(kills);
                     case "shadow_blade" -> WeaponFactory.getShadowBlade();
+                    case "windweaver" -> WeaponFactory.getWindWeaver();
                     case "hyperion" -> WeaponFactory.getHyperion();
                     case "wither_blade" -> WeaponFactory.getWitherBlade();
                     case "earth_gauntlet" -> WeaponFactory.getEarthGauntlet();
@@ -172,7 +215,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                         : "";
                 sender.sendMessage(TextUtils.legacy("§2" + target.getName() + " " + plugin.tr("получил §6", "received §6") + itemName + suffix));
             }
-            default -> sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show|reload|cooldownreset> ...", "Usage: /al <give|show|reload|cooldownreset> ...")));
+            default -> sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset> ...")));
         }
         return true;
     }

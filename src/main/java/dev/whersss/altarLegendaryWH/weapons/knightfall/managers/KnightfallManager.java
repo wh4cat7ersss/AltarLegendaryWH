@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.knightfall.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -52,6 +53,10 @@ public class KnightfallManager {
         startChargeTask();
     }
 
+    private boolean useParticleChains() {
+        return plugin.getWeaponsConfig().getBoolean("knightfall.chain.use-particles", true);
+    }
+
     public boolean canUseCloak(Player player) {
         return cloakCooldowns.getOrDefault(player.getUniqueId(), 0L) <= System.currentTimeMillis();
     }
@@ -59,8 +64,8 @@ public class KnightfallManager {
     public void triggerCloak(Player player) {
         if (plugin.isAboveLegendaryHeight(player)) return;
 
-        int duration = plugin.getConfig().getInt("knightfall.cloak.duration", 3) * 20;
-        int cooldown = plugin.getConfig().getInt("knightfall.cloak.cooldown", 8);
+        int duration = plugin.getWeaponsConfig().getInt("knightfall.cloak.duration", 3) * 20;
+        int cooldown = plugin.getWeaponsConfig().getInt("knightfall.cloak.cooldown", 8);
 
         cloakCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
         startCloakCooldownBar(player, cooldown);
@@ -141,12 +146,12 @@ public class KnightfallManager {
     }
 
     public int getCharges(Player player) {
-        return hookCharges.getOrDefault(player.getUniqueId(), plugin.getConfig().getInt("knightfall.grapple.max-charges", 3));
+        return hookCharges.getOrDefault(player.getUniqueId(), plugin.getWeaponsConfig().getInt("knightfall.grapple.max-charges", 3));
     }
 
     private void startChargeTask() {
-        int chargeCooldown = plugin.getConfig().getInt("knightfall.grapple.cooldown", 10) * 1000;
-        int maxCharges = plugin.getConfig().getInt("knightfall.grapple.max-charges", 3);
+        int chargeCooldown = plugin.getWeaponsConfig().getInt("knightfall.grapple.cooldown", 10) * 1000;
+        int maxCharges = plugin.getWeaponsConfig().getInt("knightfall.grapple.max-charges", 3);
 
         new BukkitRunnable() {
             @Override
@@ -189,14 +194,24 @@ public class KnightfallManager {
 
     private void updateDynamicChain(Player player, Location target, List<BlockDisplay> chainLinks) {
         Location startLoc = player.getLocation().add(0, 1.0, 0);
+        if (useParticleChains()) {
+            for (BlockDisplay display : chainLinks) {
+                display.remove();
+            }
+            chainLinks.clear();
+            spawnParticleChain(startLoc, target);
+            return;
+        }
+
+        double step = Math.max(0.22, plugin.getWeaponsConfig().getDouble("knightfall.chain.segment-length", 0.22));
         double dist = startLoc.distance(target);
         Vector tempDir = target.toVector().subtract(startLoc.toVector());
 
         final Vector dir = (tempDir.lengthSquared() > 0) ? tempDir.normalize() : new Vector(0, 1, 0);
-        int linksNeeded = (int) Math.ceil(dist);
+        int linksNeeded = (int) Math.ceil(dist / step);
 
         for (int i = 0; i < linksNeeded; i++) {
-            Location linkLoc = startLoc.clone().add(dir.clone().multiply(i));
+            Location linkLoc = startLoc.clone().add(dir.clone().multiply(i * step));
             linkLoc.setDirection(dir);
 
             if (i >= chainLinks.size()) {
@@ -217,6 +232,20 @@ public class KnightfallManager {
         while (chainLinks.size() > linksNeeded) {
             BlockDisplay display = chainLinks.removeLast();
             display.remove();
+        }
+    }
+
+    private void spawnParticleChain(Location startLoc, Location target) {
+        double step = Math.max(0.22, plugin.getWeaponsConfig().getDouble("knightfall.chain.segment-length", 0.22));
+        Vector delta = target.toVector().subtract(startLoc.toVector());
+        double length = Math.max(0.001, delta.length());
+        Vector dir = delta.clone().normalize();
+        org.bukkit.block.data.BlockData chainData = Material.IRON_CHAIN.createBlockData();
+
+        int points = Math.max(1, (int) Math.ceil(length / step));
+        for (int i = 0; i <= points; i++) {
+            Location point = startLoc.clone().add(dir.clone().multiply(i * step));
+            point.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, point, 2, 0.015, 0.015, 0.015, chainData);
         }
     }
 
@@ -286,7 +315,7 @@ public class KnightfallManager {
 
         Location startDirLoc = player.getEyeLocation();
         Vector dir = startDirLoc.getDirection().normalize();
-        double maxDist = plugin.getConfig().getDouble("knightfall.grapple.range", 25.0);
+        double maxDist = plugin.getWeaponsConfig().getDouble("knightfall.grapple.range", 25.0);
         RayTraceResult narrowTrace = player.getWorld().rayTrace(
                 startDirLoc, dir, maxDist, org.bukkit.FluidCollisionMode.NEVER, true, 0.3,
                 entity -> !entity.equals(player) && !(entity instanceof Projectile)
@@ -325,7 +354,7 @@ public class KnightfallManager {
                     if (victim instanceof Player && victim.getHealth() <= 2.0) {
                         playKillEffect(victim.getLocation());
                     }
-                    victim.damage(2.0, player);
+                    CombatUtils.runSyntheticDamage(() -> victim.damage(2.0, player));
                 }
             }
         }
@@ -333,8 +362,8 @@ public class KnightfallManager {
         if (targetLoc == null) return;
 
         hookCharges.put(player.getUniqueId(), charges - 1);
-        if (charges == plugin.getConfig().getInt("knightfall.grapple.max-charges", 3)) {
-            hookNextCharge.put(player.getUniqueId(), System.currentTimeMillis() + (plugin.getConfig().getInt("knightfall.grapple.cooldown", 10) * 1000L));
+        if (charges == plugin.getWeaponsConfig().getInt("knightfall.grapple.max-charges", 3)) {
+            hookNextCharge.put(player.getUniqueId(), System.currentTimeMillis() + (plugin.getWeaponsConfig().getInt("knightfall.grapple.cooldown", 10) * 1000L));
         }
 
         player.swingMainHand();
@@ -369,11 +398,11 @@ public class KnightfallManager {
                 updateDynamicChain(player, target, chainLinks);
 
                 if (ticks % 1 == 0) {
-                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHAIN_STEP, 2.0f, 2.0f);
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHAIN_STEP, 2.0f, 0.9f);
                 }
 
                 if (player.getLocation().distanceSquared(target) < 2.5 || player.getEyeLocation().distanceSquared(target) < 2.5) {
-                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHAIN_BREAK, 2.0f, 0.7f);
+                    player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CHAIN_BREAK, 2.0f, 1.0f);
 
                     if (isFloor) {
                         Vector boost = player.getLocation().getDirection().setY(0).normalize().multiply(0.5).setY(1.1);
@@ -425,7 +454,7 @@ public class KnightfallManager {
         if (plugin.isAboveLegendaryHeight(player)) return;
         if (throwCooldowns.getOrDefault(player.getUniqueId(), 0L) > System.currentTimeMillis()) return;
 
-        int cooldown = plugin.getConfig().getInt("knightfall.throw.cooldown", 20);
+        int cooldown = plugin.getWeaponsConfig().getInt("knightfall.throw.cooldown", 20);
         throwCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
         startThrowCooldownBar(player, cooldown);
 
@@ -435,11 +464,11 @@ public class KnightfallManager {
 
         Location start = player.getEyeLocation();
         Vector dir = start.getDirection().normalize();
-        double maxDist = plugin.getConfig().getDouble("knightfall.throw.range", 30.0);
-        double configDmg = plugin.getConfig().getDouble("knightfall.throw.damage", 15.0);
-        double flightSpeed = plugin.getConfig().getDouble("knightfall.throw.flight-speed", 1.5);
-        double returnSpeed = plugin.getConfig().getDouble("knightfall.throw.return-speed", 1.5);
-        int turningDelayTicks = plugin.getConfig().getInt("knightfall.throw.turning-delay-ticks", 15);
+        double maxDist = plugin.getWeaponsConfig().getDouble("knightfall.throw.range", 30.0);
+        double configDmg = plugin.getWeaponsConfig().getDouble("knightfall.throw.damage", 15.0);
+        double flightSpeed = plugin.getWeaponsConfig().getDouble("knightfall.throw.flight-speed", 1.5);
+        double returnSpeed = plugin.getWeaponsConfig().getDouble("knightfall.throw.return-speed", 1.5);
+        int turningDelayTicks = plugin.getWeaponsConfig().getInt("knightfall.throw.turning-delay-ticks", 15);
 
         ItemDisplay display = player.getWorld().spawn(start, ItemDisplay.class, ent -> {
             ent.setItemStack(item);
@@ -697,3 +726,4 @@ public class KnightfallManager {
         if (throwBar != null) throwBar.removeAll();
     }
 }
+

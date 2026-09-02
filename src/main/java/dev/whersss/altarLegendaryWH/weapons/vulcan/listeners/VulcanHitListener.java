@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.vulcan.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Arrow;
@@ -36,8 +37,9 @@ public class VulcanHitListener implements Listener {
 
             hitLoc.getWorld().spawnParticle(Particle.FLAME, hitLoc, 30, 0.3, 0.3, 0.3, 0.1);
 
-            double extraDmg = plugin.getConfig().getDouble("vulcan_crossbow.damage", 18.0);
-            target.damage(extraDmg, arrow.getShooter() instanceof LivingEntity ? (LivingEntity) arrow.getShooter() : null);
+            double extraDmg = plugin.getWeaponsConfig().getDouble("vulcan_crossbow.damage", 18.0);
+            LivingEntity shooter = arrow.getShooter() instanceof LivingEntity ? (LivingEntity) arrow.getShooter() : null;
+            CombatUtils.runSyntheticDamage(() -> target.damage(extraDmg, shooter));
             target.setFireTicks(60);
 
             hitLoc.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 60, 0.6, 0.8, 0.6, 0.1);
@@ -48,3 +50,4 @@ public class VulcanHitListener implements Listener {
         }
     }
 }
+

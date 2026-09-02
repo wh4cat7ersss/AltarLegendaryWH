@@ -75,7 +75,7 @@ public class EarthGauntletManager implements Listener {
         p.getWorld().spawnParticle(Particle.BLOCK, p.getLocation().add(0, 1, 0), 20, 0.5, 1.0, 0.5, 1.0, packedMudBlockData);
         p.getWorld().spawnParticle(Particle.DRAGON_BREATH, p.getLocation().add(0, 1, 0), 50, 1.0, 1.0, 1.0, 0.05, 1.0f);
 
-        int activeWindow = plugin.getConfig().getInt("earth-gauntlet.meteor_strike.active_window", 30);
+        int activeWindow = plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.active_window", 30);
         bossBarManager.setActiveBar(p, "MeteorStrikeActive", plugin.tr("§a§lᴍᴇᴛᴇᴏᴩиᴛʜый ʏдᴀᴩ", "§a§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), activeWindow);
 
         BukkitTask task = new BukkitRunnable() {
@@ -85,7 +85,7 @@ public class EarthGauntletManager implements Listener {
                 if (!p.isOnline() || ticks >= activeWindow * 20) {
                     cleanupMeteor(p);
                     bossBarManager.removeActiveBar(p, "MeteorStrikeActive");
-                    bossBarManager.setCooldown(p, "MeteorStrike", plugin.tr("§e§lᴍᴇᴛᴇᴏᴩиᴛʜый ʏдᴀᴩ", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
+                    bossBarManager.setCooldown(p, "MeteorStrike", plugin.tr("§e§lᴍᴇᴛᴇᴏᴩиᴛʜый ʏдᴀᴩ", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
                     return;
                 }
 
@@ -107,7 +107,7 @@ public class EarthGauntletManager implements Listener {
         activeMeteorStrikes.remove(attacker.getUniqueId());
         bossBarManager.removeActiveBar(attacker, "MeteorStrikeActive");
 
-        bossBarManager.setCooldown(attacker, "MeteorStrike", plugin.tr("§e§lМетеоритный Удар", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
+        bossBarManager.setCooldown(attacker, "MeteorStrike", plugin.tr("§e§lМетеоритный Удар", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
 
         attacker.getWorld().playSound(victim.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1f, 1f);
         attacker.getWorld().playSound(victim.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, 1f, 1f);
@@ -119,15 +119,15 @@ public class EarthGauntletManager implements Listener {
         }
         attacker.getWorld().spawnParticle(Particle.DRAGON_BREATH, victim.getLocation().add(0, 1, 0), 80, 1.0, 1.0, 1.0, 0.1, 1.0f);
 
-        double dmg = plugin.getConfig().getDouble("earth-gauntlet.meteor_strike.damage", 4.0);
+        double dmg = plugin.getWeaponsConfig().getDouble("earth-gauntlet.meteor_strike.damage", 4.0);
         plugin.getCleanDamageManager().apply(victim, attacker, dmg);
         victim.playHurtAnimation(0.0F);
 
-        double kbMultiplier = plugin.getConfig().getDouble("earth-gauntlet.meteor_strike.knockback", 2.5);
+        double kbMultiplier = plugin.getWeaponsConfig().getDouble("earth-gauntlet.meteor_strike.knockback", 2.5);
         Vector kb = attacker.getLocation().getDirection().setY(0).normalize().multiply(kbMultiplier).setY(0.35);
         victim.setVelocity(kb);
 
-        final int stunDurationTicks = plugin.getConfig().getInt("earth-gauntlet.meteor_strike.stun_duration_ticks", 100);
+        final int stunDurationTicks = plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.stun_duration_ticks", 100);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (victim.isDead() || !victim.isValid()) return;
@@ -163,7 +163,7 @@ public class EarthGauntletManager implements Listener {
     public void castMudslide(Player p) {
         if (bossBarManager.isOnCooldown(p, "Mudslide")) return;
 
-        int cooldown = plugin.getConfig().getInt("earth-gauntlet.mudslide.cooldown", 40);
+        int cooldown = plugin.getWeaponsConfig().getInt("earth-gauntlet.mudslide.cooldown", 40);
         bossBarManager.setCooldown(p, "Mudslide", plugin.tr("§e§lᴏᴨᴏᴧɜᴇʜь", "§e§lᴍᴜᴅsʟɪᴅᴇ"), cooldown);
 
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_INHALE, 1f, 1f);
@@ -192,8 +192,8 @@ public class EarthGauntletManager implements Listener {
 
         final Vector flatDirection = initialDirection.clone().setY(0).normalize();
 
-        final double maxDist = plugin.getConfig().getDouble("earth-gauntlet.mudslide.range", 50.0);
-        final double speed = plugin.getConfig().getDouble("earth-gauntlet.mudslide.speed", 1.2);
+        final double maxDist = plugin.getWeaponsConfig().getDouble("earth-gauntlet.mudslide.range", 50.0);
+        final double speed = plugin.getWeaponsConfig().getDouble("earth-gauntlet.mudslide.speed", 1.2);
 
         final double curveThreshold = 0.55 + random.nextDouble() * 0.20;
 
@@ -433,7 +433,7 @@ public class EarthGauntletManager implements Listener {
     }
 
     private void hitEntity(Player p, LivingEntity victim, LinkedList<BlockState> trail) {
-        double mudDmg = plugin.getConfig().getDouble("earth-gauntlet.mudslide.damage", 4.0);
+        double mudDmg = plugin.getWeaponsConfig().getDouble("earth-gauntlet.mudslide.damage", 4.0);
         plugin.getCleanDamageManager().apply(victim, p, mudDmg);
         victim.playHurtAnimation(0.0F);
 
@@ -443,7 +443,7 @@ public class EarthGauntletManager implements Listener {
         victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 2, false, false, true));
         victim.getWorld().spawnParticle(Particle.BLOCK, victim.getLocation().add(0, 1, 0), 50, 0.5, 1.0, 0.5, 1.0, mudBlockData);
 
-        int debuffTime = plugin.getConfig().getInt("earth-gauntlet.mudslide.debuff_time_seconds", 4);
+        int debuffTime = plugin.getWeaponsConfig().getInt("earth-gauntlet.mudslide.debuff_time_seconds", 4);
 
         if (victim instanceof Player pVictim) {
             bossBarManager.setDebuffBar(pVictim, plugin.tr("§4§l!! §c§lЗАЛЯПАННЫЙ ГРЯЗЬЮ §4§l!!", "§4§l!! §c§lMUDDED §4§l!!"), debuffTime);
@@ -497,7 +497,7 @@ public class EarthGauntletManager implements Listener {
 
         new BukkitRunnable() {
             int ticks = 0;
-            final double pullSpeed = plugin.getConfig().getDouble("earth-gauntlet.mudslide.pull_speed", 1.5);
+            final double pullSpeed = plugin.getWeaponsConfig().getDouble("earth-gauntlet.mudslide.pull_speed", 1.5);
 
             @Override
             public void run() {

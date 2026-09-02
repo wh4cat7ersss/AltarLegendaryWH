@@ -7,7 +7,7 @@ description: Legendary weapons, copper armor and combat abilities for Paper 1.21
 commands:
   altarlegendary:
     description: Manage legendary items, menus and cooldowns
-    usage: /altarlegendary <give|show|reload|cooldownreset>
+    usage: /altarlegendary <give|show [weapons|items]|reload|cooldownreset>
     aliases: [al]
     permission: altarlegendary.admin
   friendlist:
@@ -17,4 +17,4 @@ commands:
 permissions:
   altarlegendary.admin:
     description: Access to AltarLegendaryWH administration commands
-    default: op
+    default: op

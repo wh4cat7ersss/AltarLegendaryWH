@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.bloodlust.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.weapons.bloodlust.listeners.BloodLustListener;
 import net.kyori.adventure.text.Component;
@@ -91,11 +92,11 @@ public class BloodAbilityManager {
                 attacker,
                 "Infection",
                 plugin.tr("§4§lИнфекция", "§4§lɪɴꜰᴇᴄᴛɪᴏɴ"),
-                plugin.getConfig().getInt("bloodlust.infection.cooldown")
+                plugin.getWeaponsConfig().getInt("bloodlust.infection.cooldown")
         );
 
-        int maxHits = plugin.getConfig().getInt("bloodlust.infection.hits", 6);
-        double bleedDamage = plugin.getConfig().getDouble("bloodlust.infection.damage", 2.0);
+        int maxHits = plugin.getWeaponsConfig().getInt("bloodlust.infection.hits", 6);
+        double bleedDamage = plugin.getWeaponsConfig().getDouble("bloodlust.infection.damage", 2.0);
         String barId = "BloodInfection";
 
         if (victim instanceof Player pVictim) {
@@ -117,7 +118,7 @@ public class BloodAbilityManager {
                     return;
                 }
 
-                victim.damage(bleedDamage, attacker);
+                CombatUtils.runSyntheticDamage(() -> victim.damage(bleedDamage, attacker));
                 victim.getWorld().playSound(victim.getLocation(), "bloodlust.hit", 1f, 1f);
                 victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_PLAYER_HURT, 1f, 0.5f);
 
@@ -185,10 +186,10 @@ public class BloodAbilityManager {
                 p,
                 "BloodTrail",
                 plugin.tr("§4§lКровавый след", "§4§lʙʟᴏᴏᴅ ᴛʀᴀɪʟ"),
-                plugin.getConfig().getInt("bloodlust.blood-trail.cooldown")
+                plugin.getWeaponsConfig().getInt("bloodlust.blood-trail.cooldown")
         );
 
-        int maxTicks = plugin.getConfig().getInt("bloodlust.blood-trail.duration", 20) * 20;
+        int maxTicks = plugin.getWeaponsConfig().getInt("bloodlust.blood-trail.duration", 20) * 20;
 
         activePuddles.add(p.getUniqueId());
         savedEffects.put(p.getUniqueId(), new ArrayList<>(p.getActivePotionEffects()));
@@ -321,7 +322,7 @@ public class BloodAbilityManager {
                 p,
                 "BloodHook",
                 plugin.tr("§4§lКровавый крюк", "§4§lʙʟᴏᴏᴅ ʜᴏᴏᴋ"),
-                plugin.getConfig().getInt("bloodlust.blood-hook.cooldown")
+                plugin.getWeaponsConfig().getInt("bloodlust.blood-hook.cooldown")
         );
 
         p.swingMainHand();
@@ -344,8 +345,8 @@ public class BloodAbilityManager {
             float scale = 1.0f;
             double tailDistance = 0;
 
-            final double maxDist = plugin.getConfig().getDouble("bloodlust.blood-hook.range");
-            final double speed = plugin.getConfig().getDouble("bloodlust.blood-hook.speed", 1.3);
+            final double maxDist = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.range");
+            final double speed = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.speed", 1.3);
             final float flightYaw = startLoc.getYaw();
 
             @Override
@@ -377,7 +378,7 @@ public class BloodAbilityManager {
                                 display.remove();
                                 playImpactBurst(victim.getLocation().add(0, 1.0, 0));
 
-                                double damage = plugin.getConfig().getDouble("bloodlust.blood-hook.damage", 8.0);
+                                double damage = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.damage", 8.0);
                                 plugin.getCleanDamageManager().apply(victim, p, damage);
 
                                 returnHook(p, nextLoc, victim);
@@ -508,3 +509,4 @@ public class BloodAbilityManager {
         savedEffects.clear();
     }
 }
+

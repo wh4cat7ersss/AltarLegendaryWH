@@ -48,8 +48,8 @@ public class PassiveAuraTask extends BukkitRunnable {
                     wasHolding.put(p.getUniqueId(), true);
                 }
 
-                int speedAmp = plugin.getConfig().getInt("bloodlust.passive.speed-amplifier", 1);
-                int strAmp = plugin.getConfig().getInt("bloodlust.passive.strength-amplifier", 0);
+                int speedAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.speed-amplifier", 1);
+                int strAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.strength-amplifier", 0);
 
                 if (kills >= 1) p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, speedAmp, false, false, true));
                 if (kills >= 4) p.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 60, strAmp, false, false, true));
@@ -70,8 +70,8 @@ public class PassiveAuraTask extends BukkitRunnable {
                 if (heldBefore) {
                     PotionEffect activeSpeed = p.getPotionEffect(PotionEffectType.SPEED);
                     PotionEffect activeStrength = p.getPotionEffect(PotionEffectType.STRENGTH);
-                    int speedAmp = plugin.getConfig().getInt("bloodlust.passive.speed-amplifier", 1);
-                    int strAmp = plugin.getConfig().getInt("bloodlust.passive.strength-amplifier", 0);
+                    int speedAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.speed-amplifier", 1);
+                    int strAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.strength-amplifier", 0);
 
                     if (isBloodlustPassiveEffect(activeSpeed, speedAmp)) {
                         p.removePotionEffect(PotionEffectType.SPEED);
@@ -116,3 +116,4 @@ public class PassiveAuraTask extends BukkitRunnable {
         return nearest;
     }
 }
+

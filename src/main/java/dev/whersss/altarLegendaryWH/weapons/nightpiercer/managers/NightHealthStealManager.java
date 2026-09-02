@@ -24,8 +24,8 @@ public class NightHealthStealManager implements Listener {
     }
 
     public void applySteal(Player attacker, LivingEntity victim) {
-        double amount = plugin.getConfig().getDouble("nightpiercer.bite.health-steal", 4.0);
-        int durationTicks = plugin.getConfig().getInt("nightpiercer.bite.duration", 10) * 20;
+        double amount = plugin.getWeaponsConfig().getDouble("nightpiercer.bite.health-steal", 4.0);
+        int durationTicks = plugin.getWeaponsConfig().getInt("nightpiercer.bite.duration", 10) * 20;
 
         modifyMaxHealth(attacker, amount);
         if (victim instanceof Player targetPlayer) {
@@ -99,3 +99,4 @@ public class NightHealthStealManager implements Listener {
         }
     }
 }
+

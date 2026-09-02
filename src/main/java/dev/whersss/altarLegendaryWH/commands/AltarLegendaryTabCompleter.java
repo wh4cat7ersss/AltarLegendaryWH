@@ -22,10 +22,13 @@ public class AltarLegendaryTabCompleter implements TabCompleter {
         if (args.length == 1) {
             completions.addAll(Arrays.asList("give", "show", "reload", "cooldownreset"));
         }
+        else if (args.length == 2 && args[0].equalsIgnoreCase("show")) {
+            completions.addAll(Arrays.asList("weapons", "items"));
+        }
         else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
             completions.addAll(Arrays.asList(
                     "boneblade", "bloodlust", "nightpiercer", "vulcan", "frost_scythe",
-                    "pale_gun", "pure_blade", "knightfall", "shadow_blade", "hyperion",
+                    "pale_gun", "pure_blade", "knightfall", "shadow_blade", "windweaver", "hyperion",
                     "wither_blade", "earth_gauntlet", "cutlass",
                     "warden_heart", "vulcan_skull", "weapons_handle", "illusion_core",
                     "copper_helmet", "copper_chestplate", "copper_leggings", "copper_boots",

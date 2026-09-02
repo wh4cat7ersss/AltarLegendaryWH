@@ -47,11 +47,6 @@ public class CopperPickaxeItem {
         lore.add(Component.empty());
         lore.add(MM.deserialize("<!italic><yellow>" + tr("[Смена руки] ", "[Offhand] ")
                 + "</yellow><white>" + tr("Переключить добычу 3х3.", "To toggle 3x3 mining.") + "</white>"));
-        lore.add(Component.empty());
-        lore.add(MM.deserialize("<!italic><gray>" + tr("Когда в основной руке:", "When in Main Hand:") + "</gray>"));
-        lore.add(MM.deserialize("<!italic><green> " + tr("6 Урон в ближнем бою", "6 Attack Damage") + "</green>"));
-        lore.add(MM.deserialize("<!italic><green> " + tr("1.2 Скорость атаки", "1.2 Attack Speed") + "</green>"));
-        lore.add(MM.deserialize("<!italic><blue>" + tr("Неразрушаемый", "Unbreakable") + "</blue>"));
 
         meta.lore(lore.stream().map(TextUtils::shadow).toList());
 

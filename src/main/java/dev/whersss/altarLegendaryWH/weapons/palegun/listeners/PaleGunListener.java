@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.palegun.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.weapons.palegun.managers.PaleGunAbilityManager;
 import dev.whersss.altarLegendaryWH.weapons.palegun.tasks.PaleProjectileTask;
 import org.bukkit.Location;
@@ -71,7 +72,7 @@ public class PaleGunListener implements Listener {
         }
 
         if (!player.hasCooldown(bow)) {
-            int cdSec = plugin.getConfig().getInt("pale-gun.shoot.cooldown", 10);
+            int cdSec = plugin.getWeaponsConfig().getInt("pale-gun.shoot.cooldown", 10);
             player.setCooldown(bow, cdSec * 20);
         }
 
@@ -102,6 +103,9 @@ public class PaleGunListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBackstab(EntityDamageByEntityEvent event) {
+        if (!CombatUtils.isDirectMeleeHit(event)) {
+            return;
+        }
         if (!(event.getEntity() instanceof LivingEntity victim)) {
             return;
         }
@@ -123,7 +127,7 @@ public class PaleGunListener implements Listener {
 
         double dot = victimLook.normalize().dot(toAttacker.normalize());
         if (dot < -0.3) {
-            double multiplier = plugin.getConfig().getDouble("pale-gun.backstab.multiplier", 1.5);
+            double multiplier = plugin.getWeaponsConfig().getDouble("pale-gun.backstab.multiplier", 1.5);
             event.setDamage(event.getDamage() * multiplier);
             victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_CREAKING_ATTACK, 0.8f, 1.05f);
             victim.getWorld().spawnParticle(Particle.INFESTED, victim.getLocation().add(0, 1, 0), 20, 0.3, 0.5, 0.3, 0.01);
@@ -144,7 +148,7 @@ public class PaleGunListener implements Listener {
         Vector recoil = direction.clone().multiply(-1).normalize().multiply(0.8).setY(0.25);
         player.setVelocity(recoil);
 
-        double speed = plugin.getConfig().getDouble("pale-gun.shoot.projectile-speed", 1.8);
+        double speed = plugin.getWeaponsConfig().getDouble("pale-gun.shoot.projectile-speed", 1.8);
         PaleProjectileTask projectileTask = new PaleProjectileTask(player, eyeLoc, direction.multiply(speed), plugin, abilityManager);
         abilityManager.trackProjectile(projectileTask);
         projectileTask.runTaskTimer(plugin, 0L, 1L);
@@ -160,3 +164,4 @@ public class PaleGunListener implements Listener {
         player.updateInventory();
     }
 }
+

@@ -13,23 +13,22 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class NightBossBarCooldown extends BukkitRunnable {
-    private static final Map<UUID, BossBar> activeBars = new HashMap<>();
+    private static final Map<String, BossBar> activeBars = new HashMap<>();
     private final BossBar bar;
-    private final UUID uuid;
+    private final String key;
     private final int total;
     private int current;
 
     public NightBossBarCooldown(JavaPlugin plugin, Player p, String title, int sec) {
-        this.uuid = p.getUniqueId();
         this.total = sec * 20;
         this.current = total;
         String translated = ChatColor.translateAlternateColorCodes('&', title == null ? "" : title);
         this.bar = TextUtils.bossBar(ChatColor.YELLOW + ChatColor.stripColor(translated), BarColor.YELLOW, BarStyle.SOLID);
         this.bar.addPlayer(p);
-        BossBar oldBar = activeBars.put(uuid, this.bar);
+        this.key = p.getUniqueId() + ":" + ChatColor.stripColor(translated);
+        BossBar oldBar = activeBars.put(key, this.bar);
         if (oldBar != null) {
             oldBar.removeAll();
         }
@@ -40,7 +39,7 @@ public class NightBossBarCooldown extends BukkitRunnable {
     public void run() {
         if (current <= 0) {
             bar.removeAll();
-            activeBars.remove(uuid, bar);
+            activeBars.remove(key, bar);
             this.cancel();
             return;
         }
@@ -51,9 +50,13 @@ public class NightBossBarCooldown extends BukkitRunnable {
     public void start() {}
 
     public static void resetPlayer(Player player) {
-        BossBar bar = activeBars.remove(player.getUniqueId());
-        if (bar != null) {
-            bar.removeAll();
-        }
+        String prefix = player.getUniqueId() + ":";
+        activeBars.entrySet().removeIf(entry -> {
+            if (entry.getKey().startsWith(prefix)) {
+                entry.getValue().removeAll();
+                return true;
+            }
+            return false;
+        });
     }
 }

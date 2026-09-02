@@ -114,9 +114,9 @@ public class CutlassManager {
     }
 
     public void startParry(Player player) {
-        int maxCharges = plugin.getConfig().getInt("cutlass.parry.max-charges", 3);
-        int durationSeconds = plugin.getConfig().getInt("cutlass.parry.max-duration-seconds", 7);
-        int slownessAmplifier = Math.max(0, plugin.getConfig().getInt("cutlass.parry.slowness-amplifier", 0));
+        int maxCharges = plugin.getWeaponsConfig().getInt("cutlass.parry.max-charges", 3);
+        int durationSeconds = plugin.getWeaponsConfig().getInt("cutlass.parry.max-duration-seconds", 7);
+        int slownessAmplifier = Math.max(0, plugin.getWeaponsConfig().getInt("cutlass.parry.slowness-amplifier", 0));
         long durationMillis = durationSeconds * 1000L;
 
         String barKey = player.getUniqueId() + ":parry_active";
@@ -180,16 +180,16 @@ public class CutlassManager {
         applyCooldown(
                 player,
                 "parry",
-                plugin.getConfig().getInt("cutlass.parry.cooldown", 30),
+                plugin.getWeaponsConfig().getInt("cutlass.parry.cooldown", 30),
                 plugin.tr("Пиратское отражение", "Pɪʀᴀᴛᴇ's ᴘᴀʀʀʏ")
         );
     }
 
     public void startThousandCuts(Player player) {
-        int cooldown = plugin.getConfig().getInt("cutlass.thousand-cuts.cooldown", 45);
-        int durationTicks = plugin.getConfig().getInt("cutlass.thousand-cuts.duration-ticks", 42);
-        int slownessAmplifier = Math.max(0, plugin.getConfig().getInt("cutlass.thousand-cuts.slowness-amplifier", 1));
-        int slownessDurationTicks = plugin.getConfig().getInt("cutlass.thousand-cuts.slowness-duration", 3) * 20;
+        int cooldown = plugin.getWeaponsConfig().getInt("cutlass.thousand-cuts.cooldown", 45);
+        int durationTicks = plugin.getWeaponsConfig().getInt("cutlass.thousand-cuts.duration-ticks", 42);
+        int slownessAmplifier = Math.max(0, plugin.getWeaponsConfig().getInt("cutlass.thousand-cuts.slowness-amplifier", 1));
+        int slownessDurationTicks = plugin.getWeaponsConfig().getInt("cutlass.thousand-cuts.slowness-duration", 3) * 20;
 
         applyCooldown(player, "thousand_cuts", cooldown, plugin.tr("Сто царапин", "Hᴜɴᴅʀᴇᴅ ᴄᴜᴛs"));
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 1.5f);
@@ -321,7 +321,7 @@ public class CutlassManager {
     }
 
     private void dealThousandCutsHit(Player player, LivingEntity target) {
-        double damage = plugin.getConfig().getDouble("cutlass.thousand-cuts.hit-damage", 3.5);
+        double damage = plugin.getWeaponsConfig().getDouble("cutlass.thousand-cuts.hit-damage", 3.5);
         target.setNoDamageTicks(0);
         plugin.getCleanDamageManager().apply(target, player, damage);
 

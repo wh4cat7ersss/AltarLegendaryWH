@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.items.copperarmor.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.items.copperarmor.utils.CopperArmorFactory;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -80,7 +81,8 @@ public class CopperArmorListener implements Listener {
                             if (dist > explosionRadius) continue;
 
                             double damageFactor = 1.0 - (dist / explosionRadius);
-                            victim.damage(power * 6.0 * damageFactor, p);
+                            final double finalDamage = power * 6.0 * damageFactor;
+                            CombatUtils.runSyntheticDamage(() -> victim.damage(finalDamage, p));
 
                             Vector knockback = victim.getLocation().toVector().subtract(loc.toVector()).normalize();
                             knockback.multiply(power * 0.8 * damageFactor).setY(power * 0.4);
@@ -103,14 +105,21 @@ public class CopperArmorListener implements Listener {
         if (isLightningStriking) return;
 
         Player chestplateUser = null;
+        LivingEntity guaranteedTarget = null;
 
         if (e.getDamager() instanceof Player attacker && isCopperArmor(attacker.getInventory().getChestplate(), "chestplate")) {
             if (attacker.getCooledAttackStrength(0) >= 1.0f) {
                 chestplateUser = attacker;
+                if (e.getEntity() instanceof LivingEntity target) {
+                    guaranteedTarget = target;
+                }
             }
         }
         else if (e.getEntity() instanceof Player victim && isCopperArmor(victim.getInventory().getChestplate(), "chestplate")) {
             chestplateUser = victim;
+            if (e.getDamager() instanceof LivingEntity attacker) {
+                guaranteedTarget = attacker;
+            }
         }
 
         if (chestplateUser != null) {
@@ -127,12 +136,16 @@ public class CopperArmorListener implements Listener {
 
                 isLightningStriking = true;
                 try {
+                    if (guaranteedTarget != null && guaranteedTarget.isValid()) {
+                        spawnCustomLightning(guaranteedTarget.getLocation().clone().add(0, 0.2, 0), lightningDmg, chestplateUser, guaranteedTarget);
+                    }
+
                     for (int i = 0; i < count; i++) {
                         double angle = 2 * Math.PI * i / count;
                         double dx = radius * Math.cos(angle);
                         double dz = radius * Math.sin(angle);
                         Location strikeLoc = center.clone().add(dx, 0, dz);
-                        spawnCustomLightning(strikeLoc, lightningDmg, chestplateUser);
+                        spawnCustomLightning(strikeLoc, lightningDmg, chestplateUser, null);
                     }
 
                     int innerLightnings = count / 3;
@@ -140,7 +153,7 @@ public class CopperArmorListener implements Listener {
                         double randomRadius = random.nextDouble() * radius;
                         double randomAngle = random.nextDouble() * 2 * Math.PI;
                         Location strikeLoc = center.clone().add(randomRadius * Math.cos(randomAngle), 0, randomRadius * Math.sin(randomAngle));
-                        spawnCustomLightning(strikeLoc, lightningDmg, chestplateUser);
+                        spawnCustomLightning(strikeLoc, lightningDmg, chestplateUser, null);
                     }
                 } finally {
                     isLightningStriking = false;
@@ -150,11 +163,15 @@ public class CopperArmorListener implements Listener {
         }
     }
 
-    private void spawnCustomLightning(Location loc, double damage, Player owner) {
+    private void spawnCustomLightning(Location loc, double damage, Player owner, LivingEntity guaranteedTarget) {
         loc.getWorld().strikeLightningEffect(loc);
+        if (guaranteedTarget != null && guaranteedTarget.isValid()) {
+            CombatUtils.runSyntheticDamage(() -> guaranteedTarget.damage(damage, owner));
+        }
         for (Entity ent : loc.getWorld().getNearbyEntities(loc, 1.5, 2.0, 1.5)) {
             if (ent instanceof LivingEntity victim && !victim.equals(owner)) {
-                victim.damage(damage, owner);
+                if (victim.equals(guaranteedTarget)) continue;
+                CombatUtils.runSyntheticDamage(() -> victim.damage(damage, owner));
             }
         }
     }

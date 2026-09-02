@@ -23,6 +23,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,6 +39,8 @@ public class CopperPickaxeListener implements Listener {
 
     private final AltarLegendaryWH plugin;
     private final Map<UUID, BlockFace> lastFace = new HashMap<>();
+    private final Map<UUID, List<Block>> previewBlocks = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> previewTasks = new HashMap<>();
 
     public CopperPickaxeListener(AltarLegendaryWH plugin) {
         this.plugin = plugin;
@@ -60,18 +64,13 @@ public class CopperPickaxeListener implements Listener {
         ItemStack pickaxe = mainIsPickaxe ? mainHand : offHand;
         CopperPickaxeItem.toggleMode(pickaxe);
 
-        if (mainIsPickaxe) {
-            player.getInventory().setItemInMainHand(pickaxe);
-        } else {
-            player.getInventory().setItemInOffHand(pickaxe);
-        }
-
         boolean enabled = CopperPickaxeItem.isModeEnabled(pickaxe);
         String status = enabled
                 ? "&a" + plugin.tr("Включено", "Enabled")
                 : "&c" + plugin.tr("Выключено", "Disabled");
         player.sendActionBar(TextUtils.legacy("&63x3 " + plugin.tr("Копание: ", "Mining: ") + status));
         player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.0f, 2.0f);
+        plugin.getServer().getScheduler().runTask(plugin, player::updateInventory);
     }
 
     @EventHandler
@@ -84,6 +83,7 @@ public class CopperPickaxeListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+        clearPreview(event.getPlayer());
         lastFace.remove(event.getPlayer().getUniqueId());
     }
     @EventHandler
@@ -99,22 +99,13 @@ public class CopperPickaxeListener implements Listener {
         List<Block> area = computeArea(event.getBlock(), face);
         Set<Material> blocked = getBlockedMaterials();
 
-        for (Block block : area) {
-            if (block.getType().isAir() || blocked.contains(block.getType())) {
-                continue;
-            }
-            player.sendBlockDamage(block.getLocation(), 0.5f, block.hashCode());
-        }
+        clearPreview(player);
+        previewBlocks.put(player.getUniqueId(), area);
+        startPreviewTask(player, blocked);
     }
     @EventHandler
     public void onBlockDamageAbort(BlockDamageAbortEvent event) {
-        Player player = event.getPlayer();
-        BlockFace face = lastFace.getOrDefault(player.getUniqueId(), BlockFace.SELF);
-        List<Block> area = computeArea(event.getBlock(), face);
-
-        for (Block block : area) {
-            player.sendBlockDamage(block.getLocation(), 0.0f, block.hashCode());
-        }
+        clearPreview(event.getPlayer());
     }
 
     @EventHandler
@@ -131,9 +122,8 @@ public class CopperPickaxeListener implements Listener {
         World world = event.getBlock().getWorld();
         Set<Material> blocked = getBlockedMaterials();
 
+        clearPreview(player);
         for (Block block : area) {
-            player.sendBlockDamage(block.getLocation(), 0.0f, block.hashCode());
-
             if (block.getType().isAir() || blocked.contains(block.getType())) {
                 continue;
             }
@@ -144,7 +134,7 @@ public class CopperPickaxeListener implements Listener {
 
             boolean broken = block.breakNaturally(tool);
             if (broken) {
-                world.playSound(center, soundGroup.getBreakSound(), soundGroup.getVolume(), soundGroup.getPitch());
+                world.playSound(center, soundGroup.getBreakSound(), soundGroup.getVolume(), 1.0f);
                 world.spawnParticle(Particle.BLOCK, center, 40, 0.3, 0.3, 0.3, 0, blockData);
             }
         }
@@ -152,7 +142,7 @@ public class CopperPickaxeListener implements Listener {
 
     private Set<Material> getBlockedMaterials() {
         Set<Material> materials = new HashSet<>();
-        for (String entry : plugin.getConfig().getStringList("copper-pickaxe.not-breakable-3x3")) {
+        for (String entry : plugin.getItemsConfig().getStringList("copper-pickaxe.not-breakable-3x3")) {
             Material material = Material.matchMaterial(entry.toUpperCase(Locale.ROOT));
             if (material != null) {
                 materials.add(material);
@@ -200,5 +190,65 @@ public class CopperPickaxeListener implements Listener {
             }
         }
         return blocks;
+    }
+
+    private void clearPreview(Player player) {
+        cancelPreviewTask(player);
+        List<Block> blocks = previewBlocks.remove(player.getUniqueId());
+        if (blocks == null) {
+            return;
+        }
+
+        for (Block block : blocks) {
+            player.sendBlockDamage(block.getLocation(), 0.0f, blockSourceId(block));
+        }
+    }
+
+    private void startPreviewTask(Player player, Set<Material> blocked) {
+        cancelPreviewTask(player);
+        UUID uuid = player.getUniqueId();
+        BukkitRunnable task = new BukkitRunnable() {
+            private final float[] stages = new float[]{0.15f, 0.30f, 0.50f, 0.70f, 0.90f};
+            private int step;
+
+            @Override
+            public void run() {
+                List<Block> blocks = previewBlocks.get(uuid);
+                if (blocks == null || blocks.isEmpty() || !player.isOnline()) {
+                    cancelPreviewTask(player);
+                    cancel();
+                    return;
+                }
+
+                ItemStack tool = player.getInventory().getItemInMainHand();
+                if (!CopperPickaxeItem.isCopperPickaxe(tool) || !CopperPickaxeItem.isModeEnabled(tool)) {
+                    clearPreview(player);
+                    cancel();
+                    return;
+                }
+
+                float progress = stages[Math.min(step, stages.length - 1)];
+                for (Block block : blocks) {
+                    if (block.getType().isAir() || blocked.contains(block.getType())) {
+                        continue;
+                    }
+                    player.sendBlockDamage(block.getLocation(), progress, blockSourceId(block));
+                }
+                step++;
+            }
+        };
+        previewTasks.put(uuid, task);
+        task.runTaskTimer(plugin, 0L, 2L);
+    }
+
+    private void cancelPreviewTask(Player player) {
+        BukkitRunnable task = previewTasks.remove(player.getUniqueId());
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    private int blockSourceId(Block block) {
+        return Objects.hash(block.getWorld().getUID(), block.getX(), block.getY(), block.getZ());
     }
 }

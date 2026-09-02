@@ -34,6 +34,7 @@ import dev.whersss.altarLegendaryWH.weapons.pureblade.managers.PureBossBarManage
 import dev.whersss.altarLegendaryWH.weapons.shadowblade.managers.ShadowBladeManager;
 import dev.whersss.altarLegendaryWH.weapons.shadowblade.listeners.ShadowBladeListener;
 import dev.whersss.altarLegendaryWH.weapons.shadowblade.tasks.ShadowBladePassiveTask;
+import dev.whersss.altarLegendaryWH.weapons.windweaver.listeners.WindWeaverListener;
 
 import dev.whersss.altarLegendaryWH.weapons.hyperion.listeners.HyperionListener;
 import dev.whersss.altarLegendaryWH.weapons.hyperion.managers.HyperionCooldownManager;
@@ -105,6 +106,8 @@ public class AltarLegendaryWH extends JavaPlugin {
     private ShadowBladeManager shadowBladeManager;
     private CopperArmorTask copperArmorTask;
     private WitherManager witherManager;
+    private File weaponsFile;
+    private FileConfiguration weaponsConfig;
     private File itemsFile;
     private FileConfiguration itemsConfig;
 
@@ -112,6 +115,7 @@ public class AltarLegendaryWH extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+        saveDefaultWeaponsConfig();
         saveDefaultItemsConfig();
 
         killsKey = new NamespacedKey(this, "bloodlust_kills");
@@ -171,6 +175,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         new KnightfallPassiveTask(this).runTaskTimer(this, 0L, 20L);
         getServer().getPluginManager().registerEvents(new ShadowBladeListener(this, shadowBladeManager), this);
         new ShadowBladePassiveTask().runTaskTimer(this, 0L, 20L);
+        getServer().getPluginManager().registerEvents(new WindWeaverListener(this), this);
         getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.items.wardenheart.listeners.WardenHeartDropListener(this), this);
 
         getServer().getPluginManager().registerEvents(new HyperionListener(), this);
@@ -261,6 +266,28 @@ public class AltarLegendaryWH extends JavaPlugin {
         }
 
         Bukkit.addRecipe(recipe);
+    }
+
+    public void saveDefaultWeaponsConfig() {
+        weaponsFile = new File(getDataFolder(), "weapons.yml");
+        if (!weaponsFile.exists()) {
+            saveResource("weapons.yml", false);
+        }
+        weaponsConfig = YamlConfiguration.loadConfiguration(weaponsFile);
+    }
+
+    public void reloadWeaponsConfig() {
+        if (weaponsFile == null) {
+            weaponsFile = new File(getDataFolder(), "weapons.yml");
+        }
+        weaponsConfig = YamlConfiguration.loadConfiguration(weaponsFile);
+    }
+
+    public FileConfiguration getWeaponsConfig() {
+        if (weaponsConfig == null) {
+            reloadWeaponsConfig();
+        }
+        return weaponsConfig;
     }
 
     public void saveDefaultItemsConfig() {

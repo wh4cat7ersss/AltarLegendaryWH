@@ -44,9 +44,9 @@ public class PaleGunAbilityManager {
             return false;
         }
 
-        int durationSeconds = plugin.getConfig().getInt("pale-gun.pale-roots.duration-seconds", 18);
-        double damage = plugin.getConfig().getDouble("pale-gun.pale-roots.damage", 6.0);
-        int cooldownSeconds = plugin.getConfig().getInt("pale-gun.pale-roots.cooldown", 25);
+        int durationSeconds = plugin.getWeaponsConfig().getInt("pale-gun.pale-roots.duration-seconds", 18);
+        double damage = plugin.getWeaponsConfig().getDouble("pale-gun.pale-roots.damage", 6.0);
+        int cooldownSeconds = plugin.getWeaponsConfig().getInt("pale-gun.pale-roots.cooldown", 25);
 
         PaleRootsTask task = new PaleRootsTask(player, durationSeconds, damage, plugin, this);
         activeRoots.add(task);

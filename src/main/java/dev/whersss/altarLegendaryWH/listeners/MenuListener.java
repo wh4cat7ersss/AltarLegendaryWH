@@ -27,9 +27,12 @@ public class MenuListener implements Listener {
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         String plainTitle = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
-        String expectedTitle = plugin.tr("Легендарные оружия", "Legendary weapons");
+        String weaponsTitle = "Weapons";
+        String itemsTitle = "Items";
 
-        if (!plainTitle.equalsIgnoreCase(expectedTitle) || event.getInventory().getSize() != 27) {
+        boolean isWeaponsMenu = plainTitle.equalsIgnoreCase(weaponsTitle);
+        boolean isItemsMenu = plainTitle.equalsIgnoreCase(itemsTitle);
+        if ((!isWeaponsMenu && !isItemsMenu) || event.getInventory().getSize() != 18) {
             return;
         }
 
@@ -40,7 +43,7 @@ public class MenuListener implements Listener {
         }
 
         ItemStack item = event.getCurrentItem();
-        if (item == null || item.getType() == Material.AIR || item.getType() == Material.WHITE_STAINED_GLASS_PANE) {
+        if (item == null || item.getType() == Material.AIR || item.getType() == Material.GRAY_STAINED_GLASS_PANE) {
             return;
         }
 

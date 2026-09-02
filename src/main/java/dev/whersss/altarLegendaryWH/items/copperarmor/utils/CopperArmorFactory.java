@@ -48,7 +48,7 @@ public class CopperArmorFactory {
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));
         lore.add(c(ORANGE + tr("Медное Зрение: &f Удерживайте Shift 5 секунд, чтобы дать", "Copper Sight: &f Hold Crouch for 5 seconds to give")));
-        lore.add(c(tr("&f игрокам Свечение в радиусе 1000 блоков", "&f players Glowing in a 1000 block radius")));
+        lore.add(c(tr("&f всем игрокам Свечение, видимое только вам", "&f all players Glowing, visible only to you")));
         lore.add(c(CYAN + tr("Бесконечное Подводное Дыхание", "Infinite Water Breathing")));
         meta.lore(lore);
 
@@ -71,7 +71,7 @@ public class CopperArmorFactory {
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));
         lore.add(c(YELLOW + tr("Кольцо Молний: &f При атаке игроков, кольцо", "Ring of Lightning: &f When attacking players, a ring")));
-        lore.add(c(tr("&f из молний будет появляться каждые 7 ударов", "&f of lightning appears every 7 hits")));
+        lore.add(c(tr("&f из молний будет появляться каждые 7 ударов", "&fof lightning appears every 7 hits")));
         lore.add(c(""));
         lore.add(c(ORANGE + tr("Иммунитет к Молниям", "Lightning Immunity")));
         lore.add(c(CYAN + tr("Бесконечное Сопротивление", "Infinite Resistance")));
@@ -97,7 +97,7 @@ public class CopperArmorFactory {
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));
         lore.add(c(RED + tr("Ударная Волна: &f Падение с высоты создает", "Shockwave: &f Falling from a height creates")));
-        lore.add(c(tr("&f ударную волну (Работает как Булава)", "&f a shockwave (works like a mace)")));
+        lore.add(c(tr("&fударную волну (Работает как Булава)", "&fa shockwave (works like a mace)")));
         lore.add(c(""));
         lore.add(c(CYAN + tr("Иммунитет к Урону от Падения", "Fall Damage Immunity")));
         meta.lore(lore);
@@ -125,7 +125,7 @@ public class CopperArmorFactory {
         lore.add(c(""));
         lore.add(c(ORANGE + tr("Пылающий След: &f Бегите на Суперскорости", "Blazing Trail: &f Run at super speed")));
         lore.add(c(YELLOW + tr("Статический Шок: &f Бег по меди позволяет", "Static Shock: &f Running on copper lets")));
-        lore.add(c(tr("&f вам бежать быстрее", "&f you run faster")));
+        lore.add(c(tr("&fвам бежать быстрее", "&fyou run faster")));
         lore.add(c(""));
         lore.add(c(ORANGE + tr("Бесконечная Огнестойкость", "Infinite Fire Resistance")));
         meta.lore(lore);

@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.boneblade.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -81,7 +82,7 @@ public class BladeListener implements Listener {
     }
 
     private void castSkeletalLeap(Player player) {
-        plugin.getBoneCooldownManager().setDashCooldown(player, plugin.getConfig().getInt("bone-blade.dash.cooldown", 15));
+        plugin.getBoneCooldownManager().setDashCooldown(player, plugin.getWeaponsConfig().getInt("bone-blade.dash.cooldown", 15));
         player.playSound(player.getLocation(), Sound.ENTITY_SKELETON_DEATH, 1.0f, 0.8f);
         new BukkitRunnable() {
             @Override
@@ -91,11 +92,11 @@ public class BladeListener implements Listener {
                 }
             }
         }.runTaskLater(plugin, 2L);
-        double velocity = plugin.getConfig().getDouble("bone-blade.dash.velocity", 1.5);
+        double velocity = plugin.getWeaponsConfig().getDouble("bone-blade.dash.velocity", 1.5);
         player.setVelocity(player.getLocation().getDirection().normalize().multiply(velocity));
 
-        int duration = plugin.getConfig().getInt("bone-blade.dash.speed-duration", 3) * 20;
-        int amplifier = plugin.getConfig().getInt("bone-blade.dash.speed-amplifier", 2) - 1;
+        int duration = plugin.getWeaponsConfig().getInt("bone-blade.dash.speed-duration", 3) * 20;
+        int amplifier = plugin.getWeaponsConfig().getInt("bone-blade.dash.speed-amplifier", 2) - 1;
 
         PotionEffect oldSpeed = player.getPotionEffect(PotionEffectType.SPEED);
         boolean hadSpeed = oldSpeed != null && oldSpeed.getAmplifier() < amplifier;
@@ -116,8 +117,8 @@ public class BladeListener implements Listener {
         new BukkitRunnable() {
             int ticks = 0;
             final Set<UUID> hitDuringDash = new HashSet<>();
-            final double dashDamage = plugin.getConfig().getDouble("bone-blade.dash.damage", 4.0);
-            final double knockbackY = plugin.getConfig().getDouble("bone-blade.dash.knockback-y", 1.1);
+            final double dashDamage = plugin.getWeaponsConfig().getDouble("bone-blade.dash.damage", 4.0);
+            final double knockbackY = plugin.getWeaponsConfig().getDouble("bone-blade.dash.knockback-y", 1.1);
 
             @Override
             public void run() {
@@ -135,7 +136,7 @@ public class BladeListener implements Listener {
                             if (plugin.getFriendManager().isFriend(player.getUniqueId(), targetPlayer.getUniqueId())) continue;
                         }
                         hitDuringDash.add(target.getUniqueId());
-                        target.damage(dashDamage, player);
+                        CombatUtils.runSyntheticDamage(() -> target.damage(dashDamage, player));
                         target.setVelocity(target.getVelocity().add(new Vector(0, knockbackY, 0)));
 
                         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_SKELETON_HURT, 1.0f, 0.8f);
@@ -165,7 +166,7 @@ public class BladeListener implements Listener {
     }
 
     private void castBoneCage(Player player) {
-        int fullCd = plugin.getConfig().getInt("bone-blade.cage.cooldown", 45);
+        int fullCd = plugin.getWeaponsConfig().getInt("bone-blade.cage.cooldown", 45);
         plugin.getBoneCooldownManager().setCageCooldown(player, fullCd);
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SKELETON_DEATH, 1.0f, 0.8f);
@@ -218,7 +219,7 @@ public class BladeListener implements Listener {
 
     private void applyBoneStun(LivingEntity target) {
         stunnedEntities.add(target.getUniqueId());
-        int stunTicks = plugin.getConfig().getInt("bone-blade.cage.stun-duration", 4) * 20;
+        int stunTicks = plugin.getWeaponsConfig().getInt("bone-blade.cage.stun-duration", 4) * 20;
 
         if (target instanceof Player p) {
             Component titleText = TextUtils.legacy(plugin.tr("&eОглушен!", "&eStunned!"));
@@ -400,3 +401,4 @@ public class BladeListener implements Listener {
         }
     }
 }
+

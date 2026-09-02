@@ -50,7 +50,7 @@ public class WitherManager {
         dashCharges.put(player.getUniqueId(), charges);
 
         if (charges == 0) {
-            int cooldown = plugin.getConfig().getInt("wither-blade.dash.cooldown", 30);
+            int cooldown = plugin.getWeaponsConfig().getInt("wither-blade.dash.cooldown", 30);
             dashCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
 
             BossBar bar = TextUtils.bossBar(yellowTitle(plugin.tr("иссушительный прыжок", "ᴡɪᴛʜᴇʀ ʟᴇᴀᴘ")), BarColor.YELLOW, BarStyle.SOLID);
@@ -84,7 +84,7 @@ public class WitherManager {
     }
 
     public void setAuraCooldown(Player player) {
-        int cooldown = plugin.getConfig().getInt("wither-blade.aura.cooldown", 50);
+        int cooldown = plugin.getWeaponsConfig().getInt("wither-blade.aura.cooldown", 50);
         auraCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
 
         BossBar bar = TextUtils.bossBar(yellowTitle(plugin.tr("иссушительное высвобождение", "ᴡɪᴛʜᴇʀ ʀᴇʟᴇᴀsᴇ")), BarColor.YELLOW, BarStyle.SOLID);

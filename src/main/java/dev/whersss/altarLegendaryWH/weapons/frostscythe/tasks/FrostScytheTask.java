@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.frostscythe.tasks;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.weapons.frostscythe.listeners.FrostListener;
 import dev.whersss.altarLegendaryWH.weapons.frostscythe.managers.FrostAbilityManager;
 import org.bukkit.FluidCollisionMode;
@@ -50,8 +51,8 @@ public class FrostScytheTask extends BukkitRunnable {
         this.abilityManager = abilityManager;
         this.item = item;
 
-        double flightSpeed = plugin.getConfig().getDouble("frost-scythe.throw.flight-speed", 1.65);
-        this.returnSpeed = plugin.getConfig().getDouble("frost-scythe.throw.return-speed", 1.55);
+        double flightSpeed = plugin.getWeaponsConfig().getDouble("frost-scythe.throw.flight-speed", 1.65);
+        this.returnSpeed = plugin.getWeaponsConfig().getDouble("frost-scythe.throw.return-speed", 1.55);
         this.direction = owner.getEyeLocation().getDirection().normalize().multiply(flightSpeed);
 
         this.display = (ItemDisplay) owner.getWorld().spawnEntity(owner.getEyeLocation(), EntityType.ITEM_DISPLAY);
@@ -119,9 +120,11 @@ public class FrostScytheTask extends BukkitRunnable {
                     abilityManager.playSweepEffect(sweepLoc, direction);
                     abilityManager.playImpactBurst(victim.getLocation().clone().add(0, 1, 0), direction.clone().normalize());
                     abilityManager.applyFreeze(owner, victim, 3, 0);
-                    victim.damage(plugin.getConfig().getDouble("frost-scythe.throw.damage", 12.0), owner);
+                    CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.damage", 12.0), owner));
                     hitOutward.add(victim.getUniqueId());
                 }
+                startReturn();
+                return;
             }
         }
 
@@ -154,7 +157,7 @@ public class FrostScytheTask extends BukkitRunnable {
                     abilityManager.playSweepEffect(sweepLoc, toOwner.clone().normalize());
                     abilityManager.playImpactBurst(victim.getLocation().clone().add(0, 1, 0), toOwner.clone().normalize());
                     abilityManager.applyFreeze(owner, victim, 3, 0);
-                    victim.damage(plugin.getConfig().getDouble("frost-scythe.throw.damage", 12.0), owner);
+                    CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.damage", 12.0), owner));
                     hitOnReturn.add(victim.getUniqueId());
                 }
             }
@@ -240,3 +243,4 @@ public class FrostScytheTask extends BukkitRunnable {
         cancel();
     }
 }
+

@@ -45,7 +45,7 @@ public class VulcanShootListener implements Listener {
             Vector recoil = dir.clone().multiply(-1).normalize().multiply(0.8).setY(0.25);
             player.setVelocity(recoil);
 
-            int cooldownTime = plugin.getConfig().getInt("vulcan_crossbow.magma-attack.cooldown", 25);
+            int cooldownTime = plugin.getWeaponsConfig().getInt("vulcan_crossbow.magma-attack.cooldown", 25);
             VulcanCooldownManager.startCooldown(player, cooldownTime);
         }
         else if (event.getProjectile() instanceof Arrow arrow) {
@@ -71,3 +71,4 @@ public class VulcanShootListener implements Listener {
         }
     }
 }
+

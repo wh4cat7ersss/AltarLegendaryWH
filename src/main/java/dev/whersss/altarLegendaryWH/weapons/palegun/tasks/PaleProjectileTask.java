@@ -64,12 +64,12 @@ public class PaleProjectileTask extends BukkitRunnable {
             return;
         }
 
-        if (ticks++ > plugin.getConfig().getInt("pale-gun.shoot.lifetime-ticks", 150)) {
+        if (ticks++ > plugin.getWeaponsConfig().getInt("pale-gun.shoot.lifetime-ticks", 150)) {
             forceCleanup();
             return;
         }
 
-        double gravity = plugin.getConfig().getDouble("pale-gun.shoot.gravity-per-tick", 0.05);
+        double gravity = plugin.getWeaponsConfig().getDouble("pale-gun.shoot.gravity-per-tick", 0.05);
         velocity.setY(velocity.getY() - gravity);
 
         RayTraceResult hit = currentLoc.getWorld().rayTrace(
@@ -131,7 +131,7 @@ public class PaleProjectileTask extends BukkitRunnable {
             return;
         }
 
-        float power = (float) plugin.getConfig().getDouble("pale-gun.shoot.explosion-power", 2.0);
+        float power = (float) plugin.getWeaponsConfig().getDouble("pale-gun.shoot.explosion-power", 2.0);
         world.createExplosion(loc, power, false, false, shooter);
         world.spawnParticle(Particle.EXPLOSION_EMITTER, loc, 1);
         world.playSound(loc, Sound.BLOCK_RESIN_BREAK, 1.0f, 0.8f);
@@ -197,10 +197,10 @@ public class PaleProjectileTask extends BukkitRunnable {
             return;
         }
 
-        int duration = plugin.getConfig().getInt("pale-gun.shoot.cloud-duration-ticks", 600);
-        double radius = plugin.getConfig().getDouble("pale-gun.shoot.cloud-radius", 3.0);
-        int effectDuration = plugin.getConfig().getInt("pale-gun.shoot.effect-duration-ticks", 12000);
-        int effectAmp = plugin.getConfig().getInt("pale-gun.shoot.effect-amplifier", 1);
+        int duration = plugin.getWeaponsConfig().getInt("pale-gun.shoot.cloud-duration-ticks", 600);
+        double radius = plugin.getWeaponsConfig().getDouble("pale-gun.shoot.cloud-radius", 3.0);
+        int effectDuration = plugin.getWeaponsConfig().getInt("pale-gun.shoot.effect-duration-ticks", 12000);
+        int effectAmp = plugin.getWeaponsConfig().getInt("pale-gun.shoot.effect-amplifier", 1);
 
         AreaEffectCloud cloud = (AreaEffectCloud) world.spawnEntity(loc.clone().add(0, 0.1, 0), EntityType.AREA_EFFECT_CLOUD);
         cloud.setDuration(duration);

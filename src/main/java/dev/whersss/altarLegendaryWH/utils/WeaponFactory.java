@@ -71,8 +71,8 @@ public class WeaponFactory {
 
     public static ItemStack getBoneBlade() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int dashCooldown = plugin.getConfig().getInt("bone-blade.dash.cooldown", 15);
-        int cageCooldown = plugin.getConfig().getInt("bone-blade.cage.cooldown", 45);
+        int dashCooldown = plugin.getWeaponsConfig().getInt("bone-blade.dash.cooldown", 15);
+        int cageCooldown = plugin.getWeaponsConfig().getInt("bone-blade.cage.cooldown", 45);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -102,9 +102,9 @@ public class WeaponFactory {
 
     public static ItemStack getBloodLust(int kills) {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int infectionCooldown = plugin.getConfig().getInt("bloodlust.infection.cooldown", 15);
-        int bloodTrailCooldown = plugin.getConfig().getInt("bloodlust.blood-trail.cooldown", 60);
-        int bloodHookCooldown = plugin.getConfig().getInt("bloodlust.blood-hook.cooldown", 30);
+        int infectionCooldown = plugin.getWeaponsConfig().getInt("bloodlust.infection.cooldown", 15);
+        int bloodTrailCooldown = plugin.getWeaponsConfig().getInt("bloodlust.blood-trail.cooldown", 60);
+        int bloodHookCooldown = plugin.getWeaponsConfig().getInt("bloodlust.blood-hook.cooldown", 30);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -155,8 +155,8 @@ public class WeaponFactory {
 
     public static ItemStack getNightpiercer() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int transformationCooldown = plugin.getConfig().getInt("nightpiercer.transformation.cooldown", 20);
-        int biteCooldown = plugin.getConfig().getInt("nightpiercer.bite.cooldown", 45);
+        int transformationCooldown = plugin.getWeaponsConfig().getInt("nightpiercer.transformation.cooldown", 20);
+        int biteCooldown = plugin.getWeaponsConfig().getInt("nightpiercer.bite.cooldown", 45);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -189,7 +189,7 @@ public class WeaponFactory {
 
     public static ItemStack getVulcanCrossbow() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int magmaCooldown = plugin.getConfig().getInt("vulcan_crossbow.magma-attack.cooldown", 25);
+        int magmaCooldown = plugin.getWeaponsConfig().getInt("vulcan_crossbow.magma-attack.cooldown", 25);
         ItemStack item = new ItemStack(Material.CROSSBOW);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -225,8 +225,8 @@ public class WeaponFactory {
 
     public static ItemStack getPaleGun() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int shootCooldown = plugin.getConfig().getInt("pale-gun.shoot.cooldown", 10);
-        int rootsCooldown = plugin.getConfig().getInt("pale-gun.pale-roots.cooldown", 25);
+        int shootCooldown = plugin.getWeaponsConfig().getInt("pale-gun.shoot.cooldown", 10);
+        int rootsCooldown = plugin.getWeaponsConfig().getInt("pale-gun.pale-roots.cooldown", 25);
         ItemStack item = new ItemStack(Material.CROSSBOW);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -256,8 +256,8 @@ public class WeaponFactory {
     }
     public static ItemStack getFrostScythe() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int iceCommandCooldown = plugin.getConfig().getInt("frost-scythe.ice-command.cooldown", 45);
-        int throwCooldown = plugin.getConfig().getInt("frost-scythe.throw.cooldown", 30);
+        int iceCommandCooldown = plugin.getWeaponsConfig().getInt("frost-scythe.ice-command.cooldown", 45);
+        int throwCooldown = plugin.getWeaponsConfig().getInt("frost-scythe.throw.cooldown", 30);
         ItemStack item = new ItemStack(Material.TRIDENT);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -302,8 +302,8 @@ public class WeaponFactory {
 
     public static ItemStack getPureBlade() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int shadeSoulCooldown = plugin.getConfig().getInt("pure-blade.shade-soul.cooldown", 45);
-        int cycloneCooldown = plugin.getConfig().getInt("pure-blade.cyclone-slash.cooldown", 30);
+        int shadeSoulCooldown = plugin.getWeaponsConfig().getInt("pure-blade.shade-soul.cooldown", 45);
+        int cycloneCooldown = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.cooldown", 30);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -344,8 +344,8 @@ public class WeaponFactory {
 
     public static ItemStack getKnightfallCustom(int kills, int cmd, boolean hasDensity) {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int grappleCooldown = plugin.getConfig().getInt("knightfall.grapple.cooldown", 10);
-        int hammerThrowCooldown = plugin.getConfig().getInt("knightfall.throw.cooldown", 20);
+        int grappleCooldown = plugin.getWeaponsConfig().getInt("knightfall.grapple.cooldown", 10);
+        int hammerThrowCooldown = plugin.getWeaponsConfig().getInt("knightfall.throw.cooldown", 20);
         ItemStack item = new ItemStack(Material.MACE);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -398,8 +398,8 @@ public class WeaponFactory {
 
     public static ItemStack getShadowBlade() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int leapCooldown = plugin.getConfig().getInt("shadow-blade.leap.cooldown", 30);
-        int daggersCooldown = plugin.getConfig().getInt("shadow-blade.daggers.cooldown", 45);
+        int leapCooldown = plugin.getWeaponsConfig().getInt("shadow-blade.leap.cooldown", 30);
+        int daggersCooldown = plugin.getWeaponsConfig().getInt("shadow-blade.daggers.cooldown", 45);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -436,10 +436,51 @@ public class WeaponFactory {
         return item;
     }
 
+    public static ItemStack getWindWeaver() {
+        AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
+        int leapCooldown = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.cooldown", 10);
+        int burstCooldown = plugin.getWeaponsConfig().getInt("windweaver.wind-burst.cooldown", 35);
+        ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.displayName(gradientTitle("#D8F7FF", "#7EC8E3", "#D8F7FF", tr("Ветроплёт", "ᴡɪɴᴅᴡᴇᴀᴠᴇʀ")));
+            meta.setCustomModelData(12);
+            addCommonSwordEnchants(meta);
+            meta.setUnbreakable(true);
+            meta.addEnchant(Enchantment.SHARPNESS, 5, true);
+            meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
+            meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
+            meta.addEnchant(Enchantment.LOOTING, 3, true);
+            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "windweaver"), PersistentDataType.BYTE, (byte) 1);
+
+            meta.lore(lore(
+                    line("&o&8Клинок, в котором слышен только свист ветра.", "&o&8A blade in which only the whisper of wind can be heard."),
+                    line("&o&8Он режет воздух так же легко, как и плоть.", "&o&8It cuts through air as easily as flesh."),
+                    blank(),
+                    line("&f&lᴡɪɴᴅ ʟᴇᴀᴘ", "&f&lᴡɪɴᴅ ʟᴇᴀᴘ"),
+                    line("&f\uE80E &f[Смена руки]", "&f\uE80E &f[OffHand]"),
+                    blank(),
+                    line("&7Рывок сквозь воздух с кометным следом,", "&7Dash through the air with a comet-like trail,"),
+                    line("&7оставляя за собой вихрь ветра и взрыв скорости.", "&7leaving a gusting wake behind you."),
+                    cooldownLine(leapCooldown),
+                    blank(),
+                    line("&f&lᴡɪɴᴅ ʙᴜʀsᴛ", "&f&lᴡɪɴᴅ ʙᴜʀsᴛ"),
+                    line("&f[SHIFT + Смена руки]", "&f[Crouch + OffHand]"),
+                    blank(),
+                    line("&7Зарядите порыв ветра и выпустите его,", "&7Charge a burst of wind and release it,"),
+                    line("&7отбрасывая врагов в зависимости от заряда.", "&7knocking enemies back based on charge."),
+                    cooldownLine(burstCooldown)
+            ));
+
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
     public static ItemStack getHyperion() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int scorchingCooldown = plugin.getConfig().getInt("hyperion.scorching-blade.cooldown", 30);
-        int holyLanceCooldown = plugin.getConfig().getInt("hyperion.holy-lance.cooldown", 60);
+        int scorchingCooldown = plugin.getWeaponsConfig().getInt("hyperion.scorching-blade.cooldown", 30);
+        int holyLanceCooldown = plugin.getWeaponsConfig().getInt("hyperion.holy-lance.cooldown", 60);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -473,8 +514,8 @@ public class WeaponFactory {
 
     public static ItemStack getWitherBlade() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int dashCooldown = plugin.getConfig().getInt("wither-blade.dash.cooldown", 30);
-        int auraCooldown = plugin.getConfig().getInt("wither-blade.aura.cooldown", 50);
+        int dashCooldown = plugin.getWeaponsConfig().getInt("wither-blade.dash.cooldown", 30);
+        int auraCooldown = plugin.getWeaponsConfig().getInt("wither-blade.aura.cooldown", 50);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -511,8 +552,8 @@ public class WeaponFactory {
 
     public static ItemStack getEarthGauntlet() {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        int meteorCooldown = plugin.getConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35);
-        int mudslideCooldown = plugin.getConfig().getInt("earth-gauntlet.mudslide.cooldown", 40);
+        int meteorCooldown = plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35);
+        int mudslideCooldown = plugin.getWeaponsConfig().getInt("earth-gauntlet.mudslide.cooldown", 40);
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -564,10 +605,10 @@ public class WeaponFactory {
             addCommonSwordEnchants(meta);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "cutlass"), PersistentDataType.BYTE, (byte) 1);
 
-            int thousandCooldown = plugin.getConfig().getInt("cutlass.thousand-cuts.cooldown", 45);
-            int parryCooldown = plugin.getConfig().getInt("cutlass.parry.cooldown", 30);
-            int parryCharges = plugin.getConfig().getInt("cutlass.parry.max-charges", 3);
-            int parryDuration = plugin.getConfig().getInt("cutlass.parry.max-duration-seconds", 7);
+            int thousandCooldown = plugin.getWeaponsConfig().getInt("cutlass.thousand-cuts.cooldown", 45);
+            int parryCooldown = plugin.getWeaponsConfig().getInt("cutlass.parry.cooldown", 30);
+            int parryCharges = plugin.getWeaponsConfig().getInt("cutlass.parry.max-charges", 3);
+            int parryDuration = plugin.getWeaponsConfig().getInt("cutlass.parry.max-duration-seconds", 7);
 
             meta.lore(lore(
                     line("&o&8Легендарная сабля, оттачивающая ваши навыки", "&o&8A legendary cutlass that sharpens your skills"),
@@ -595,11 +636,12 @@ public class WeaponFactory {
         }
 
         if (plugin.getCutlassManager() != null) {
-            double damage = plugin.getConfig().getDouble("cutlass.base.damage", 8.0);
-            double speed = plugin.getConfig().getDouble("cutlass.base.attack-speed", 1.6);
+            double damage = plugin.getWeaponsConfig().getDouble("cutlass.base.damage", 8.0);
+            double speed = plugin.getWeaponsConfig().getDouble("cutlass.base.attack-speed", 1.6);
             plugin.getCutlassManager().setCutlassAttributes(item, damage, speed);
         }
 
         return item;
     }
 }
+

@@ -79,7 +79,11 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
     }
 
     private int getChargeHoldTicks() {
-        return Math.max(10, plugin.getItemsConfig().getInt("copper-armor.helmet.charge-hold-ticks", 100));
+        return Math.max(20, plugin.getItemsConfig().getInt("copper-armor.helmet.charge-hold-ticks", 100));
+    }
+
+    private int getChargeSoundIntervalTicks() {
+        return Math.max(1, plugin.getItemsConfig().getInt("copper-armor.helmet.charge-sound-interval-ticks", 25));
     }
 
     private int getGlowDurationTicks() {
@@ -88,13 +92,12 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
             return ticks;
         }
 
-        int seconds = plugin.getItemsConfig().getInt("copper-armor.helmet.glowing-duration-seconds", 10);
+        int seconds = plugin.getItemsConfig().getInt("copper-armor.helmet.glowing-duration-seconds", 20);
         return Math.max(1, seconds * 20);
     }
 
-    private double getGlowRadiusSquared() {
-        double radius = Math.max(1.0, plugin.getItemsConfig().getDouble("copper-armor.helmet.glowing-radius-blocks", 1000.0));
-        return radius * radius;
+    private boolean isVisibleOnlyToOwner() {
+        return plugin.getItemsConfig().getBoolean("copper-armor.helmet.visible-only-to-owner", true);
     }
 
     private boolean hasActiveGlow(UUID playerId) {
@@ -108,11 +111,9 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
     private void updateVisibleGlows(Player owner) {
         Set<UUID> currentTargets = glowingTargets.computeIfAbsent(owner.getUniqueId(), ignored -> new HashSet<>());
         Set<UUID> nextTargets = new HashSet<>();
-        double radiusSquared = getGlowRadiusSquared();
 
         for (Player target : Bukkit.getOnlinePlayers()) {
-            if (target.equals(owner) || !target.getWorld().equals(owner.getWorld())) continue;
-            if (owner.getLocation().distanceSquared(target.getLocation()) > radiusSquared) continue;
+            if (target.equals(owner)) continue;
 
             nextTargets.add(target.getUniqueId());
             if (!currentTargets.contains(target.getUniqueId())) {
@@ -137,12 +138,10 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
         activeTicks.put(playerId, getGlowDurationTicks());
         glowingTargets.put(playerId, new HashSet<>());
         stopCharging(player);
-
-        Location loc = player.getLocation();
-        player.playSound(loc, Sound.ENTITY_WARDEN_SONIC_CHARGE, 1f, 1.0f);
-        player.getWorld().strikeLightningEffect(loc);
-        player.getWorld().spawnParticle(Particle.SONIC_BOOM, player.getEyeLocation(), 1, 0, 0, 0, 0);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.DARKNESS, 60, 0, false, false, true));
+        player.getWorld().strikeLightningEffect(player.getLocation());
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_CURSE, 1.0f, 1.0f);
+        player.showElderGuardian();
+        player.getWorld().spawnParticle(Particle.FLASH, player.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0);
     }
 
     private void endHelmetAbility(Player player) {
@@ -157,7 +156,6 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
             }
         }
         activeTicks.remove(playerId);
-        player.removePotionEffect(PotionEffectType.DARKNESS);
     }
 
     private void removeIfInfinite(Player player, PotionEffectType type) {
@@ -173,16 +171,25 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
     }
 
     private void setGlowingForPlayer(Player viewer, Player target, boolean glow) {
+        int duration = Math.max(40, getGlowDurationTicks());
         if (glow) {
-            viewer.sendPotionEffectChange(target, new PotionEffect(PotionEffectType.GLOWING, 40, 0, false, false, false));
+            if (isVisibleOnlyToOwner()) {
+                viewer.sendPotionEffectChange(target, new PotionEffect(PotionEffectType.GLOWING, duration, 0, false, false, false));
+            } else {
+                target.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, duration, 0, false, false, false));
+            }
             return;
         }
 
-        PotionEffect actualEffect = target.getPotionEffect(PotionEffectType.GLOWING);
-        if (actualEffect != null) {
-            viewer.sendPotionEffectChange(target, actualEffect);
+        if (isVisibleOnlyToOwner()) {
+            PotionEffect actualEffect = target.getPotionEffect(PotionEffectType.GLOWING);
+            if (actualEffect != null) {
+                viewer.sendPotionEffectChange(target, actualEffect);
+            } else {
+                viewer.sendPotionEffectChangeRemove(target, PotionEffectType.GLOWING);
+            }
         } else {
-            viewer.sendPotionEffectChangeRemove(target, PotionEffectType.GLOWING);
+            target.removePotionEffect(PotionEffectType.GLOWING);
         }
     }
     @Override
@@ -223,7 +230,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                     if (ticks >= getChargeHoldTicks()) {
                         startHelmetAbility(player);
                         updateVisibleGlows(player);
-                    } else if (ticks % 10 == 0) {
+                    } else if (ticks % getChargeSoundIntervalTicks() == 0) {
                         player.playSound(player.getLocation(), Sound.BLOCK_TRIAL_SPAWNER_CLOSE_SHUTTER, 1f, 1.0f);
                     }
                 } else {

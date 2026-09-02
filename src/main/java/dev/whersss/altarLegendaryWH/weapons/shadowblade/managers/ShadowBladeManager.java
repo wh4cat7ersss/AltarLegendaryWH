@@ -73,6 +73,9 @@ public class ShadowBladeManager {
             final int maxTicks = 30;
             final Location currentTip = p.getEyeLocation().clone();
             Location actualTargetLoc = p.getEyeLocation().clone();
+            final Vector dir = p.getLocation().getDirection().normalize();
+            final double cometSpeed = plugin.getWeaponsConfig().getDouble("shadow-blade.leap.trail-speed", 0.6);
+            final double burstDistance = plugin.getWeaponsConfig().getDouble("shadow-blade.leap.burst-distance", 4.5);
 
             @Override
             public void run() {
@@ -91,11 +94,12 @@ public class ShadowBladeManager {
                     spawnBlackDust(p.getLocation());
                     p.getWorld().playSound(p.getLocation(), Sound.ITEM_TRIDENT_THROW, 1.0f, 1.3f);
                     p.swingMainHand();
+                    p.setVelocity(dir.clone().multiply(Math.max(0.2, burstDistance / 2.3)));
 
                     activeLeaps.remove(p.getUniqueId());
                     currentLeapLocs.remove(p.getUniqueId());
 
-                    int cooldown = plugin.getConfig().getInt("shadow-blade.leap.cooldown", 30);
+                    int cooldown = plugin.getWeaponsConfig().getInt("shadow-blade.leap.cooldown", 30);
                     leapCooldowns.put(p.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
                     startCooldownBar(p, cooldown, plugin.tr("§f§lᴛᴇнᴇʙой прыжоᴋ", "§f§lsʜᴀᴅᴏᴡ ʟᴇᴀᴘ"), leapCooldownBars, leapCooldowns);
 
@@ -113,8 +117,7 @@ public class ShadowBladeManager {
                 double progress = (double) (maxTicks - ticks) / maxTicks;
                 activeBar.setProgress(Math.max(0, progress));
 
-                double distTraveled = ticks * 0.6;
-                Vector dir = p.getLocation().getDirection().normalize();
+                double distTraveled = ticks * cometSpeed;
 
                 RayTraceResult rt = p.getWorld().rayTraceBlocks(p.getEyeLocation(), dir, distTraveled, FluidCollisionMode.NEVER, true);
 
@@ -126,39 +129,10 @@ public class ShadowBladeManager {
                 }
 
                 Vector tipDiff = actualTargetLoc.toVector().subtract(currentTip.toVector());
-                currentTip.add(tipDiff.multiply(0.25));
+                currentTip.add(tipDiff.multiply(0.18));
                 currentLeapLocs.put(p.getUniqueId(), currentTip);
 
-                double maxTrail = Math.min(distTraveled, 1.0);
-
-                for (double d = 0; d <= maxTrail; d += 0.1) {
-                    Location partLoc = currentTip.clone().subtract(dir.clone().multiply(d));
-
-                    float size;
-                    double spread;
-                    int count;
-
-                    if (d <= 0.15) {
-                        size = 2.2f;
-                        spread = 0.1;
-                        count = 12;
-                    } else if (d <= 0.5) {
-                        size = 1.8f;
-                        spread = 0.2;
-                        count = 3;
-                    } else {
-                        size = 1.2f;
-                        spread = 0.32;
-                        count = 1;
-                    }
-
-                    Particle.DustOptions blackDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), size);
-                    partLoc.getWorld().spawnParticle(Particle.DUST, partLoc, count, spread, spread, spread, 0.0, blackDust);
-
-                    if (d <= 0.15 && Math.random() < 0.6) {
-                        partLoc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, partLoc, 2, 0.07, 0.07, 0.07, 0.0);
-                    }
-                }
+                spawnShadowComet(currentTip, dir);
 
                 ticks++;
             }
@@ -168,11 +142,15 @@ public class ShadowBladeManager {
     public void castShadowDaggers(Player p, ItemStack bladeItem) {
         if (isOnDaggersCooldown(p)) return;
 
-        int cooldown = plugin.getConfig().getInt("shadow-blade.daggers.cooldown", 45);
+        int cooldown = plugin.getWeaponsConfig().getInt("shadow-blade.daggers.cooldown", 45);
+        double damage = plugin.getWeaponsConfig().getDouble("shadow-blade.daggers.damage", 2.0);
+        double speed = plugin.getWeaponsConfig().getDouble("shadow-blade.daggers.speed", 1.0);
+        double gravity = plugin.getWeaponsConfig().getDouble("shadow-blade.daggers.gravity", 0.035);
+        double spinSpeed = plugin.getWeaponsConfig().getDouble("shadow-blade.daggers.spin-speed", 0.10);
+        int interpolationTicks = plugin.getWeaponsConfig().getInt("shadow-blade.daggers.interpolation-ticks", 3);
         daggersCooldowns.put(p.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
         startCooldownBar(p, cooldown, plugin.tr("§f§lᴛᴇнᴇʙыᴇ ᴋинжᴀлы", "§f§lsʜᴀᴅᴏᴡ ᴅᴀɢɢᴇʀs"), daggersCooldownBars, daggersCooldowns);
 
-        p.getWorld().playSound(p.getLocation(), Sound.ITEM_TRIDENT_THROW, 1.0f, 1.2f);
         p.swingMainHand();
 
         Vector dir = p.getLocation().getDirection().normalize();
@@ -187,77 +165,91 @@ public class ShadowBladeManager {
                 dir.clone().add(right.clone().multiply(0.05)).normalize()
         };
 
-        boolean[] soundPlayed = new boolean[]{false};
-
-        for (Vector d : dirs) {
-            ItemDisplay dagger = p.getWorld().spawn(center, ItemDisplay.class, ent -> {
-                ent.setItemStack(bladeItem);
-                ent.setInterpolationDuration(1);
-                ent.setTeleportDuration(1);
-                Transformation t = ent.getTransformation();
-                t.getLeftRotation().set(new Quaternionf().rotateX((float) Math.toRadians(90)));
-                t.getScale().set(0.6f, 0.6f, 0.6f);
-                ent.setTransformation(t);
-            });
+        for (int i = 0; i < 3; i++) {
+            final int index = i;
+            final Vector shotDir = dirs[i];
+            final Location spawnLoc = center.clone().add(right.clone().multiply((i - 1) * 0.25)).add(dir.clone().multiply(0.25));
 
             new BukkitRunnable() {
-                final Location curr = center.clone();
-                int ticks = 0;
                 @Override
                 public void run() {
-                    if (ticks > 40 || !dagger.isValid()) {
-                        dagger.remove();
-                        this.cancel();
+                    if (!p.isOnline() || p.isDead()) {
+                        cancel();
                         return;
                     }
 
-                    curr.add(d.clone().multiply(2.0));
-                    dagger.teleport(curr);
+                    p.getWorld().playSound(spawnLoc, Sound.ITEM_TRIDENT_THROW, 1.0f, 1.05f + (index * 0.03f));
 
-                    curr.getWorld().spawnParticle(Particle.DUST, curr, 1, 0.1, 0.1, 0.1, new Particle.DustOptions(Color.BLACK, 0.6f));
-                    if (ticks % 2 == 0) {
-                        curr.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, curr, 1, 0.05, 0.05, 0.05, 0.02);
-                    }
+                    ItemDisplay dagger = p.getWorld().spawn(spawnLoc, ItemDisplay.class, ent -> {
+                        ent.setItemStack(bladeItem);
+                        ent.setInterpolationDuration(interpolationTicks);
+                        ent.setTeleportDuration(1);
+                        ent.setInterpolationDelay(0);
+                        Transformation t = ent.getTransformation();
+                        t.getScale().set(0.6f, 0.6f, 0.6f);
+                        t.getLeftRotation().set(new Quaternionf().rotateX((float) Math.toRadians(90)));
+                        ent.setTransformation(t);
+                    });
 
-                    if (curr.getBlock().getType().isSolid()) {
-                        dagger.remove();
-                        this.cancel();
-                        return;
-                    }
+                    new BukkitRunnable() {
+                        final Location curr = spawnLoc.clone();
+                        final Vector velocity = shotDir.clone().multiply(speed);
+                        double spin = 0.0;
+                        int ticks = 0;
 
-                    for (Entity e : curr.getWorld().getNearbyEntities(curr, 1.0, 1.0, 1.0)) {
-                        if (e instanceof LivingEntity victim && !victim.equals(p)) {
+                        @Override
+                        public void run() {
+                            if (ticks > 80 || !dagger.isValid()) {
+                                dagger.remove();
+                                cancel();
+                                return;
+                            }
 
-                            if (victim instanceof Player targetPlayer) {
-                                if (plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) {
-                                    continue;
+                            velocity.setY(velocity.getY() - gravity);
+
+                            Location next = curr.clone().add(velocity);
+                            if (next.getBlock().getType().isSolid()) {
+                                dagger.remove();
+                                cancel();
+                                return;
+                            }
+
+                            curr.add(velocity);
+                            dagger.teleport(curr);
+
+                            spin += spinSpeed;
+                            dagger.setRotation((float) Math.toDegrees(spin), dagger.getLocation().getPitch());
+                            spawnShadowDaggerTrail(curr, velocity);
+
+                            for (Entity e : curr.getWorld().getNearbyEntities(curr, 0.85, 0.85, 0.85)) {
+                                if (e instanceof LivingEntity victim && !victim.equals(p)) {
+                                    if (victim instanceof Player targetPlayer && plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) {
+                                        continue;
+                                    }
+
+                                    plugin.getCleanDamageManager().apply(victim, p, damage);
+                                    victim.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 0, false, false));
+                                    victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1, false, false));
+
+                                    victim.getWorld().playSound(victim.getLocation(), Sound.BLOCK_SPONGE_ABSORB, 1.0f, 0.8f);
+                                    victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 0.7f);
+
+                                    Particle.DustOptions massiveDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 2.6f);
+                                    victim.getWorld().spawnParticle(Particle.DUST, victim.getLocation().add(0, 1, 0), 40, 0.55, 0.85, 0.55, massiveDust);
+
+                                    dagger.remove();
+                                    cancel();
+                                    return;
                                 }
                             }
 
-                            double dmg = plugin.getConfig().getDouble("shadow-blade.daggers.damage", 6.0);
-                            plugin.getCleanDamageManager().apply(victim, p, dmg);
-
-                            victim.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 60, 0, false, false));
-                            victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 1, false, false));
-
-                            if (!soundPlayed[0]) {
-                                p.getWorld().playSound(victim.getLocation(), Sound.BLOCK_SPONGE_ABSORB, 1.0f, 0.8f);
-                                p.getWorld().playSound(victim.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 3.0f, 0.7f);
-
-                                Particle.DustOptions massiveDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 3.0f);
-                                victim.getWorld().spawnParticle(Particle.DUST, victim.getLocation().add(0, 1, 0), 150, 0.8, 1.2, 0.8, massiveDust);
-
-                                soundPlayed[0] = true;
-                            }
-
-                            dagger.remove();
-                            this.cancel();
-                            return;
+                            ticks++;
                         }
-                    }
-                    ticks++;
+                    }.runTaskTimer(plugin, 0L, 1L);
+
+                    cancel();
                 }
-            }.runTaskTimer(plugin, 0, 1);
+            }.runTaskLater(plugin, i * 2L);
         }
     }
 
@@ -270,7 +262,7 @@ public class ShadowBladeManager {
             }
         }
 
-        if (Math.random() > plugin.getConfig().getDouble("shadow-blade.passive.backstab-chance", 0.30)) return;
+        if (Math.random() > plugin.getWeaponsConfig().getDouble("shadow-blade.passive.backstab-chance", 0.30)) return;
 
         backstabCooldowns.put(attacker.getUniqueId(), System.currentTimeMillis() + 8000L);
         attacker.getWorld().playSound(mainVictim.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f);
@@ -360,6 +352,41 @@ public class ShadowBladeManager {
     private void spawnBlackDust(Location loc) {
         Particle.DustOptions blackDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 2.5f);
         loc.getWorld().spawnParticle(Particle.DUST, loc.clone().add(0, 1, 0), 60, 0.5, 1.0, 0.5, blackDust);
+    }
+
+    private void spawnShadowComet(Location tip, Vector direction) {
+        World world = tip.getWorld();
+        if (world == null) return;
+
+        Vector dir = direction.clone().normalize();
+        Particle.DustOptions head = new Particle.DustOptions(Color.fromRGB(215, 215, 215), 1.2f);
+        Particle.DustOptions body = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 2.1f);
+
+        for (double d = 0; d <= 1.15; d += 0.12) {
+            Location partLoc = tip.clone().subtract(dir.clone().multiply(d));
+            float size = d < 0.22 ? 1.3f : 2.0f;
+            Particle.DustOptions dust = d < 0.22 ? head : body;
+
+            world.spawnParticle(Particle.DUST, partLoc, 1, 0.03, 0.03, 0.03, 0.0, dust);
+            world.spawnParticle(Particle.CLOUD, partLoc, 1, 0.02, 0.02, 0.02, 0.0);
+
+            if (d < 0.5) {
+                world.spawnParticle(Particle.ELECTRIC_SPARK, partLoc, 0,
+                        -dir.getX(), -dir.getY(), -dir.getZ(), 0.12 + (size * 0.02));
+            }
+        }
+    }
+
+    private void spawnShadowDaggerTrail(Location loc, Vector velocity) {
+        World world = loc.getWorld();
+        if (world == null) return;
+
+        Vector dir = velocity.clone().normalize();
+        Location handle = loc.clone().subtract(dir.clone().multiply(0.28));
+        for (int i = 0; i < 8; i++) {
+            world.spawnParticle(Particle.ELECTRIC_SPARK, handle, 0,
+                    -dir.getX(), -dir.getY(), -dir.getZ(), 0.12);
+        }
     }
 
     private void startCooldownBar(Player p, int seconds, String title, Map<UUID, BossBar> barMap, Map<UUID, Long> cdMap) {

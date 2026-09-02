@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.hyperion.tasks;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.weapons.hyperion.managers.HyperionCooldownManager;
 import org.bukkit.Bukkit;
@@ -73,7 +74,7 @@ public class HyperionTasks {
                 if (attacker != null && attacker.isValid()) {
                     AltarLegendaryWH.getInstance().getCleanDamageManager().apply(target, attacker, reducedFireDamage);
                 } else {
-                    target.damage(reducedFireDamage);
+                    CombatUtils.runSyntheticDamage(() -> target.damage(reducedFireDamage));
                 }
                 target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_HURT_ON_FIRE, 1.0f, 0.6f);
             }
@@ -233,7 +234,7 @@ public class HyperionTasks {
                 if (lengthShrink < 0.05f) lengthShrink = 0.05f;
             }
 
-            double pureDamage = AltarLegendaryWH.getInstance().getConfig().getDouble("hyperion.scorching-blade.pure-damage", 6.0);
+            double pureDamage = AltarLegendaryWH.getInstance().getWeaponsConfig().getDouble("hyperion.scorching-blade.pure-damage", 6.0);
             double curveDepth = 1.3;
 
             for (int i = 0; i < DISPLAY_COUNT; i++) {
@@ -366,8 +367,8 @@ public class HyperionTasks {
         public void run() {
             if (ticks == 30) {
                 AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-                double radDmg = plugin.getConfig().getDouble("hyperion.holy-lance.radius-damage", 10.0);
-                double centerDmg = plugin.getConfig().getDouble("hyperion.holy-lance.center-damage", 14.0);
+                double radDmg = plugin.getWeaponsConfig().getDouble("hyperion.holy-lance.radius-damage", 10.0);
+                double centerDmg = plugin.getWeaponsConfig().getDouble("hyperion.holy-lance.center-damage", 14.0);
 
                 targetLoc.getWorld().playSound(targetLoc, Sound.BLOCK_CONDUIT_DEACTIVATE, 1.0f, 1.0f);
 
@@ -471,3 +472,4 @@ public class HyperionTasks {
         }
     }
 }
+

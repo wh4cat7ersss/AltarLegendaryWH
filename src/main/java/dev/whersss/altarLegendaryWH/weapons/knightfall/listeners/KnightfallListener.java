@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.knightfall.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.knightfall.managers.KnightfallManager;
@@ -162,12 +163,13 @@ public class KnightfallListener implements Listener {
 
     @EventHandler
     public void onSmashAttack(EntityDamageByEntityEvent e) {
+        if (!CombatUtils.isDirectMeleeHit(e)) return;
         if (!(e.getDamager() instanceof Player p)) return;
         ItemStack item = p.getInventory().getItemInMainHand();
 
         if (isKnightfall(item)) {
             if (p.getFallDistance() > 0.0 && !p.isOnGround()) {
-                if (Math.random() <= plugin.getConfig().getDouble("knightfall.cloak.chance", 0.10)) {
+                if (Math.random() <= plugin.getWeaponsConfig().getDouble("knightfall.cloak.chance", 0.10)) {
                     if (manager.canUseCloak(p)) {
                         manager.triggerCloak(p);
                     }
@@ -176,3 +178,4 @@ public class KnightfallListener implements Listener {
         }
     }
 }
+

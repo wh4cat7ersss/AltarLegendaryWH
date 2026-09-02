@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.pureblade.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -69,7 +70,7 @@ public class PureBladeManager {
                 p,
                 "ShadeSoul",
                 plugin.tr("§f§lТень души", "§f§lsʜᴀᴅᴇ ᴏꜰ sᴏᴜʟ"),
-                plugin.getConfig().getInt("pure-blade.shade-soul.cooldown", 45)
+                plugin.getWeaponsConfig().getInt("pure-blade.shade-soul.cooldown", 45)
         );
 
         ItemStack cubeItem = new ItemStack(Material.CLAY_BALL);
@@ -202,13 +203,25 @@ public class PureBladeManager {
 
         ItemDisplay display = (ItemDisplay) p.getWorld().spawnEntity(currentLoc, EntityType.ITEM_DISPLAY);
         display.setItemStack(item);
-        display.setTeleportDuration(1);
+        display.setInterpolationDelay(0);
+        display.setInterpolationDuration(3);
+        display.setTeleportDuration(3);
 
         Transformation t = display.getTransformation();
         t.getScale().set(scaleStart, scaleStart, scaleStart);
         display.setTransformation(t);
 
-        double yDrift = (random.nextBoolean() ? 1 : -1) * (0.02 + random.nextDouble() * 0.02);
+        double yDrift = (random.nextBoolean() ? 1 : -1) * (0.008 + random.nextDouble() * 0.012);
+        final Vector sideways;
+        Vector sidewaysBase = new Vector(-launchDir.getZ(), 0, launchDir.getX());
+        if (sidewaysBase.lengthSquared() > 0.0001) {
+            sidewaysBase.normalize();
+        }
+        if (random.nextDouble() < 0.4) {
+            sideways = sidewaysBase.multiply((random.nextBoolean() ? 1 : -1) * (0.006 + random.nextDouble() * 0.01));
+        } else {
+            sideways = new Vector();
+        }
         int evaporateDelay = 25 + random.nextInt(20);
         Particle.DustOptions blackDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 1.6f);
 
@@ -226,6 +239,13 @@ public class PureBladeManager {
 
                 if (life < evaporateDelay) {
                     currentLoc.add(0, yDrift, 0);
+                    currentLoc.add(sideways);
+                    if (life % 6 == 0) {
+                        currentLoc.add(0, Math.sin(life * 0.35) * 0.01, 0);
+                    }
+                    display.setInterpolationDelay(0);
+                    display.setInterpolationDuration(3);
+                    display.setTeleportDuration(3);
                     display.teleport(currentLoc);
 
                     if (Math.random() > 0.5) {
@@ -234,10 +254,12 @@ public class PureBladeManager {
                 } else {
                     scale -= 0.05f;
                     display.setInterpolationDelay(0);
-                    display.setInterpolationDuration(1);
+                    display.setInterpolationDuration(3);
+                    display.setTeleportDuration(3);
 
-                    currentLoc.add(launchDir.clone().multiply(-0.06));
+                    currentLoc.add(launchDir.clone().multiply(-0.04));
                     currentLoc.add(0, yDrift, 0);
+                    currentLoc.add(sideways.clone().multiply(0.5));
                     display.teleport(currentLoc);
 
                     Transformation trans = display.getTransformation();
@@ -252,10 +274,10 @@ public class PureBladeManager {
                             if (plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) continue;
                         }
 
-                        applyPureDamage(victim, p, plugin.getConfig().getDouble("pure-blade.shade-soul.damage", 8.0));
+                        applyPureDamage(victim, p, plugin.getWeaponsConfig().getDouble("pure-blade.shade-soul.damage", 8.0));
 
-                        int durationTicks = plugin.getConfig().getInt("pure-blade.shade-soul.effect-duration", 5) * 20;
-                        int slowAmp = plugin.getConfig().getInt("pure-blade.shade-soul.slowness-amplifier", 1);
+                        int durationTicks = plugin.getWeaponsConfig().getInt("pure-blade.shade-soul.effect-duration", 5) * 20;
+                        int slowAmp = plugin.getWeaponsConfig().getInt("pure-blade.shade-soul.slowness-amplifier", 1);
                         victim.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, durationTicks, 0, false, false));
                         victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, slowAmp, false, false));
 
@@ -270,12 +292,12 @@ public class PureBladeManager {
 
     public void castCycloneSlash(Player p) {
         if (bossBarManager.isOnCooldown(p, "CycloneSlash")) return;
-        bossBarManager.setCooldown(p, "CycloneSlash", plugin.tr("§f§lВихревой Разрез", "§f§lᴄʏᴄʟᴏɴᴇ sʟᴀsʜ"), plugin.getConfig().getInt("pure-blade.cyclone-slash.cooldown", 30));
+        bossBarManager.setCooldown(p, "CycloneSlash", plugin.tr("§f§lВихревой Разрез", "§f§lᴄʏᴄʟᴏɴᴇ sʟᴀsʜ"), plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.cooldown", 30));
 
         p.getWorld().playSound(p.getLocation(), Sound.BLOCK_TRIAL_SPAWNER_OMINOUS_ACTIVATE, 1.0f, 1.0f);
 
-        int duration = plugin.getConfig().getInt("pure-blade.cyclone-slash.speed-duration", 5) * 20;
-        int amplifier = plugin.getConfig().getInt("pure-blade.cyclone-slash.speed-amplifier", 10);
+        int duration = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.speed-duration", 5) * 20;
+        int amplifier = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.speed-amplifier", 10);
 
         PotionEffect oldSpeed = p.getPotionEffect(PotionEffectType.SPEED);
         boolean hadSpeed = oldSpeed != null && oldSpeed.getAmplifier() < amplifier;
@@ -415,7 +437,7 @@ public class PureBladeManager {
                                 if (targetPlayer.getGameMode() == GameMode.SPECTATOR) continue;
                                 if (plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) continue;
                             }
-                            victim.damage(plugin.getConfig().getDouble("pure-blade.cyclone-slash.damage", 10.0), p);
+                            CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("pure-blade.cyclone-slash.damage", 10.0), p));
                         }
                     }
                 }
@@ -462,3 +484,4 @@ public class PureBladeManager {
         bossBarManager.resetPlayer(player);
     }
 }
+

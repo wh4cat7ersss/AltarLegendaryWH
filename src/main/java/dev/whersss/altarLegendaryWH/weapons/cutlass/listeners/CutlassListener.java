@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.cutlass.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.weapons.cutlass.managers.CutlassManager;
 import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
@@ -74,6 +75,7 @@ public class CutlassListener implements Listener {
 
     @EventHandler
     public void onMeleeHit(EntityDamageByEntityEvent event) {
+        if (!CombatUtils.isDirectMeleeHit(event)) return;
         if (!(event.getDamager() instanceof Player player) || !(event.getEntity() instanceof LivingEntity target)) return;
         if (!manager.isCutlass(player.getInventory().getItemInMainHand())) return;
         if (manager.isDoingThousandCuts(player)) return;
@@ -125,7 +127,7 @@ public class CutlassListener implements Listener {
         victim.getWorld().playSound(victim.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.8f);
 
         if (event instanceof EntityDamageByEntityEvent damageEvent && damageEvent.getDamager() instanceof LivingEntity attacker) {
-            double knockbackPower = AltarLegendaryWH.getInstance().getConfig().getDouble("cutlass.parry.knockback-power", 0.8);
+            double knockbackPower = AltarLegendaryWH.getInstance().getWeaponsConfig().getDouble("cutlass.parry.knockback-power", 0.8);
             Vector knockback = attacker.getLocation().toVector()
                     .subtract(victim.getLocation().toVector())
                     .normalize()
@@ -141,3 +143,4 @@ public class CutlassListener implements Listener {
         }
     }
 }
+

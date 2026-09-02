@@ -33,11 +33,13 @@ public class CleanDamageManager implements Listener {
         target.setNoDamageTicks(0);
 
         double triggerDamage = Math.max(0.001, amount);
-        if (attacker != null) {
-            target.damage(triggerDamage, attacker);
-        } else {
-            target.damage(triggerDamage);
-        }
+        CombatUtils.runSyntheticDamage(() -> {
+            if (attacker != null) {
+                target.damage(triggerDamage, attacker);
+            } else {
+                target.damage(triggerDamage);
+            }
+        });
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)

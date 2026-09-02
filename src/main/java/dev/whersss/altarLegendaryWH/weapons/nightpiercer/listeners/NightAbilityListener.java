@@ -1,6 +1,8 @@
 package dev.whersss.altarLegendaryWH.weapons.nightpiercer.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.weapons.nightpiercer.managers.NightBossBarCooldown;
 import org.bukkit.Bukkit;
@@ -92,6 +94,7 @@ public class NightAbilityListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityHit(EntityDamageByEntityEvent event) {
+        if (!CombatUtils.isDirectMeleeHit(event)) return;
         if (!(event.getDamager() instanceof Player player)) return;
         if (!preparedBites.contains(player.getUniqueId())) return;
         if (!(event.getEntity() instanceof LivingEntity victim)) return;
@@ -108,8 +111,8 @@ public class NightAbilityListener implements Listener {
     private void executeBite(Player player, LivingEntity target) {
         preparedBites.remove(player.getUniqueId());
 
-        int cooldown = plugin.getConfig().getInt("nightpiercer.bite.cooldown", 45);
-        double damage = plugin.getConfig().getDouble("nightpiercer.bite.damage", 4.0);
+        int cooldown = plugin.getWeaponsConfig().getInt("nightpiercer.bite.cooldown", 45);
+        double damage = plugin.getWeaponsConfig().getDouble("nightpiercer.bite.damage", 4.0);
         double range = 2.5;
 
         biteCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
@@ -146,10 +149,10 @@ public class NightAbilityListener implements Listener {
 
     private void applyBiteEffects(Player attacker, LivingEntity victim, double damage) {
         plugin.getNightHealthManager().applySteal(attacker, victim);
-        victim.damage(damage, attacker);
+        CombatUtils.runSyntheticDamage(() -> victim.damage(damage, attacker));
 
         if (victim instanceof Player victimPlayer) {
-            int durationSeconds = plugin.getConfig().getInt("nightpiercer.bite.duration", 10);
+            int durationSeconds = plugin.getWeaponsConfig().getInt("nightpiercer.bite.duration", 10);
             int totalTicks = durationSeconds * 20;
 
             BossBar victimBar = TextUtils.bossBar(
@@ -198,10 +201,10 @@ public class NightAbilityListener implements Listener {
     }
 
     private void executeTransformation(Player player) {
-        int cooldown = plugin.getConfig().getInt("nightpiercer.transformation.cooldown", 20);
-        int maxTicks = plugin.getConfig().getInt("nightpiercer.transformation.duration", 2) * 20;
-        double speed = plugin.getConfig().getDouble("nightpiercer.transformation.speed", 1.0);
-        double damage = plugin.getConfig().getDouble("nightpiercer.transformation.damage", 4.0);
+        int cooldown = plugin.getWeaponsConfig().getInt("nightpiercer.transformation.cooldown", 20);
+        int maxTicks = plugin.getWeaponsConfig().getInt("nightpiercer.transformation.duration", 2) * 20;
+        double speed = plugin.getWeaponsConfig().getDouble("nightpiercer.transformation.speed", 1.0);
+        double damage = plugin.getWeaponsConfig().getDouble("nightpiercer.transformation.damage", 4.0);
 
         transformationCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
         new NightBossBarCooldown(plugin, player, plugin.tr("трансформация", "ᴛʀᴀɴsꜰᴏʀᴍᴀᴛɪᴏɴ"), cooldown).start();
@@ -302,3 +305,4 @@ public class NightAbilityListener implements Listener {
         preparedBites.remove(uuid);
     }
 }
+

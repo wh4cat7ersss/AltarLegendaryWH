@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.frostscythe.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.weapons.frostscythe.tasks.FrostScytheTask;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -151,7 +152,7 @@ public class FrostAbilityManager {
         else p.getInventory().setItemInMainHand(null);
 
         Location start = p.getEyeLocation();
-        Vector dir = start.getDirection().normalize().multiply(plugin.getConfig().getDouble("frost-scythe.throw.flight-speed", 1.65));
+        Vector dir = start.getDirection().normalize().multiply(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.flight-speed", 1.65));
 
         Location sweepCenter = start.clone().add(dir.clone().normalize().multiply(1.5));
         playMassiveDustSweep(sweepCenter, dir);
@@ -270,7 +271,7 @@ public class FrostAbilityManager {
         final float rotY = (ThreadLocalRandom.current().nextFloat() * 0.6f + 0.2f) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
         final float rotZ = (ThreadLocalRandom.current().nextFloat() * 0.6f + 0.2f) * (ThreadLocalRandom.current().nextBoolean() ? 1 : -1);
 
-        final double speed = plugin.getConfig().getDouble("frost-scythe.ice-command.speed", 1.25);
+        final double speed = plugin.getWeaponsConfig().getDouble("frost-scythe.ice-command.speed", 1.25);
 
         new BukkitRunnable() {
             int life = 0;
@@ -329,7 +330,7 @@ public class FrostAbilityManager {
                         }
 
                         breakIce(current);
-                        victim.damage(plugin.getConfig().getDouble("frost-scythe.ice-command.damage", 10.0), p);
+                        CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.ice-command.damage", 10.0), p));
                         applyFreeze(p, victim, 5, 2);
                         block.remove();
                         this.cancel();
@@ -408,7 +409,7 @@ public class FrostAbilityManager {
                 }
 
                 if (ticks > 0 && ticks % 60 == 0) {
-                    victim.damage(plugin.getConfig().getDouble("frost-scythe.freeze.damage", 2.0), p);
+                    CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.freeze.damage", 2.0), p));
                     victim.getWorld().playSound(victim.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 1.0f);
                 }
                 ticks++;
@@ -416,3 +417,4 @@ public class FrostAbilityManager {
         }.runTaskTimer(plugin, 0, 1);
     }
 }
+

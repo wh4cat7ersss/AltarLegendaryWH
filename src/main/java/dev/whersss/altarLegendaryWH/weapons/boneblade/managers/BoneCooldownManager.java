@@ -65,7 +65,7 @@ public class BoneCooldownManager {
                         bar.removeAll();
                         return true;
                     }
-                    double total = plugin.getConfig().getInt("bone-blade.dash.cooldown", 10) * 1000.0;
+                    double total = plugin.getWeaponsConfig().getInt("bone-blade.dash.cooldown", 10) * 1000.0;
                     bar.setProgress(Math.max(0.0, Math.min(1.0, (expire - now) / total)));
                     return false;
                 });
@@ -78,7 +78,7 @@ public class BoneCooldownManager {
                         bar.removeAll();
                         return true;
                     }
-                    double total = plugin.getConfig().getInt("bone-blade.cage.cooldown", 35) * 1000.0;
+                    double total = plugin.getWeaponsConfig().getInt("bone-blade.cage.cooldown", 35) * 1000.0;
                     bar.setProgress(Math.max(0.0, Math.min(1.0, (expire - now) / total)));
                     return false;
                 });
@@ -103,3 +103,4 @@ public class BoneCooldownManager {
         if (cageBar != null) cageBar.removeAll();
     }
 }
+

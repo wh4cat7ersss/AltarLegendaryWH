@@ -85,15 +85,15 @@ public class MagmaProjectile extends BukkitRunnable {
         display.remove();
 
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
-        float power = (float) plugin.getConfig().getDouble("vulcan_crossbow.magma-attack.explosion-power", 2.0);
+        float power = (float) plugin.getWeaponsConfig().getDouble("vulcan_crossbow.magma-attack.explosion-power", 2.0);
         loc.getWorld().createExplosion(loc, power, false, false, shooter);
 
         loc.getWorld().playSound(loc, Sound.BLOCK_SCULK_SPREAD, 1.0f, 1.0f);
         loc.getWorld().playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 1.0f, 0.8f);
 
-        int radius = plugin.getConfig().getInt("vulcan_crossbow.magma-attack.radius", 3);
-        double spreadChance = plugin.getConfig().getDouble("vulcan_crossbow.magma-attack.spread-chance", 0.8);
-        boolean autoReset = plugin.getConfig().getBoolean("vulcan_crossbow.magma-attack.auto-reset", false);
+        int radius = plugin.getWeaponsConfig().getInt("vulcan_crossbow.magma-attack.radius", 3);
+        double spreadChance = plugin.getWeaponsConfig().getDouble("vulcan_crossbow.magma-attack.spread-chance", 0.8);
+        boolean autoReset = plugin.getWeaponsConfig().getBoolean("vulcan_crossbow.magma-attack.auto-reset", false);
 
         loc.getWorld().spawnParticle(Particle.FLAME, loc, 150, radius / 1.5, radius / 1.5, radius / 1.5, 1.2);
         loc.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, loc, 1);
@@ -184,7 +184,7 @@ public class MagmaProjectile extends BukkitRunnable {
         }
 
         if (autoReset && !oldBlocks.isEmpty()) {
-            int delaySeconds = plugin.getConfig().getInt("vulcan_crossbow.magma-attack.reset-delay", 20);
+            int delaySeconds = plugin.getWeaponsConfig().getInt("vulcan_crossbow.magma-attack.reset-delay", 20);
             Location holoLoc = loc.clone().add(0, radius + 1.5, 0);
             if (isFloor) holoLoc.add(0, 1.5, 0);
 

@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.bloodlust.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.bloodlust.managers.BloodAbilityManager;
@@ -104,6 +105,7 @@ public class BloodLustListener implements Listener {
 
     @EventHandler
     public void onHit(EntityDamageByEntityEvent e) {
+        if (!CombatUtils.isDirectMeleeHit(e)) return;
         if (e.getDamager() instanceof Player p) {
             ItemStack item = p.getInventory().getItemInMainHand();
             if (isBloodLust(item)) {

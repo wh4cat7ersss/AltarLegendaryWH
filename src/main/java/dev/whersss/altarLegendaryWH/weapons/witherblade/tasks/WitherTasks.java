@@ -34,11 +34,11 @@ public class WitherTasks {
         p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SHOOT, 1.0f, 1.2f);
         p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SKELETON_HURT, 1.0f, 1.0f);
 
-        double velocity = plugin.getConfig().getDouble("wither-blade.dash.velocity", 1.5);
+        double velocity = plugin.getWeaponsConfig().getDouble("wither-blade.dash.velocity", 1.5);
         p.setVelocity(p.getLocation().getDirection().normalize().multiply(velocity));
 
-        int duration = plugin.getConfig().getInt("wither-blade.dash.speed-duration", 4) * 20;
-        int amplifier = plugin.getConfig().getInt("wither-blade.dash.speed-amplifier", 1);
+        int duration = plugin.getWeaponsConfig().getInt("wither-blade.dash.speed-duration", 4) * 20;
+        int amplifier = plugin.getWeaponsConfig().getInt("wither-blade.dash.speed-amplifier", 1);
 
         PotionEffect oldSpeed = p.getPotionEffect(PotionEffectType.SPEED);
         p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false), true);
@@ -136,7 +136,7 @@ public class WitherTasks {
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_WITHER_AMBIENT, 1.5f, 0.8f);
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_SLIME_JUMP, 1.0f, 0.5f);
 
-        double maxDamage = plugin.getConfig().getDouble("wither-blade.aura.max-damage", 10.0);
+        double maxDamage = plugin.getWeaponsConfig().getDouble("wither-blade.aura.max-damage", 10.0);
         double range = Math.max(1.0, charge);
 
         new BukkitRunnable() {

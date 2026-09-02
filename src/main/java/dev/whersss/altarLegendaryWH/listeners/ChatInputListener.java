@@ -57,7 +57,7 @@ public class ChatInputListener implements Listener {
                     player.sendMessage(TextUtils.legacy("§a" + plugin.tr("Вы получили §fПадшего рыцаря §aс §c", "You received §fKnightfall §awith §c") + kills + " " + plugin.tr("§aубийствами.", "§akills.")));
                 }
 
-                AltarLegendaryCommand.openLegendaryMenu(player);
+                AltarLegendaryCommand.openWeaponsMenu(player);
             });
         } catch (NumberFormatException ex) {
             player.sendMessage(TextUtils.legacy("§c" + plugin.tr("Ошибка! Введите целое число (например, 5) или напишите 'отмена'.", "Error! Enter a whole number (for example, 5) or type 'cancel'.")));

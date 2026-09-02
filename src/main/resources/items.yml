@@ -46,14 +46,15 @@ items:
         M: MAGMA_BLOCK
         S: WITHER_SKELETON_SKULL
 
-# Copper Armor configuration
-# Настройка медной брони
+# Copper Armor & Pickaxe configuration
+# Настройка медной брони и кирки
 
 copper-armor:
   helmet:
     charge-hold-ticks: 100
-    glowing-duration-seconds: 10
-    glowing-radius-blocks: 1000.0
+    charge-sound-interval-ticks: 25
+    glowing-duration-seconds: 20
+    visible-only-to-owner: true
   boots:
     speed-level: 3
     copper-speed-level: 5
@@ -61,9 +62,65 @@ copper-armor:
     min-fall-distance: 2.0
     max-fall-distance: 300.0
     min-explosion-power: 1.0
-    max-explosion-power: 100.0
+    max-explosion-power: 10.0
   chestplate:
     hits-for-lightning: 7
     ring-radius: 10.0
     lightning-count: 10
     lightning-damage: 6.0
+
+copper-pickaxe:
+  not-breakable-3x3:
+    # Blocks that 3x3 mining will never break (chests, shulkers, blast-resistant blocks, etc).
+    # Блоки, которые добыча 3х3 никогда не сломает (сундуки, шалкеры, взрывостойкие блоки и т.д.).
+    - CHEST
+    - TRAPPED_CHEST
+    - ENDER_CHEST
+    - BARREL
+    - SHULKER_BOX
+    - WHITE_SHULKER_BOX
+    - ORANGE_SHULKER_BOX
+    - MAGENTA_SHULKER_BOX
+    - LIGHT_BLUE_SHULKER_BOX
+    - YELLOW_SHULKER_BOX
+    - LIME_SHULKER_BOX
+    - PINK_SHULKER_BOX
+    - GRAY_SHULKER_BOX
+    - LIGHT_GRAY_SHULKER_BOX
+    - CYAN_SHULKER_BOX
+    - PURPLE_SHULKER_BOX
+    - BLUE_SHULKER_BOX
+    - BROWN_SHULKER_BOX
+    - GREEN_SHULKER_BOX
+    - RED_SHULKER_BOX
+    - BLACK_SHULKER_BOX
+    - OBSIDIAN
+    - CRYING_OBSIDIAN
+    - RESPAWN_ANCHOR
+    - BEDROCK
+    - ANVIL
+    - CHIPPED_ANVIL
+    - DAMAGED_ANVIL
+    - ENCHANTING_TABLE
+    - END_PORTAL_FRAME
+    - BARRIER
+    - REINFORCED_DEEPSLATE
+    - SPAWNER
+    - TRIAL_SPAWNER
+    - VAULT
+    - BEACON
+    - CONDUIT
+    - NETHER_PORTAL
+    - END_PORTAL
+    - END_GATEWAY
+    - COMMAND_BLOCK
+    - CHAIN_COMMAND_BLOCK
+    - REPEATING_COMMAND_BLOCK
+    - STRUCTURE_BLOCK
+    - JIGSAW
+    - LODESTONE
+    - FURNACE
+    - BLAST_FURNACE
+    - SMOKER
+    - DISPENSER
+    - DROPPER
