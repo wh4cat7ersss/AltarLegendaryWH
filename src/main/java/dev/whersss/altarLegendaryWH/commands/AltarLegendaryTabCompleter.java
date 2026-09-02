@@ -20,7 +20,7 @@ public class AltarLegendaryTabCompleter implements TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            completions.addAll(Arrays.asList("give", "show", "reload", "cooldownreset"));
+            completions.addAll(Arrays.asList("give", "show", "reload", "cooldownreset", "discord"));
         }
         else if (args.length == 2 && args[0].equalsIgnoreCase("show")) {
             completions.addAll(Arrays.asList("weapons", "items"));
@@ -32,7 +32,7 @@ public class AltarLegendaryTabCompleter implements TabCompleter {
                     "wither_blade", "earth_gauntlet", "cutlass",
                     "warden_heart", "vulcan_skull", "weapons_handle", "illusion_core",
                     "copper_helmet", "copper_chestplate", "copper_leggings", "copper_boots",
-                    "copper_pickaxe"
+                    "copper_pickaxe", "vampire_shard", "pale_shard", "hyperion_shard"
             ));
         }
         else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {

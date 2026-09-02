@@ -198,7 +198,7 @@ public class ItemProtectionListener implements Listener {
 
             if (type == Material.FEATHER && customModelData == 1) return true;
             if (type == Material.CLAY_BALL && customModelData == 3) return true;
-            if (type == Material.PAPER && (customModelData == 7 || customModelData == 9)) return true;
+            if (type == Material.PAPER && (customModelData == 1 || customModelData == 2 || customModelData == 3 || customModelData == 7 || customModelData == 9)) return true;
             if (type == Material.MACE && (customModelData == 1 || customModelData == 2 || customModelData == 3)) return true;
         }
 

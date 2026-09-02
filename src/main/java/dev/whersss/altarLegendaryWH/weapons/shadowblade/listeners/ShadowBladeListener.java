@@ -1,7 +1,6 @@
 package dev.whersss.altarLegendaryWH.weapons.shadowblade.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
-import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.weapons.shadowblade.managers.ShadowBladeManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -73,7 +72,6 @@ public class ShadowBladeListener implements Listener {
 
     @EventHandler
     public void onHit(EntityDamageByEntityEvent event) {
-        if (!CombatUtils.isDirectMeleeHit(event)) return;
         if (!(event.getDamager() instanceof Player player)) return;
         if (!(event.getEntity() instanceof LivingEntity victim)) return;
         if (plugin.isAboveLegendaryHeight(player)) return;

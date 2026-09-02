@@ -122,6 +122,9 @@ shadow-blade:
     cooldown: 30
     burst-distance: 4.5
     trail-speed: 0.6
+    head-particle-count: 8
+    tail-length: 2.2
+    end-impulse: 0.85
   daggers:
     cooldown: 45
     damage: 2.0
@@ -129,8 +132,11 @@ shadow-blade:
     gravity: 0.035
     spin-speed: 0.10
     interpolation-ticks: 3
+    spark-count: 6
+    trail-offset-back: 0.35
   passive:
     backstab-chance: 0.25
+    backstab-cooldown: 4
 
 
 hyperion:

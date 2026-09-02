@@ -5,12 +5,17 @@ import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.utils.InventoryUtils;
 import dev.whersss.altarLegendaryWH.items.copperarmor.utils.CopperArmorFactory;
 import dev.whersss.altarLegendaryWH.items.copperpickaxe.CopperPickaxeItem;
+import dev.whersss.altarLegendaryWH.items.shards.vampireshard.VampireShardItem;
+import dev.whersss.altarLegendaryWH.items.shards.paleshard.PaleShardItem;
+import dev.whersss.altarLegendaryWH.items.shards.hyperionshard.HyperionShardItem;
 import dev.whersss.altarLegendaryWH.items.illusioncore.IllusionCoreItem;
 import dev.whersss.altarLegendaryWH.items.vulcanskull.VulcanSkullItem;
 import dev.whersss.altarLegendaryWH.items.wardenheart.WardenHeartItem;
 import dev.whersss.altarLegendaryWH.items.weaponshandle.WeaponsHandleItem;
 import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
@@ -93,7 +98,10 @@ public class AltarLegendaryCommand implements CommandExecutor {
                         CopperArmorFactory.getChestplate(),
                         CopperArmorFactory.getLeggings(),
                         CopperArmorFactory.getBoots(),
-                        CopperPickaxeItem.create()
+                        CopperPickaxeItem.create(),
+                        VampireShardItem.create(),
+                        PaleShardItem.create(),
+                        HyperionShardItem.create()
                 ));
     }
 
@@ -103,17 +111,35 @@ public class AltarLegendaryCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset|discord> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset|discord> ...")));
+            return true;
+        }
+
+        String subCommand = args[0].toLowerCase();
+
+        if (subCommand.equals("discord")) {
+            String text = plugin.tr(
+                    "§6Заходите в мой дискорд чтобы скачать актуальный ресурспак к плагину: ",
+                    "§6Join my discord to download the latest resource pack for the plugin: "
+            );
+
+            Component message = TextUtils.legacy(text)
+                    .append(Component.text("DISCORD")
+                            .color(NamedTextColor.DARK_AQUA)
+                            .clickEvent(ClickEvent.openUrl("https://dsc.gg/WHersssDevNotes"))
+                            .hoverEvent(HoverEvent.showText(TextUtils.legacy(plugin.tr("§aНажмите, чтобы перейти!", "§aClick to open!")))));
+
+            sender.sendMessage(message);
+            return true;
+        }
+
         if (!sender.hasPermission("altarlegendary.admin")) {
             sender.sendMessage(TextUtils.legacy("§c" + plugin.tr("У вас нет прав.", "You do not have permission.")));
             return true;
         }
 
-        if (args.length == 0) {
-            sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset> ...")));
-            return true;
-        }
-
-        switch (args[0].toLowerCase()) {
+        switch (subCommand) {
             case "reload" -> {
                 plugin.reloadConfig();
                 plugin.reloadWeaponsConfig();
@@ -194,6 +220,9 @@ public class AltarLegendaryCommand implements CommandExecutor {
                     case "copper_leggings" -> CopperArmorFactory.getLeggings();
                     case "copper_boots" -> CopperArmorFactory.getBoots();
                     case "copper_pickaxe" -> CopperPickaxeItem.create();
+                    case "vampire_shard" -> VampireShardItem.create();
+                    case "pale_shard" -> PaleShardItem.create();
+                    case "hyperion_shard" -> HyperionShardItem.create();
                     default -> null;
                 };
 
@@ -215,7 +244,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                         : "";
                 sender.sendMessage(TextUtils.legacy("§2" + target.getName() + " " + plugin.tr("получил §6", "received §6") + itemName + suffix));
             }
-            default -> sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset> ...")));
+            default -> sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset|discord> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset|discord> ...")));
         }
         return true;
     }
