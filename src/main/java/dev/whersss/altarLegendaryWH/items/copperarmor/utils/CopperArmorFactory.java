@@ -44,6 +44,7 @@ public class CopperArmorFactory {
         meta.addEnchant(Enchantment.AQUA_AFFINITY, 1, true);
         meta.addEnchant(Enchantment.UNBREAKING, 3, true);
         meta.addEnchant(Enchantment.MENDING, 1, true);
+        meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
 
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));
@@ -67,6 +68,7 @@ public class CopperArmorFactory {
         meta.addEnchant(Enchantment.PROTECTION, 4, true);
         meta.addEnchant(Enchantment.UNBREAKING, 3, true);
         meta.addEnchant(Enchantment.MENDING, 1, true);
+        meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
 
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));
@@ -92,6 +94,7 @@ public class CopperArmorFactory {
         meta.addEnchant(Enchantment.PROTECTION, 4, true);
         meta.addEnchant(Enchantment.UNBREAKING, 3, true);
         meta.addEnchant(Enchantment.MENDING, 1, true);
+        meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
         meta.addEnchant(Enchantment.SWIFT_SNEAK, 3, true);
 
         List<Component> lore = new ArrayList<>();
@@ -120,6 +123,7 @@ public class CopperArmorFactory {
         meta.addEnchant(Enchantment.DEPTH_STRIDER, 3, true);
         meta.addEnchant(Enchantment.UNBREAKING, 3, true);
         meta.addEnchant(Enchantment.MENDING, 1, true);
+        meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
 
         List<Component> lore = new ArrayList<>();
         lore.add(c(""));

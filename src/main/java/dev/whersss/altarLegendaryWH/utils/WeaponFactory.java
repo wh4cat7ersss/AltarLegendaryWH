@@ -78,6 +78,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#CBA073", "#FFFFFF", "#CBA073", tr("Костяной Клинок", "ʙᴏɴᴇ ʙʟᴀᴅᴇ")));
             meta.setCustomModelData(1);
+            meta.setTooltipStyle(NamespacedKey.minecraft("bone"));
             addCommonSwordEnchants(meta);
             meta.lore(lore(
                     line("&o&8Клинок, созданный из древнейших костей,", "&o&8A blade forged from the oldest bones known to humankind,"),
@@ -91,7 +92,7 @@ public class WeaponFactory {
                     blank(),
                     line("&eКостяная Клетка &6(SHIFT+Смена Руки)", "&eʙᴏɴᴇ ᴄᴀɢᴇ &6(Crouch+OffHand)"),
                     line("&7Бросьте быстрый снаряд перед собой,", "&7Throw a fast projectile in front of you,"),
-                    line("&7который оглушает любого игрока", "&7which stuns any player"),
+                    line("&7который огнушает любого игрока", "&7which stuns any player"),
                     line("&7при попадании на несколько секунд.", "&7for a few seconds on hit."),
                     cooldownLine(cageCooldown)
             ));
@@ -99,6 +100,7 @@ public class WeaponFactory {
         }
         return item;
     }
+
 
     public static ItemStack getBloodLust(int kills) {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
@@ -113,6 +115,7 @@ public class WeaponFactory {
             addCommonSwordEnchants(meta);
             meta.getPersistentDataContainer().set(plugin.getKillsKey(), PersistentDataType.INTEGER, kills);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+            meta.setTooltipStyle(NamespacedKey.minecraft("red"));
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
             meta.lore(lore(
@@ -160,13 +163,14 @@ public class WeaponFactory {
         ItemStack item = new ItemStack(Material.NETHERITE_SWORD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(gradientTitle("#4A0000", "#AA0000", "#4A0000", tr("Пронзитель ночи", "ɴɪɢʜᴛᴘɪᴇʀᴄᴇʀ")));
+            meta.displayName(gradientTitle("#4A0000", "#AA0000", "#4A0000", tr("Пронзатель ночи", "ɴɪɢʜᴛᴘɪᴇʀᴄᴇʀ")));
             meta.setCustomModelData(5);
+            meta.setTooltipStyle(NamespacedKey.minecraft("red"));
             addCommonSwordEnchants(meta);
 
             meta.lore(lore(
                     line("&7Вы получаете пассивную &fРегенерацию I &7ночью,", "&7You gain passive &fRegeneration &7I at night,"),
-                    line("&7когда держите Пронзитель ночи.", "&7while holding nightpiercer."),
+                    line("&7когда держите Пронзатель ночи.", "&7while holding nightpiercer."),
                     blank(),
                     line("&o&8Vampiri sunt praedatores noctis ultimi.", "&o&8Vampiri sunt praedatores noctis ultimi."),
                     blank(),
@@ -199,6 +203,7 @@ public class WeaponFactory {
             meta.addEnchant(Enchantment.POWER, 7, true);
             meta.addEnchant(Enchantment.PIERCING, 4, true);
             meta.addEnchant(Enchantment.MULTISHOT, 1, true);
+            meta.setTooltipStyle(NamespacedKey.minecraft("vulcan"));
             meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             meta.getPersistentDataContainer().set(plugin.getVulcanKey(), PersistentDataType.BYTE, (byte) 1);
 
@@ -233,6 +238,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#D7CFBC", "#F5F1E4", "#A99D83", tr("зцᴋᴇᴇп ᴄшцйлɸы", "ᴘᴡʀᴛᴛɢ ᴄɪᴡǫᴋᴀs")));
             meta.setCustomModelData(2);
             meta.setUnbreakable(true);
+            meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
             meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
             meta.getPersistentDataContainer().set(plugin.getPaleGunKey(), PersistentDataType.BYTE, (byte) 1);
@@ -268,6 +274,7 @@ public class WeaponFactory {
             meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
             meta.addEnchant(Enchantment.LOOTING, 3, true);
             meta.setUnbreakable(true);
+            meta.setTooltipStyle(NamespacedKey.minecraft("frost"));
             meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE);
             meta.removeAttributeModifier(Attribute.ATTACK_SPEED);
 
@@ -309,6 +316,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#AAAAAA", "#FFFFFF", "#AAAAAA", tr("Чистый Клинок", "ᴘᴜʀᴇ ʙʟᴀᴅᴇ")));
             meta.setCustomModelData(7);
+            meta.setTooltipStyle(NamespacedKey.minecraft("pure"));
             addCommonSwordEnchants(meta);
 
             meta.lore(lore(
@@ -351,6 +359,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#AAAAAA", "#FFFFFF", "#AAAAAA", tr("Падший Рыцарь", "ᴋɴɪɢʜᴛꜰᴀʟʟ")));
             meta.setCustomModelData(cmd);
+            meta.setTooltipStyle(NamespacedKey.minecraft("pure"));
             meta.setUnbreakable(true);
 
             if (kills >= 2) {
@@ -405,6 +414,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#AAAAAA", "#FFFFFF", "#AAAAAA", tr("ᴛᴇнᴇʙой ᴋлиноᴋ", "sʜᴀᴅᴏᴡ ʙʟᴀᴅᴇ")));
             meta.setCustomModelData(10);
+            meta.setTooltipStyle(NamespacedKey.minecraft("pure"));
             addCommonSwordEnchants(meta);
 
             meta.lore(lore(
@@ -447,6 +457,7 @@ public class WeaponFactory {
             meta.setCustomModelData(12);
             addCommonSwordEnchants(meta);
             meta.setUnbreakable(true);
+            meta.setTooltipStyle(NamespacedKey.minecraft("pure"));
             meta.addEnchant(Enchantment.SHARPNESS, 5, true);
             meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
             meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
@@ -457,14 +468,14 @@ public class WeaponFactory {
                     line("&o&8Клинок, в котором слышен только свист ветра.", "&o&8A blade in which only the whisper of wind can be heard."),
                     line("&o&8Он режет воздух так же легко, как и плоть.", "&o&8It cuts through air as easily as flesh."),
                     blank(),
-                    line("&f&lᴡɪɴᴅ ʟᴇᴀᴘ", "&f&lᴡɪɴᴅ ʟᴇᴀᴘ"),
-                    line("&f\uE80E &f[Смена руки]", "&f\uE80E &f[OffHand]"),
+                    line("&f&lВетровой Прыжок", "&f&lᴡɪɴᴅ ʟᴇᴀᴘ"),
+                    line("&f[Смена руки]", "&f[OffHand]"),
                     blank(),
                     line("&7Рывок сквозь воздух с кометным следом,", "&7Dash through the air with a comet-like trail,"),
                     line("&7оставляя за собой вихрь ветра и взрыв скорости.", "&7leaving a gusting wake behind you."),
                     cooldownLine(leapCooldown),
                     blank(),
-                    line("&f&lᴡɪɴᴅ ʙᴜʀsᴛ", "&f&lᴡɪɴᴅ ʙᴜʀsᴛ"),
+                    line("&f&lПорыв Ветра", "&f&lᴡɪɴᴅ ʙᴜʀsᴛ"),
                     line("&f[SHIFT + Смена руки]", "&f[Crouch + OffHand]"),
                     blank(),
                     line("&7Зарядите порыв ветра и выпустите его,", "&7Charge a burst of wind and release it,"),
@@ -486,6 +497,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#FFC000", "#FF4000", "#FFC000", tr("Гиперион", "ʜʏᴘᴇʀɪᴏɴ")));
             meta.setCustomModelData(6);
+            meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
             addCommonSwordEnchants(meta);
             meta.getPersistentDataContainer().set(AltarLegendaryWH.getInstance().getHyperionKey(), PersistentDataType.BYTE, (byte) 1);
 
@@ -521,6 +533,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#2b2b2b", "#5c5c5c", "#2b2b2b", tr("Иссушенный Костяной Клинок", "ᴡɪᴛʜᴇʀᴇᴅ ʙᴏɴᴇ ʙʟᴀᴅᴇ")));
             meta.setCustomModelData(9);
+            meta.setTooltipStyle(NamespacedKey.minecraft("pure"));
             addCommonSwordEnchants(meta);
             meta.getPersistentDataContainer().set(AltarLegendaryWH.getInstance().getWitherKey(), PersistentDataType.BYTE, (byte) 1);
 
@@ -562,6 +575,7 @@ public class WeaponFactory {
             meta.addEnchant(Enchantment.SHARPNESS, 5, true);
             meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
             meta.addEnchant(Enchantment.LOOTING, 3, true);
+            meta.setTooltipStyle(NamespacedKey.minecraft("earth"));
             meta.setUnbreakable(true);
 
             meta.lore(lore(
@@ -602,6 +616,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#179DD0", "#59BEDF", "#179DD0", tr("Абордажная Сабля", "ᴄᴜᴛʟᴀss")));
             meta.setCustomModelData(11);
+            meta.setTooltipStyle(NamespacedKey.minecraft("tidebreaker"));
             addCommonSwordEnchants(meta);
             meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "cutlass"), PersistentDataType.BYTE, (byte) 1);
 

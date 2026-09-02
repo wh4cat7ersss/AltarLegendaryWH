@@ -72,7 +72,6 @@ public class CutlassListener implements Listener {
         }
     }
 
-
     @EventHandler
     public void onMeleeHit(EntityDamageByEntityEvent event) {
         if (!CombatUtils.isDirectMeleeHit(event)) return;
@@ -80,10 +79,12 @@ public class CutlassListener implements Listener {
         if (!manager.isCutlass(player.getInventory().getItemInMainHand())) return;
         if (manager.isDoingThousandCuts(player)) return;
         if (event.getFinalDamage() <= 0) return;
+
         manager.playCutlassSwingFX(player);
 
         boolean fullyCharged = player.getCooledAttackStrength(0) >= 0.85f;
         if (!fullyCharged) return;
+
         if (ThreadLocalRandom.current().nextInt(100) < 20) {
             Vector pull = player.getLocation().toVector()
                     .subtract(target.getLocation().toVector())
@@ -143,4 +144,3 @@ public class CutlassListener implements Listener {
         }
     }
 }
-

@@ -2,8 +2,8 @@ package dev.whersss.altarLegendaryWH.weapons.cutlass.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@SuppressWarnings({"BooleanMethodIsAlwaysInverted", "SpellCheckingInspection", "unused"})
 public class CutlassManager {
 
     private final AltarLegendaryWH plugin;
@@ -47,12 +48,12 @@ public class CutlassManager {
     }
 
     public boolean isCutlass(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer().has(cutlassKey, PersistentDataType.BYTE);
     }
 
     public void setCutlassAttributes(ItemStack item, double damage, double attackSpeed) {
-        if (item == null || !item.hasItemMeta()) return;
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) return;
 
         ItemMeta meta = item.getItemMeta();
         meta.removeAttributeModifier(Attribute.ATTACK_DAMAGE);
@@ -68,10 +69,6 @@ public class CutlassManager {
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
         item.setItemMeta(meta);
-    }
-
-    public void dealCleanDamage(LivingEntity target, Player attacker, double amount) {
-        plugin.getCleanDamageManager().apply(target, attacker, amount);
     }
 
     public boolean checkCooldown(Player player, String ability) {
@@ -142,6 +139,8 @@ public class CutlassManager {
 
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ILLUSIONER_PREPARE_MIRROR, 1.0f, 1.2f);
 
+        Particle.DustOptions blueDust = new Particle.DustOptions(Color.fromRGB(0, 191, 255), 0.6f);
+
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -150,6 +149,18 @@ public class CutlassManager {
                     removeOldBar(barKey);
                     cancel();
                     return;
+                }
+
+                Location waistLoc = player.getLocation().add(0, 0.9, 0);
+                double radius = 0.85;
+                int points = 24;
+                for (int i = 0; i < points; i++) {
+                    double angle = 2 * Math.PI * i / points;
+                    double x = radius * Math.cos(angle);
+                    double z = radius * Math.sin(angle);
+                    waistLoc.add(x, 0, z);
+                    player.getWorld().spawnParticle(Particle.DUST, waistLoc, 1, 0, 0, 0, 0, blueDust);
+                    waistLoc.subtract(x, 0, z);
                 }
 
                 long elapsed = System.currentTimeMillis() - current.lastHitTime;
@@ -210,7 +221,7 @@ public class CutlassManager {
                 }
 
                 ItemStack itemInHand = player.getInventory().getItemInMainHand();
-                if (itemInHand == null || !isCutlass(itemInHand)) {
+                if (!isCutlass(itemInHand)) {
                     cancelThousandCuts(player);
                     return;
                 }
@@ -326,7 +337,7 @@ public class CutlassManager {
         plugin.getCleanDamageManager().apply(target, player, damage);
 
         ItemStack weapon = player.getInventory().getItemInMainHand();
-        if (weapon != null) {
+        if (weapon.hasItemMeta()) {
             int fireAspect = weapon.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.FIRE_ASPECT);
             if (fireAspect > 0) {
                 target.setFireTicks(Math.max(target.getFireTicks(), (fireAspect * 4) * 20));

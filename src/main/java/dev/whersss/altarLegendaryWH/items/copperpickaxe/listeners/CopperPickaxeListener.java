@@ -134,7 +134,7 @@ public class CopperPickaxeListener implements Listener {
 
             boolean broken = block.breakNaturally(tool);
             if (broken) {
-                world.playSound(center, soundGroup.getBreakSound(), soundGroup.getVolume(), 1.0f);
+                world.playSound(center, soundGroup.getBreakSound(), soundGroup.getVolume(), 1.1f);
                 world.spawnParticle(Particle.BLOCK, center, 40, 0.3, 0.3, 0.3, 0, blockData);
             }
         }

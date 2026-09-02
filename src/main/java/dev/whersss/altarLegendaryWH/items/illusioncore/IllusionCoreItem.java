@@ -5,6 +5,7 @@ import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -23,6 +24,7 @@ public class IllusionCoreItem {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setCustomModelData(7);
+            meta.setTooltipStyle(NamespacedKey.minecraft("purple"));
 
             MiniMessage mm = MiniMessage.miniMessage();
             meta.displayName(TextUtils.shadow(mm.deserialize("<!italic><gradient:#e64ce6:#990099:#e64ce6>" + tr("Ядро Иллюзий", "ɪʟʟᴜsɪᴏɴ ᴄᴏʀᴇ") + "</gradient>")));

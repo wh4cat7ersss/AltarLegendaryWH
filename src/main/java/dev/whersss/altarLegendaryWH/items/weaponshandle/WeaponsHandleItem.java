@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public class WeaponsHandleItem {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setCustomModelData(9);
+            meta.setTooltipStyle(NamespacedKey.minecraft("shard"));
 
             MiniMessage mm = MiniMessage.miniMessage();
             meta.displayName(TextUtils.shadow(mm.deserialize("<!italic><gradient:#ff5555:#aa0000:#ff5555>" + tr("Рукоятка Оружия", "ᴡᴇᴀᴘᴏɴ ʜᴀɴᴅʟᴇ") + "</gradient>")));

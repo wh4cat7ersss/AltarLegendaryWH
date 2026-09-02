@@ -7,6 +7,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.NamespacedKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class WardenHeartItem {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setCustomModelData(1);
+            meta.setTooltipStyle(NamespacedKey.minecraft("ancient"));
 
             MiniMessage mm = MiniMessage.miniMessage();
             meta.displayName(TextUtils.shadow(mm.deserialize("<!italic><gradient:#0b4d53:#23c7c8:#0b4d53>" + tr("Сердце Вардена", "ᴡᴀʀᴅᴇɴ ʜᴇᴀʀᴛ") + "</gradient>")));

@@ -52,6 +52,7 @@ public class CopperPickaxeItem {
 
         meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
         meta.addEnchant(Enchantment.FORTUNE, 3, true);
+        meta.setTooltipStyle(NamespacedKey.minecraft("gold"));
         meta.setUnbreakable(true);
 
         meta.addAttributeModifier(Attribute.ATTACK_DAMAGE, new AttributeModifier(

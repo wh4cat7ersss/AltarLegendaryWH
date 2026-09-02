@@ -57,7 +57,6 @@ import dev.whersss.altarLegendaryWH.items.weaponshandle.WeaponsHandleItem;
 import dev.whersss.altarLegendaryWH.items.illusioncore.IllusionCoreItem;
 import dev.whersss.altarLegendaryWH.items.vulcanskull.VulcanSkullItem;
 
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -104,6 +103,7 @@ public class AltarLegendaryWH extends JavaPlugin {
     private PureBossBarManager pureBossBarManager;
     private PureBladeManager pureBladeManager;
     private ShadowBladeManager shadowBladeManager;
+    private WindWeaverListener windWeaverListener;
     private CopperArmorTask copperArmorTask;
     private WitherManager witherManager;
     private File weaponsFile;
@@ -138,6 +138,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         knightfallManager = new KnightfallManager(this);
         shadowBladeManager = new ShadowBladeManager(this);
         witherManager = new WitherManager(this);
+        windWeaverListener = new WindWeaverListener(this);
 
         frostBossBarManager = new FrostBossBarManager(this);
         frostAbilityManager = new FrostAbilityManager(this, frostBossBarManager);
@@ -175,7 +176,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         new KnightfallPassiveTask(this).runTaskTimer(this, 0L, 20L);
         getServer().getPluginManager().registerEvents(new ShadowBladeListener(this, shadowBladeManager), this);
         new ShadowBladePassiveTask().runTaskTimer(this, 0L, 20L);
-        getServer().getPluginManager().registerEvents(new WindWeaverListener(this), this);
+        getServer().getPluginManager().registerEvents(windWeaverListener, this);
         getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.items.wardenheart.listeners.WardenHeartDropListener(this), this);
 
         getServer().getPluginManager().registerEvents(new HyperionListener(), this);
@@ -329,6 +330,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         if (nightHealthManager != null) nightHealthManager.revertAll();
         if (pureBossBarManager != null) pureBossBarManager.clearAll();
         if (paleGunAbilityManager != null) paleGunAbilityManager.clearAll();
+        if (windWeaverListener != null) windWeaverListener.removeAllBars();
         if (friendManager != null) friendManager.saveFriends();
         if (cutlassManager != null) cutlassManager.cleanupAll();
         if (cleanDamageManager != null) cleanDamageManager.clear();
@@ -362,6 +364,7 @@ public class AltarLegendaryWH extends JavaPlugin {
     public NightAbilityListener getNightAbilityListener() { return nightAbilityListener; }
     public NightHealthStealManager getNightHealthManager() { return nightHealthManager; }
     public PureBladeManager getPureBladeManager() { return pureBladeManager; }
+    public WindWeaverListener getWindWeaverListener() { return windWeaverListener; }
 
     public boolean isEnglish() {
         return "en_US".equalsIgnoreCase(getConfig().getString("lang", "en_US"));
@@ -384,25 +387,20 @@ public class AltarLegendaryWH extends JavaPlugin {
     }
 
     public void resetAllCooldowns(Player player) {
-        boneCooldownManager.resetPlayer(player);
-        bloodBossBarManager.resetPlayer(player);
-        nightAbilityListener.resetCooldowns(player);
+        if (boneCooldownManager != null) boneCooldownManager.resetPlayer(player);
+        if (bloodBossBarManager != null) bloodBossBarManager.resetPlayer(player);
+        if (nightAbilityListener != null) nightAbilityListener.resetCooldowns(player);
         NightBossBarCooldown.resetPlayer(player);
-        frostBossBarManager.resetPlayer(player);
-        paleGunAbilityManager.resetPlayer(player);
-        pureBladeManager.resetCooldowns(player);
-        knightfallManager.resetCooldowns(player);
-        shadowBladeManager.resetCooldowns(player);
-        witherManager.resetCooldowns(player);
-        earthGauntletManager.resetCooldowns(player);
-        cutlassManager.resetCooldowns(player);
+        if (frostBossBarManager != null) frostBossBarManager.resetPlayer(player);
+        if (paleGunAbilityManager != null) paleGunAbilityManager.resetPlayer(player);
+        if (pureBladeManager != null) pureBladeManager.resetCooldowns(player);
+        if (knightfallManager != null) knightfallManager.resetCooldowns(player);
+        if (shadowBladeManager != null) shadowBladeManager.resetCooldowns(player);
+        if (witherManager != null) witherManager.resetCooldowns(player);
+        if (earthGauntletManager != null) earthGauntletManager.resetCooldowns(player);
+        if (cutlassManager != null) cutlassManager.resetCooldowns(player);
+        if (windWeaverListener != null) windWeaverListener.resetPlayer(player);
         VulcanCooldownManager.resetPlayer(player);
         HyperionCooldownManager.resetPlayer(player);
     }
 }
-
-
-
-
-
-
