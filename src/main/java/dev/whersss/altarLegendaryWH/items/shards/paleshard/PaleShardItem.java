@@ -32,7 +32,7 @@ public class PaleShardItem {
             List<Component> lore = new ArrayList<>();
             lore.add(Component.empty());
             lore.add(mm.deserialize("<!italic><white>" + tr("Холодный осколок, хранящий в себе", "A cold shard holding within it") + "</white>"));
-            lore.add(mm.deserialize("<!italic><white>" + tr("тихую и бледную силу иного мира.", "the quiet, pale power of another world.") + "</white>"));
+            lore.add(mm.deserialize("<!italic><white>" + tr("тихую и бледную силу бледного леса.", "the quiet, pale power of pale forest.") + "</white>"));
             lore.add(Component.empty());
             lore.add(mm.deserialize("<!italic><white>" + tr("Применение:", "Use:") + "</white>"));
             lore.add(mm.deserialize("<!italic><dark_gray>•</dark_gray> <gray>" + tr("Используется для создания", "Used to create") + "</gray>"));

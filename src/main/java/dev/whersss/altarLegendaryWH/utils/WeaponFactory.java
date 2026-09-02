@@ -471,15 +471,15 @@ public class WeaponFactory {
                     line("&f&lВетровой Прыжок", "&f&lᴡɪɴᴅ ʟᴇᴀᴘ"),
                     line("&f[Смена руки]", "&f[OffHand]"),
                     blank(),
-                    line("&7Рывок сквозь воздух с кометным следом,", "&7Dash through the air with a comet-like trail,"),
-                    line("&7оставляя за собой вихрь ветра и взрыв скорости.", "&7leaving a gusting wake behind you."),
+                    line("&7Быстрый рывок в воздух,", "&7Dash through the air with a comet-like trail,"),
+                    line("&7оставляя за собой вихрь ветра.", "&7leaving a gusting wake behind you."),
                     cooldownLine(leapCooldown),
                     blank(),
                     line("&f&lПорыв Ветра", "&f&lᴡɪɴᴅ ʙᴜʀsᴛ"),
                     line("&f[SHIFT + Смена руки]", "&f[Crouch + OffHand]"),
                     blank(),
                     line("&7Зарядите порыв ветра и выпустите его,", "&7Charge a burst of wind and release it,"),
-                    line("&7отбрасывая врагов в зависимости от заряда.", "&7knocking enemies back based on charge."),
+                    line("&7отбрасывая врагов в зависимости от силы заряда.", "&7knocking enemies back based on charge."),
                     cooldownLine(burstCooldown)
             ));
 
