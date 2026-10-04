@@ -33,7 +33,7 @@ public class KnightfallPassiveTask extends BukkitRunnable {
             ItemStack item = p.getInventory().getItemInMainHand();
             boolean isHoldingKnightfall = false;
 
-            if (item != null && item.hasItemMeta() && (item.getType() == Material.MACE || item.getItemMeta().getPersistentDataContainer().has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER))) {
+            if (dev.whersss.altarLegendaryWH.utils.WeaponFactory.isAltarWeapon(item, "knightfall")) {
                 if (item.getItemMeta().getPersistentDataContainer().has(plugin.getKillsKey(), PersistentDataType.INTEGER)) {
                     int kills = item.getItemMeta().getPersistentDataContainer().get(plugin.getKillsKey(), PersistentDataType.INTEGER);
 

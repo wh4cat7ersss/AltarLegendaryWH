@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.pureblade.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.pureblade.managers.PureBladeManager;
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
@@ -26,13 +27,7 @@ public class PureBladeListener implements Listener {
     }
 
     private boolean isPureBlade(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(AltarLegendaryWH.getInstance(), "pure_blade"), PersistentDataType.BYTE)) {
-            return true;
-        }
-        return meta.hasCustomModelData() && (meta.getCustomModelData() == 7 || meta.getCustomModelData() == 3008);
+        return WeaponFactory.isAltarWeapon(item, "pure_blade");
     }
 
     @EventHandler

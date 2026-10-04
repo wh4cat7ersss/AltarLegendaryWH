@@ -29,65 +29,11 @@ public class WorldGuardAbilityGate implements Listener {
     }
 
     private boolean isLegendaryWeapon(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-
-        if (meta.getPersistentDataContainer().has(plugin.getKillsKey(), PersistentDataType.INTEGER)) return true;
-        if (meta.getPersistentDataContainer().has(plugin.getVulcanKey(), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(plugin.getPaleGunKey(), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(plugin.getWitherKey(), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(plugin.getHyperionKey(), PersistentDataType.BYTE)) return true;
-        if (plugin.getPaladinsBattleAxeKey() != null
-                && meta.getPersistentDataContainer().has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) {
-            return true;
-        }
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "bone_blade"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "bloodlust"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "nightpiercer"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "pure_blade"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shadow_blade"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "windweaver"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "earth_gauntlet"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "cutlass"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "frost_scythe"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "crazyslots"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "knightfall"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
-
-        if (meta.hasCustomModelData()) {
-            int customModelData = meta.getCustomModelData();
-            if (customModelData >= 3000 && customModelData <= 3009) return true;
-            Material type = item.getType();
-
-            if (type == Material.NETHERITE_SWORD) {
-                return customModelData == 1
-                        || customModelData == 5
-                        || customModelData == 7
-                        || customModelData == 9
-                        || customModelData == 10
-                        || customModelData == 6
-                        || customModelData == 8
-                        || customModelData == 11
-                        || customModelData == 4;
-            }
-            if (type == Material.NETHERITE_AXE && customModelData == 2) return true;
-            if (type == Material.TRIDENT && customModelData == 4) return true;
-            if ((type == Material.CROSSBOW || type == Material.BOW) && (customModelData == 1 || customModelData == 2)) return true;
-            if (type == Material.MACE && (customModelData == 1 || customModelData == 2 || customModelData == 3 || (customModelData >= 3001 && customModelData <= 3003))) return true;
-        }
-        return false;
+        return dev.whersss.altarLegendaryWH.utils.WeaponFactory.isAnyAltarWeapon(item);
     }
 
     private boolean isPaladinsBattleAxe(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (plugin.getPaladinsBattleAxeKey() != null
-                && meta.getPersistentDataContainer().has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) {
-            return true;
-        }
-        return item.getType() == Material.NETHERITE_AXE
-                && meta.hasCustomModelData()
-                && meta.getCustomModelData() == 2;
+        return dev.whersss.altarLegendaryWH.utils.WeaponFactory.isAltarWeapon(item, "paladins_battle_axe");
     }
 
     private void notifyDenied(Player player, ItemStack item) {

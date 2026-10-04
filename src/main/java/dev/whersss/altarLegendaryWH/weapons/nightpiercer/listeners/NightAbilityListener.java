@@ -2,8 +2,8 @@ package dev.whersss.altarLegendaryWH.weapons.nightpiercer.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
-import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.nightpiercer.managers.NightBossBarCooldown;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -57,13 +57,7 @@ public class NightAbilityListener implements Listener {
     }
 
     private boolean isNightpiercer(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "nightpiercer"), PersistentDataType.BYTE)) {
-            return true;
-        }
-        return meta.hasCustomModelData() && (meta.getCustomModelData() == 5 || meta.getCustomModelData() == 3009);
+        return WeaponFactory.isAltarWeapon(item, "nightpiercer");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

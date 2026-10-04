@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.witherblade.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.witherblade.managers.WitherManager;
 import dev.whersss.altarLegendaryWH.weapons.witherblade.tasks.WitherTasks;
 import org.bukkit.Location;
@@ -35,14 +36,7 @@ public class WitherBladeListener implements Listener {
     }
 
     private boolean isWitherBlade(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-
-        if (meta.getPersistentDataContainer().has(AltarLegendaryWH.getInstance().getWitherKey(), PersistentDataType.BYTE)) {
-            return true;
-        }
-        return meta.hasCustomModelData() && (meta.getCustomModelData() == 9 || meta.getCustomModelData() == 3003);
+        return WeaponFactory.isAltarWeapon(item, "wither_blade");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

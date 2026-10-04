@@ -3,6 +3,7 @@ package dev.whersss.altarLegendaryWH.weapons.boneblade.listeners;
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
@@ -46,14 +47,7 @@ public class BladeListener implements Listener {
     }
 
     private boolean isBoneBlade(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "bone_blade"), PersistentDataType.BYTE)) return true;
-        if (meta.hasCustomModelData()) {
-            int cmd = meta.getCustomModelData();
-            return cmd == 1 || cmd == 3000;
-        }
-        return false;
+        return WeaponFactory.isAltarWeapon(item, "bone_blade");
     }
 
     @EventHandler

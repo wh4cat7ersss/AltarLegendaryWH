@@ -487,6 +487,11 @@ public class KnightfallManager {
         throwCooldowns.put(player.getUniqueId(), System.currentTimeMillis() + (cooldown * 1000L));
         startThrowCooldownBar(player, cooldown);
 
+        if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(item)) {
+            java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(item);
+            plugin.getCrazySlotsManager().markInFlight(instId);
+        }
+
         player.getInventory().setItemInMainHand(null);
         player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_THROW, 1f, 0.5f);
         player.getWorld().playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_CHAIN, 1f, 2.0f);
@@ -530,7 +535,14 @@ public class KnightfallManager {
                     if (player.isDead() && state == waitingState) {
                         curr.getWorld().playSound(curr, Sound.ENTITY_ITEM_PICKUP, 1.0f, 0.6f);
                     }
-                    curr.getWorld().dropItem(curr, item);
+                    ItemStack toDrop = item;
+                    if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(toDrop)) {
+                        java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(toDrop);
+                        plugin.getCrazySlotsManager().unmarkInFlight(instId);
+                        toDrop = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
+                        plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(player, instId);
+                    }
+                    curr.getWorld().dropItem(curr, toDrop);
                     display.remove();
                     throwChain.forEach(Entity::remove);
                     if (caughtEntity != null) caughtEntity.setFallDistance(0);
@@ -637,7 +649,16 @@ public class KnightfallManager {
                         }
 
                         if (player.getInventory().firstEmpty() != -1) {
-                            player.getInventory().addItem(item);
+                            ItemStack returnItem = item;
+                            if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(returnItem)) {
+                                java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(returnItem);
+                                plugin.getCrazySlotsManager().unmarkInFlight(instId);
+                                if (!plugin.getCrazySlotsManager().hasActiveTransformation(instId)) {
+                                    returnItem = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
+                                    plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(player, instId);
+                                }
+                            }
+                            player.getInventory().addItem(returnItem);
                             display.remove();
                             throwChain.forEach(Entity::remove);
                             cancel();
@@ -672,7 +693,16 @@ public class KnightfallManager {
                     }
                 } else if (state == waitingState) {
                     if (player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().addItem(item);
+                        ItemStack returnItem = item;
+                        if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(returnItem)) {
+                            java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(returnItem);
+                            plugin.getCrazySlotsManager().unmarkInFlight(instId);
+                            if (!plugin.getCrazySlotsManager().hasActiveTransformation(instId)) {
+                                returnItem = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
+                                plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(player, instId);
+                            }
+                        }
+                        player.getInventory().addItem(returnItem);
                         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
                         display.remove();
                         cancel();
@@ -681,7 +711,14 @@ public class KnightfallManager {
 
                     stateTimer--;
                     if (stateTimer <= 0) {
-                        player.getWorld().dropItem(player.getLocation(), item);
+                        ItemStack toDrop = item;
+                        if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(toDrop)) {
+                            java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(toDrop);
+                            plugin.getCrazySlotsManager().unmarkInFlight(instId);
+                            toDrop = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
+                            plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(player, instId);
+                        }
+                        player.getWorld().dropItem(player.getLocation(), toDrop);
                         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 0.6f);
                         display.remove();
                         cancel();

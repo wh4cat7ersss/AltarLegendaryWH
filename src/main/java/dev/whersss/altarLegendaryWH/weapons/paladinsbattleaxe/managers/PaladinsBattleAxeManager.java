@@ -3,6 +3,7 @@ package dev.whersss.altarLegendaryWH.weapons.paladinsbattleaxe.managers;
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -54,11 +55,7 @@ public class PaladinsBattleAxeManager {
     }
 
     public boolean isPaladinsBattleAxe(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        if (meta.getPersistentDataContainer().has(weaponKey, PersistentDataType.BYTE)) return true;
-        return meta.hasCustomModelData() && meta.getCustomModelData() == 2;
+        return WeaponFactory.isAltarWeapon(item, "paladins_battle_axe");
     }
 
     public void setPaladinsBattleAxeAttributes(ItemStack item, double damage, double attackSpeed) {

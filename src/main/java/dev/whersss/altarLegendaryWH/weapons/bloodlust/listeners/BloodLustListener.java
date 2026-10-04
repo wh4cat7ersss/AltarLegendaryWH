@@ -37,13 +37,7 @@ public class BloodLustListener implements Listener {
     }
 
     public static boolean isBloodLust(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        if (meta.getPersistentDataContainer().has(new org.bukkit.NamespacedKey(AltarLegendaryWH.getInstance(), "bloodlust"), PersistentDataType.BYTE)) {
-            return true;
-        }
-        return item.getType() == Material.NETHERITE_SWORD && meta.getPersistentDataContainer().has(AltarLegendaryWH.getInstance().getKillsKey(), PersistentDataType.INTEGER);
+        return WeaponFactory.isAltarWeapon(item, "bloodlust");
     }
 
     @EventHandler

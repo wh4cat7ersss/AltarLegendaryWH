@@ -54,7 +54,7 @@ copper-armor:
     charge-hold-ticks: 100
     charge-sound-interval-ticks: 25
     glowing-duration-seconds: 20
-    visible-only-to-owner: true
+    visible-only-to-owner: false
   boots:
     speed-level: 3
     copper-speed-level: 5

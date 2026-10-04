@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.shadowblade.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.shadowblade.managers.ShadowBladeManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,13 +33,7 @@ public class ShadowBladeListener implements Listener {
     }
 
     public static boolean isShadowBlade(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(AltarLegendaryWH.getInstance(), "shadow_blade"), PersistentDataType.BYTE)) {
-            return true;
-        }
-        return meta.hasCustomModelData() && (meta.getCustomModelData() == 10 || meta.getCustomModelData() == 3007);
+        return WeaponFactory.isAltarWeapon(item, "shadow_blade");
     }
 
     @EventHandler

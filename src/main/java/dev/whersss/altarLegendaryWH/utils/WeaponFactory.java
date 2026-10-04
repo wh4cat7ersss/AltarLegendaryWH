@@ -15,6 +15,7 @@ import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -47,6 +48,71 @@ public class WeaponFactory {
             return plugin.getModelsConfig().getString("symbols." + key, fallback);
         }
         return fallback;
+    }
+
+    public static final String ALTAR_WEAPON_KEY = "altar_weapon";
+
+    public static void tagWeapon(ItemMeta meta, String weaponId) {
+        if (meta == null) return;
+        AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        pdc.set(new NamespacedKey(plugin, ALTAR_WEAPON_KEY), PersistentDataType.STRING, weaponId);
+        pdc.set(new NamespacedKey(plugin, weaponId), PersistentDataType.BYTE, (byte) 1);
+    }
+
+    public static boolean isAltarWeapon(ItemStack item, String weaponId) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
+
+        if (weaponId != null) {
+            String taggedId = pdc.get(new NamespacedKey(plugin, ALTAR_WEAPON_KEY), PersistentDataType.STRING);
+            if (weaponId.equalsIgnoreCase(taggedId)) return true;
+            if (pdc.has(new NamespacedKey(plugin, weaponId), PersistentDataType.BYTE)) return true;
+
+            // Backward compatibility for items created before this update (strictly PDC, NEVER CMD!)
+            if ("vulcan_crossbow".equalsIgnoreCase(weaponId) && pdc.has(plugin.getVulcanKey(), PersistentDataType.BYTE)) return true;
+            if ("pale_gun".equalsIgnoreCase(weaponId) && pdc.has(plugin.getPaleGunKey(), PersistentDataType.BYTE)) return true;
+            if ("hyperion".equalsIgnoreCase(weaponId) && pdc.has(plugin.getHyperionKey(), PersistentDataType.BYTE)) return true;
+            if ("wither_blade".equalsIgnoreCase(weaponId) && pdc.has(plugin.getWitherKey(), PersistentDataType.BYTE)) return true;
+            if ("paladins_battle_axe".equalsIgnoreCase(weaponId) && plugin.getPaladinsBattleAxeKey() != null && pdc.has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) return true;
+            if ("knightfall".equalsIgnoreCase(weaponId) && pdc.has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
+            if ("bloodlust".equalsIgnoreCase(weaponId) && pdc.has(plugin.getKillsKey(), PersistentDataType.INTEGER) && item.getType() == Material.NETHERITE_SWORD && pdc.has(new NamespacedKey(plugin, "bloodlust"), PersistentDataType.BYTE)) return true;
+            return false;
+        }
+
+        return isAnyAltarWeapon(item);
+    }
+
+    public static boolean isAnyAltarWeapon(ItemStack item) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
+
+        if (pdc.has(new NamespacedKey(plugin, ALTAR_WEAPON_KEY), PersistentDataType.STRING)) return true;
+
+        String[] keys = {
+                "bone_blade", "bloodlust", "nightpiercer", "vulcan_crossbow", "pale_gun",
+                "frost_scythe", "pure_blade", "knightfall", "shadow_blade", "windweaver",
+                "hyperion", "wither_blade", "earth_gauntlet", "cutlass", "paladins_battle_axe",
+                "crazyslots"
+        };
+        for (String k : keys) {
+            if (pdc.has(new NamespacedKey(plugin, k), PersistentDataType.BYTE)) return true;
+        }
+
+        if (pdc.has(plugin.getVulcanKey(), PersistentDataType.BYTE)) return true;
+        if (pdc.has(plugin.getPaleGunKey(), PersistentDataType.BYTE)) return true;
+        if (pdc.has(plugin.getHyperionKey(), PersistentDataType.BYTE)) return true;
+        if (pdc.has(plugin.getWitherKey(), PersistentDataType.BYTE)) return true;
+        if (plugin.getPaladinsBattleAxeKey() != null && pdc.has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) return true;
+        if (pdc.has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
+
+        return false;
     }
 
     public static Material resolveWeaponMaterial(String weaponKey, Material fallback) {
@@ -171,7 +237,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#CBA073", "#FFFFFF", "#CBA073", tr("Костяной Клинок", "ʙᴏɴᴇ ʙʟᴀᴅᴇ")));
             applyModelSettings(meta, "bone_blade", 3000, "minecraft:bone");
             addCommonSwordEnchants(meta);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "bone_blade"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "bone_blade");
             meta.lore(lore(
                     line("&o&8Клинок, созданный из древнейших костей,", "&o&8A blade forged from the oldest bones known to humankind,"),
                     line("&o&8oизвестных человечеству. Некоторые говорят,", "&o&8Some say those bones are still alive,"),
@@ -206,8 +272,8 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#8B0000", "#FF5555", "#8B0000", tr("Жажда крови", "ʙʟᴏᴏᴅʟᴜsᴛ")));
             applyModelSettings(meta, "bloodlust", 3001, "minecraft:red");
             addCommonSwordEnchants(meta);
+            tagWeapon(meta, "bloodlust");
             meta.getPersistentDataContainer().set(plugin.getKillsKey(), PersistentDataType.INTEGER, kills);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "bloodlust"), PersistentDataType.BYTE, (byte) 1);
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
 
@@ -260,7 +326,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#4A0000", "#AA0000", "#4A0000", tr("Пронзатель ночи", "ɴɪɢʜᴛᴘɪᴇʀᴄᴇʀ")));
             applyModelSettings(meta, "nightpiercer", 3009, "minecraft:red");
             addCommonSwordEnchants(meta);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "nightpiercer"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "nightpiercer");
 
             meta.lore(lore(
                     line("&7Вы получаете пассивную &fРегенерацию I &7ночью,", "&7You gain passive &fRegeneration &7I at night,"),
@@ -299,6 +365,7 @@ public class WeaponFactory {
             meta.addEnchant(Enchantment.PIERCING, 4, true);
             meta.addEnchant(Enchantment.MULTISHOT, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            tagWeapon(meta, "vulcan_crossbow");
             meta.getPersistentDataContainer().set(plugin.getVulcanKey(), PersistentDataType.BYTE, (byte) 1);
 
             meta.lore(lore(
@@ -335,6 +402,7 @@ public class WeaponFactory {
             meta.setUnbreakable(true);
             meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+            tagWeapon(meta, "pale_gun");
             meta.getPersistentDataContainer().set(plugin.getPaleGunKey(), PersistentDataType.BYTE, (byte) 1);
             meta.lore(lore(
                     line("&8&k7xv0a ствол помнит каждую трещину плоти &8&kr4m8", "&8&k7xv0a the barrel remembers every split in flesh &8&kr4m8"),
@@ -380,7 +448,7 @@ public class WeaponFactory {
             meta.addAttributeModifier(Attribute.ATTACK_SPEED,
                     new AttributeModifier(spdKey, -2.4, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
 
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "frost_scythe"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "frost_scythe");
 
             String crouchRmb = getSymbol("crouch-rmb", "\uE80E");
             meta.lore(lore(
@@ -414,7 +482,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#AAAAAA", "#FFFFFF", "#AAAAAA", tr("Чистый Клинок", "ᴘᴜʀᴇ ʙʟᴀᴅᴇ")));
             applyModelSettings(meta, "pure_blade", 3008, "minecraft:pure");
             addCommonSwordEnchants(meta);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "pure_blade"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "pure_blade");
 
             meta.lore(lore(
                     line("&o&8Создано на окраинах Города Слез,", "&o&8Created on the outskirts of the City of Tears,"),
@@ -473,9 +541,9 @@ public class WeaponFactory {
             if (hasDensity) {
                 meta.addEnchant(Enchantment.DENSITY, 2, true);
             }
+            tagWeapon(meta, "knightfall");
             meta.getPersistentDataContainer().set(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER, tier);
             meta.getPersistentDataContainer().set(plugin.getKillsKey(), PersistentDataType.INTEGER, kills);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "knightfall"), PersistentDataType.BYTE, (byte) 1);
             String chargesIcon = getSymbol("charges-icon", "\uE80D");
             meta.lore(lore(
                     line("&o&8Луна ярко светит над темным рыцарем.", "&o&8The moon shines brightly above the dark knight."),
@@ -523,7 +591,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#AAAAAA", "#FFFFFF", "#AAAAAA", tr("ᴛᴇнᴇʙой ᴋлиноᴋ", "sʜᴀᴅᴏᴡ ʙʟᴀᴅᴇ")));
             applyModelSettings(meta, "shadow_blade", 3007, "minecraft:pure");
             addCommonSwordEnchants(meta);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "shadow_blade"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "shadow_blade");
 
             String crouchRmb = getSymbol("crouch-rmb", "\uE80E");
             meta.lore(lore(
@@ -571,7 +639,7 @@ public class WeaponFactory {
             meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
             meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
             meta.addEnchant(Enchantment.LOOTING, 3, true);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "windweaver"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "windweaver");
 
             meta.lore(lore(
                     line("&o&8Клинок, в котором слышен только свист ветра.", "&o&8A blade in which only the whisper of wind can be heard."),
@@ -609,6 +677,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#FFC000", "#FF4000", "#FFC000", tr("Гиперион", "ʜʏᴘᴇʀɪᴏɴ")));
             applyModelSettings(meta, "hyperion", 3005, "minecraft:gold");
             addCommonSwordEnchants(meta);
+            tagWeapon(meta, "hyperion");
             meta.getPersistentDataContainer().set(AltarLegendaryWH.getInstance().getHyperionKey(), PersistentDataType.BYTE, (byte) 1);
 
             meta.lore(lore(
@@ -645,6 +714,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#2b2b2b", "#5c5c5c", "#2b2b2b", tr("Иссушенный Костяной Клинок", "ᴡɪᴛʜᴇʀᴇᴅ ʙᴏɴᴇ ʙʟᴀᴅᴇ")));
             applyModelSettings(meta, "wither_blade", 3003, "minecraft:pure");
             addCommonSwordEnchants(meta);
+            tagWeapon(meta, "wither_blade");
             meta.getPersistentDataContainer().set(AltarLegendaryWH.getInstance().getWitherKey(), PersistentDataType.BYTE, (byte) 1);
 
             meta.lore(lore(
@@ -713,7 +783,7 @@ public class WeaponFactory {
                     cooldownLine(mudslideCooldown)
             ));
 
-            meta.getPersistentDataContainer().set(new NamespacedKey(AltarLegendaryWH.getInstance(), "earth_gauntlet"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "earth_gauntlet");
             item.setItemMeta(meta);
         }
         return item;
@@ -728,7 +798,7 @@ public class WeaponFactory {
             meta.displayName(gradientTitle("#179DD0", "#59BEDF", "#179DD0", tr("Абордажная Сабля", "ᴄᴜᴛʟᴀss")));
             applyModelSettings(meta, "cutlass", 3002, "minecraft:tidebreaker");
             addCommonSwordEnchants(meta);
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "cutlass"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "cutlass");
 
             int thousandCooldown = plugin.getWeaponsConfig().getInt("cutlass.thousand-cuts.cooldown", 45);
             int parryCooldown = plugin.getWeaponsConfig().getInt("cutlass.parry.cooldown", 30);
@@ -781,6 +851,7 @@ public class WeaponFactory {
             meta.addEnchant(Enchantment.SHARPNESS, 5, true);
             meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
             meta.setUnbreakable(true);
+            tagWeapon(meta, "paladins_battle_axe");
             meta.getPersistentDataContainer().set(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE, (byte) 1);
 
             int shatterCooldown = plugin.getWeaponsConfig().getInt("paladins-battle-axe.earth-shatter.cooldown", 45);
@@ -831,7 +902,7 @@ public class WeaponFactory {
         if (meta != null) {
             meta.displayName(gradientTitle("#FFAA00", "#FFD700", "#FFAA00", tr("бᴇзумныᴇ ᴄлоᴛы", "ᴄʀᴀᴢʏ sʟᴏᴛs")));
             applyModelSettings(meta, "crazyslots", 4, "minecraft:pure");
-            meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "crazyslots"), PersistentDataType.BYTE, (byte) 1);
+            tagWeapon(meta, "crazyslots");
 
             int transformDuration = plugin.getWeaponsConfig().getInt("crazy-slots.transform-duration", 30);
             int cooldown = plugin.getWeaponsConfig().getInt("crazy-slots.cooldown", 60);

@@ -2,6 +2,7 @@ package dev.whersss.altarLegendaryWH.weapons.windweaver.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,13 +50,7 @@ public class WindWeaverListener implements Listener {
     }
 
     public static boolean isWindWeaver(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-        if (meta.getPersistentDataContainer().has(new org.bukkit.NamespacedKey(AltarLegendaryWH.getInstance(), "windweaver"), org.bukkit.persistence.PersistentDataType.BYTE)) {
-            return true;
-        }
-        return meta.hasCustomModelData() && (meta.getCustomModelData() == 12 || meta.getCustomModelData() == 3006);
+        return WeaponFactory.isAltarWeapon(item, "windweaver");
     }
 
     public boolean onLeapCooldown(Player player) {

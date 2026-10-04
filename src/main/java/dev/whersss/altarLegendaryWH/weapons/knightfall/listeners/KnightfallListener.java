@@ -36,11 +36,7 @@ public class KnightfallListener implements Listener {
     }
 
     private boolean isKnightfall(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "knightfall"), PersistentDataType.BYTE)) return true;
-        if (meta.getPersistentDataContainer().has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
-        return item.getType() == Material.MACE && meta.getPersistentDataContainer().has(plugin.getKillsKey(), PersistentDataType.INTEGER);
+        return WeaponFactory.isAltarWeapon(item, "knightfall");
     }
 
     private int getKills(ItemStack item) {

@@ -51,6 +51,7 @@ public class CrazySlotsManager {
 
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
     private final Map<UUID, BossBar> activeBars = new ConcurrentHashMap<>();
+    private final java.util.Set<UUID> inFlightInstances = ConcurrentHashMap.newKeySet();
     private final Random random = new Random();
 
     public CrazySlotsManager(AltarLegendaryWH plugin) {
@@ -67,27 +68,20 @@ public class CrazySlotsManager {
         return crazySlotsKey;
     }
 
+    public void markInFlight(UUID instanceId) {
+        if (instanceId != null) inFlightInstances.add(instanceId);
+    }
+
+    public void unmarkInFlight(UUID instanceId) {
+        if (instanceId != null) inFlightInstances.remove(instanceId);
+    }
+
+    public boolean isInFlight(UUID instanceId) {
+        return instanceId != null && inFlightInstances.contains(instanceId);
+    }
+
     public boolean isCrazySlots(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        if (pdc.has(crazySlotsKey, PersistentDataType.BYTE)) {
-            return true;
-        }
-
-        if (item.getType() == Material.CLAY_BALL && meta.hasCustomModelData() && meta.getCustomModelData() == 4) {
-            return true;
-        }
-
-        if (meta.hasDisplayName()) {
-            String plain = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
-            if (plain.equalsIgnoreCase("Crazy Slots") || plain.equalsIgnoreCase("Безумные Слоты")) {
-                return true;
-            }
-        }
-        return false;
+        return WeaponFactory.isAltarWeapon(item, "crazyslots");
     }
 
     public boolean isTransformedItem(ItemStack item) {
@@ -137,6 +131,7 @@ public class CrazySlotsManager {
     }
 
     public boolean hasTransformedItem(Player player, UUID instanceId) {
+        if (isInFlight(instanceId)) return true;
         if (player == null || !player.isOnline()) return false;
         Inventory inv = player.getInventory();
         for (int i = 0; i < inv.getSize(); i++) {
@@ -160,6 +155,7 @@ public class CrazySlotsManager {
     public void endTransformationAndApplyCooldown(Player player, UUID instanceId) {
         UUID pUuid = null;
         if (instanceId != null) {
+            inFlightInstances.remove(instanceId);
             activeTransformations.remove(instanceId);
             BukkitTask task = activeTasks.remove(instanceId);
             if (task != null) task.cancel();

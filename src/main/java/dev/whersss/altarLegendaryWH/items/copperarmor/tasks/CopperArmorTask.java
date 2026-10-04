@@ -96,8 +96,26 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
         return Math.max(1, seconds * 20);
     }
 
+    private boolean isTeammate(Player p1, Player p2) {
+        if (p1 == null || p2 == null) return false;
+        if (p1.equals(p2)) return true;
+        if (plugin.getFriendManager() != null && plugin.getFriendManager().isFriend(p1.getUniqueId(), p2.getUniqueId())) {
+            return true;
+        }
+        try {
+            org.bukkit.scoreboard.Scoreboard sb = p1.getScoreboard();
+            if (sb != null) {
+                org.bukkit.scoreboard.Team t1 = sb.getEntryTeam(p1.getName());
+                if (t1 != null && t1.hasEntry(p2.getName())) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
     private boolean isVisibleOnlyToOwner() {
-        return plugin.getItemsConfig().getBoolean("copper-armor.helmet.visible-only-to-owner", true);
+        return plugin.getItemsConfig().getBoolean("copper-armor.helmet.visible-only-to-owner", false);
     }
 
     private boolean hasActiveGlow(UUID playerId) {
@@ -114,6 +132,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
 
         for (Player target : Bukkit.getOnlinePlayers()) {
             if (target.equals(owner)) continue;
+            if (isTeammate(owner, target)) continue;
 
             nextTargets.add(target.getUniqueId());
             if (!currentTargets.contains(target.getUniqueId())) {

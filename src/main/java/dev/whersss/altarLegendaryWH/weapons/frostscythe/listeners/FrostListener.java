@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.frostscythe.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.frostscythe.managers.FrostAbilityManager;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -46,22 +47,7 @@ public class FrostListener implements Listener {
     }
 
     private boolean isFrostScythe(ItemStack item) {
-        if (item == null || !item.hasItemMeta()) return false;
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) return false;
-
-        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "frost_scythe"), PersistentDataType.BYTE)) {
-            return true;
-        }
-
-        int expectedCmd = 4;
-        if (plugin.getModelsConfig() != null) {
-            expectedCmd = plugin.getModelsConfig().getInt("weapons.frost_scythe.custom-model-data", 4);
-        }
-
-        return meta.hasCustomModelData() &&
-                (meta.getCustomModelData() == expectedCmd || meta.getCustomModelData() == 4) &&
-                (item.getType() == Material.NETHERITE_SWORD || item.getType() == Material.TRIDENT);
+        return WeaponFactory.isAltarWeapon(item, "frost_scythe");
     }
 
     public static void setScytheModel(ItemStack item, boolean isDrawing) {

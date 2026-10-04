@@ -110,6 +110,11 @@ public class FrostAbilityManager {
         throwItem.setType(Material.NETHERITE_SWORD);
         dev.whersss.altarLegendaryWH.weapons.frostscythe.listeners.FrostListener.setScytheModel(throwItem, false);
 
+        if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(throwItem)) {
+            java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(throwItem);
+            plugin.getCrazySlotsManager().markInFlight(instId);
+        }
+
         if (hand == EquipmentSlot.OFF_HAND) p.getInventory().setItemInOffHand(null);
         else p.getInventory().setItemInMainHand(null);
 

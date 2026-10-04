@@ -40,6 +40,7 @@ import dev.whersss.altarLegendaryWH.weapons.windweaver.listeners.WindWeaverListe
 import dev.whersss.altarLegendaryWH.weapons.hyperion.listeners.HyperionListener;
 import dev.whersss.altarLegendaryWH.weapons.hyperion.managers.HyperionCooldownManager;
 
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import dev.whersss.altarLegendaryWH.weapons.witherblade.managers.WitherManager;
 import dev.whersss.altarLegendaryWH.weapons.witherblade.listeners.WitherBladeListener;
 
@@ -287,17 +288,15 @@ public class AltarLegendaryWH extends JavaPlugin {
             public void run() {
                 for (Player p : getServer().getOnlinePlayers()) {
                     ItemStack item = p.getInventory().getItemInMainHand();
-                    if (item != null && item.getType() == Material.MACE && item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(killsKey, PersistentDataType.INTEGER)) {
-                        int kills = item.getItemMeta().getPersistentDataContainer().get(killsKey, PersistentDataType.INTEGER);
-                        if (item.getItemMeta().hasCustomModelData()) {
-                            int cmd = item.getItemMeta().getCustomModelData();
-                            boolean hasDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
-                            int tier = item.getItemMeta().getPersistentDataContainer().getOrDefault(knightfallTierKey, PersistentDataType.INTEGER,
-                                    (cmd >= 3003 || cmd == 3) ? 3 : (hasDensity ? 2 : ((cmd >= 3002 || cmd == 2) ? 1 : 0)));
+                    if (WeaponFactory.isAltarWeapon(item, "knightfall")) {
+                        int kills = item.getItemMeta().getPersistentDataContainer().getOrDefault(killsKey, PersistentDataType.INTEGER, 0);
+                        int cmd = item.getItemMeta().hasCustomModelData() ? item.getItemMeta().getCustomModelData() : 0;
+                        boolean hasDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
+                        int tier = item.getItemMeta().getPersistentDataContainer().getOrDefault(knightfallTierKey, PersistentDataType.INTEGER,
+                                (cmd >= 3003 || cmd == 3) ? 3 : (hasDensity ? 2 : ((cmd >= 3002 || cmd == 2) ? 1 : 0)));
 
-                            if ((kills >= 4 && tier < 1) || (kills >= 8 && tier < 2) || (kills >= 10 && tier < 3)) {
-                                p.sendActionBar(TextUtils.legacy(tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
-                            }
+                        if ((kills >= 4 && tier < 1) || (kills >= 8 && tier < 2) || (kills >= 10 && tier < 3)) {
+                            p.sendActionBar(TextUtils.legacy(tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
                         }
                     }
                 }

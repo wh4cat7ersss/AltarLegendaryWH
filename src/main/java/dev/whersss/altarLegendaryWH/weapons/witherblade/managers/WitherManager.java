@@ -2,6 +2,7 @@ package dev.whersss.altarLegendaryWH.weapons.witherblade.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -140,10 +141,7 @@ public class WitherManager {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     ItemStack item = player.getInventory().getItemInMainHand();
-                    if (item != null
-                            && item.hasItemMeta()
-                            && (item.getItemMeta().getPersistentDataContainer().has(plugin.getWitherKey(), org.bukkit.persistence.PersistentDataType.BYTE)
-                                || (item.getItemMeta().hasCustomModelData() && (item.getItemMeta().getCustomModelData() == 9 || item.getItemMeta().getCustomModelData() == 3003)))) {
+                    if (WeaponFactory.isAltarWeapon(item, "wither_blade")) {
 
                         int charge = getAttackCharge(player);
                         StringBuilder bar = new StringBuilder("§8☠ §7- ");

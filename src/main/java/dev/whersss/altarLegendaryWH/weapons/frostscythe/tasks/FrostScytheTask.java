@@ -214,9 +214,22 @@ public class FrostScytheTask extends BukkitRunnable {
     private void forceFinish() {
         if (owner != null && owner.isOnline() && !owner.isDead()) {
             ItemStack returnItem = item.clone();
-            boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
-            returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
-            FrostListener.setScytheModel(returnItem, false);
+            if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(returnItem)) {
+                java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(returnItem);
+                plugin.getCrazySlotsManager().unmarkInFlight(instId);
+                if (!plugin.getCrazySlotsManager().hasActiveTransformation(instId)) {
+                    returnItem = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
+                    plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(owner, instId);
+                } else {
+                    boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
+                    returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
+                    FrostListener.setScytheModel(returnItem, false);
+                }
+            } else {
+                boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
+                returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
+                FrostListener.setScytheModel(returnItem, false);
+            }
 
             if (owner.getInventory().firstEmpty() != -1) {
                 owner.getInventory().addItem(returnItem);
@@ -248,11 +261,22 @@ public class FrostScytheTask extends BukkitRunnable {
     }
 
     private void dropItem(Location dropLoc) {
-        Location loc = dropLoc != null ? dropLoc : (display.isValid() ? display.getLocation() : owner.getLocation());
+        Location loc = dropLoc != null ? dropLoc : (display.isValid() ? display.getLocation() : (owner != null ? owner.getLocation() : null));
+        if (loc == null || loc.getWorld() == null) {
+            cleanup();
+            return;
+        }
 
         ItemStack drop = item.clone();
-        drop.setType(Material.TRIDENT);
-        FrostListener.setScytheModel(drop, false);
+        if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(drop)) {
+            java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(drop);
+            plugin.getCrazySlotsManager().unmarkInFlight(instId);
+            drop = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
+            plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(owner, instId);
+        } else {
+            drop.setType(Material.TRIDENT);
+            FrostListener.setScytheModel(drop, false);
+        }
 
         loc.getWorld().dropItemNaturally(loc, drop);
         loc.getWorld().playSound(loc, Sound.ENTITY_ITEM_PICKUP, 1.0f, 0.6f);
@@ -261,6 +285,10 @@ public class FrostScytheTask extends BukkitRunnable {
     }
 
     private void cleanup() {
+        if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(item)) {
+            java.util.UUID instId = plugin.getCrazySlotsManager().getTransformedInstanceId(item);
+            plugin.getCrazySlotsManager().unmarkInFlight(instId);
+        }
         if (display.isValid()) {
             display.remove();
         }
