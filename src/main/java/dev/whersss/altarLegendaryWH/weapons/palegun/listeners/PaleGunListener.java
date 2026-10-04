@@ -2,9 +2,12 @@ package dev.whersss.altarLegendaryWH.weapons.palegun.listeners;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.weapons.palegun.managers.PaleGunAbilityManager;
 import dev.whersss.altarLegendaryWH.weapons.palegun.tasks.PaleProjectileTask;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.AbstractArrow;
@@ -66,10 +69,6 @@ public class PaleGunListener implements Listener {
             return;
         }
 
-        if (plugin.isAboveLegendaryHeight(player)) {
-            event.setCancelled(true);
-            return;
-        }
 
         if (!player.hasCooldown(bow)) {
             int cdSec = plugin.getWeaponsConfig().getInt("pale-gun.shoot.cooldown", 10);
@@ -93,9 +92,6 @@ public class PaleGunListener implements Listener {
         Player player = event.getPlayer();
         event.setCancelled(true);
 
-        if (plugin.isAboveLegendaryHeight(player)) {
-            return;
-        }
 
         if (!abilityManager.activatePaleRoots(player)) {
         }

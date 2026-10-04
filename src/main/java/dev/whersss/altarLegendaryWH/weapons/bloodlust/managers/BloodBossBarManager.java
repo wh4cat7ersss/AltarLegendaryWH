@@ -132,16 +132,16 @@ public class BloodBossBarManager {
 
     private String resolveCooldownTitle(String ability, String fallback) {
         return switch (ability) {
-            case "Infection" -> plugin.tr("§4§lИнфекция", "§4§lɪɴꜰᴇᴄᴛɪᴏɴ");
-            case "BloodTrail" -> plugin.tr("§4§lКровавый след", "§4§lʙʟᴏᴏᴅ ᴛʀᴀɪʟ");
-            case "BloodHook" -> plugin.tr("§4§lКровавый крюк", "§4§lʙʟᴏᴏᴅ ʜᴏᴏᴋ");
+            case "Infection" -> plugin.tr("§4§lинɸᴇᴋция", "§4§lɪɴꜰᴇᴄᴛɪᴏɴ");
+            case "BloodTrail" -> plugin.tr("§4§lᴋроʙᴀʙый ᴄлᴇд", "§4§lʙʟᴏᴏᴅ ᴛʀᴀɪʟ");
+            case "BloodHook" -> plugin.tr("§4§lᴋроʙᴀʙый ᴋрюᴋ", "§4§lʙʟᴏᴏᴅ ʜᴏᴏᴋ");
             default -> fallback;
         };
     }
 
     private String resolveDebuffTitle(String id, String fallback) {
         if ("BloodInfection".equals(id)) {
-            return plugin.tr("§4§l!Кровотечение!", "§4§l!ʙʟᴇᴇᴅɪɴɢ!");
+            return plugin.tr("§4§l!ᴋроʙоᴛᴇчᴇниᴇ!", "§4§l!ʙʟᴇᴇᴅɪɴɢ!");
         }
         return fallback;
     }

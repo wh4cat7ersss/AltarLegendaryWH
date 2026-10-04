@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.earthgauntlet.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -70,13 +71,13 @@ public class EarthGauntletManager implements Listener {
         if (bossBarManager.isOnCooldown(p, "MeteorStrike")) return;
         if (activeMeteorStrikes.containsKey(p.getUniqueId())) return;
 
-        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_DEATH, 1f, 1f);
+        p.getWorld().playSound(p.getLocation(), Sound.ENTITY_EVOKER_PREPARE_ATTACK, 1f, 1f);
         p.getWorld().spawnParticle(Particle.FIREWORK, p.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
         p.getWorld().spawnParticle(Particle.BLOCK, p.getLocation().add(0, 1, 0), 20, 0.5, 1.0, 0.5, 1.0, packedMudBlockData);
         p.getWorld().spawnParticle(Particle.DRAGON_BREATH, p.getLocation().add(0, 1, 0), 50, 1.0, 1.0, 1.0, 0.05, 1.0f);
 
         int activeWindow = plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.active_window", 30);
-        bossBarManager.setActiveBar(p, "MeteorStrikeActive", plugin.tr("§a§lᴍᴇᴛᴇᴏᴩиᴛʜый ʏдᴀᴩ", "§a§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), activeWindow);
+        bossBarManager.setActiveBar(p, "MeteorStrikeActive", plugin.tr("§a§lмᴇᴛᴇориᴛный удᴀр", "§a§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), activeWindow);
 
         BukkitTask task = new BukkitRunnable() {
             int ticks = 0;
@@ -85,7 +86,7 @@ public class EarthGauntletManager implements Listener {
                 if (!p.isOnline() || ticks >= activeWindow * 20) {
                     cleanupMeteor(p);
                     bossBarManager.removeActiveBar(p, "MeteorStrikeActive");
-                    bossBarManager.setCooldown(p, "MeteorStrike", plugin.tr("§e§lᴍᴇᴛᴇᴏᴩиᴛʜый ʏдᴀᴩ", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
+                    bossBarManager.setCooldown(p, "MeteorStrike", plugin.tr("§e§lмᴇᴛᴇориᴛный удᴀр", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
                     return;
                 }
 
@@ -107,7 +108,7 @@ public class EarthGauntletManager implements Listener {
         activeMeteorStrikes.remove(attacker.getUniqueId());
         bossBarManager.removeActiveBar(attacker, "MeteorStrikeActive");
 
-        bossBarManager.setCooldown(attacker, "MeteorStrike", plugin.tr("§e§lМетеоритный Удар", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
+        bossBarManager.setCooldown(attacker, "MeteorStrike", plugin.tr("§e§lмᴇᴛᴇориᴛный удᴀр", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ"), plugin.getWeaponsConfig().getInt("earth-gauntlet.meteor_strike.cooldown", 35));
 
         attacker.getWorld().playSound(victim.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1f, 1f);
         attacker.getWorld().playSound(victim.getLocation(), Sound.ENTITY_WITHER_BREAK_BLOCK, 1f, 1f);
@@ -164,7 +165,7 @@ public class EarthGauntletManager implements Listener {
         if (bossBarManager.isOnCooldown(p, "Mudslide")) return;
 
         int cooldown = plugin.getWeaponsConfig().getInt("earth-gauntlet.mudslide.cooldown", 40);
-        bossBarManager.setCooldown(p, "Mudslide", plugin.tr("§e§lᴏᴨᴏᴧɜᴇʜь", "§e§lᴍᴜᴅsʟɪᴅᴇ"), cooldown);
+        bossBarManager.setCooldown(p, "Mudslide", plugin.tr("§e§lоползᴇнь", "§e§lᴍᴜᴅsʟɪᴅᴇ"), cooldown);
 
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_INHALE, 1f, 1f);
 
@@ -186,6 +187,7 @@ public class EarthGauntletManager implements Listener {
             ent.setInterpolationDuration(1);
             ent.setTeleportDuration(1);
         });
+        plugin.getVisualCleanupManager().track(display);
 
         Vector right = initialDirection.clone().setY(0).normalize().crossProduct(new Vector(0, 1, 0)).normalize();
         LinkedList<BlockState> trail = new LinkedList<>();
@@ -395,61 +397,45 @@ public class EarthGauntletManager implements Listener {
 
     public void playImpactBurst(Location center, Vector dir) {
         center.getWorld().playSound(center, Sound.BLOCK_MUD_BREAK, 1.65f, 0.4f);
-        center.getWorld().playSound(center, Sound.BLOCK_MUD_BREAK, 1.5f, 1.0f);
-        center.getWorld().playSound(center, Sound.BLOCK_PACKED_MUD_BREAK, 1.2f, 0.8f);
+        center.getWorld().playSound(center, Sound.BLOCK_MUD_BREAK, 1.5f, 0.01f);
+        center.getWorld().playSound(center, Sound.BLOCK_PACKED_MUD_BREAK, 1.2f, 0.4f);
 
-        Location baseLoc = center.clone().add(0, -0.45, 0);
-        Vector forward = dir.lengthSquared() == 0.0 ? new Vector() : dir.clone().normalize().multiply(0.15);
-
-        for (int i = 0; i < 45; i++) {
-            double u = ThreadLocalRandom.current().nextDouble();
-            double v = ThreadLocalRandom.current().nextDouble();
-            double theta = u * 2.0 * Math.PI;
-            double phi = Math.acos(2.0 * v - 1.0);
-            double speed = ThreadLocalRandom.current().nextDouble(0.15, 0.4);
-            Vector velocity = new Vector(
-                    Math.sin(phi) * Math.cos(theta) * speed,
-                    Math.abs(Math.cos(phi)) * speed + 0.1,
-                    Math.sin(phi) * Math.sin(theta) * speed
-            ).add(forward);
-
-            baseLoc.getWorld().spawnParticle(
-                    Particle.BLOCK,
-                    baseLoc,
-                    0,
-                    velocity.getX(), velocity.getY(), velocity.getZ(),
-                    1.0,
-                    mudBlockData
-            );
-        }
+        Location baseLoc = center.clone().add(0, -0.2, 0);
+        ParticleUtils.spawnBlockDispersion(plugin, baseLoc, mudBlockData, 4.8);
     }
     private void infectBlock(Block toInfect, LinkedList<BlockState> trail) {
         if (toInfect.getType().isSolid() && toInfect.getType() != Material.MUD && toInfect.getType() != Material.BEDROCK) {
             trail.add(toInfect.getState());
             toInfect.setType(Material.MUD);
-            toInfect.getWorld().playSound(toInfect.getLocation(), Sound.BLOCK_MUD_PLACE, 1.3f, 0.9f);
-            toInfect.getWorld().spawnParticle(Particle.BLOCK, toInfect.getLocation().add(0.5, 1.0, 0.5), 30, 0.5, 0.5, 0.5, 1.5, mudBlockData);
+            toInfect.getWorld().playSound(toInfect.getLocation(), Sound.BLOCK_MUD_PLACE, 1.3f, 0.4f);
+            ParticleUtils.spawnBlockDispersion(plugin, toInfect.getLocation().add(0.5, 0.5, 0.5), mudBlockData, 1.2, 16);
         }
     }
 
     private void hitEntity(Player p, LivingEntity victim, LinkedList<BlockState> trail) {
+        if (plugin.getWorldGuardManager() != null
+                && !plugin.getWorldGuardManager().canAffectTarget(p, victim)) {
+            return;
+        }
+
         double mudDmg = plugin.getWeaponsConfig().getDouble("earth-gauntlet.mudslide.damage", 4.0);
         plugin.getCleanDamageManager().apply(victim, p, mudDmg);
         victim.playHurtAnimation(0.0F);
 
-        p.getWorld().playSound(victim.getLocation(), Sound.BLOCK_SPONGE_ABSORB, 1f, 1f);
+        p.getWorld().playSound(victim.getLocation(), Sound.BLOCK_SPONGE_ABSORB, 1f, 0.3f);
         p.playSound(p.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, SoundCategory.MASTER, 1f, 0.7f);
 
         victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 80, 2, false, false, true));
-        victim.getWorld().spawnParticle(Particle.BLOCK, victim.getLocation().add(0, 1, 0), 50, 0.5, 1.0, 0.5, 1.0, mudBlockData);
+        // 2x spread and count when mud projectile hits victim
+        ParticleUtils.spawnBlockDispersion(plugin, victim.getLocation().add(0, 0.5, 0), mudBlockData, 9.0, 170);
 
         int debuffTime = plugin.getWeaponsConfig().getInt("earth-gauntlet.mudslide.debuff_time_seconds", 4);
 
         if (victim instanceof Player pVictim) {
-            bossBarManager.setDebuffBar(pVictim, plugin.tr("§4§l!! §c§lЗАЛЯПАННЫЙ ГРЯЗЬЮ §4§l!!", "§4§l!! §c§lMUDDED §4§l!!"), debuffTime);
+            bossBarManager.setDebuffBar(pVictim, plugin.tr("§4§l!! §c§lзᴀляпᴀнный грязью §4§l!!", "§4§l!! §c§lᴍᴜᴅᴅᴇᴅ §4§l!!"), debuffTime);
         }
 
-        bossBarManager.setActiveBar(p, "PullPrompt", plugin.tr("§2§l!! §a§lПритянуть Цель [Смена Руки] §2§l!!", "§2§l!! §a§lPull Target [OffHand] §2§l!!"), debuffTime);
+        bossBarManager.setActiveBar(p, "PullPrompt", plugin.tr("§2§l!! §a§lприᴛянуᴛь цᴇль §2§l!!", "§2§l!! §a§lᴩᴜʟʟ ᴛᴀʀɢᴇᴛ §2§l!!"), debuffTime);
 
         pullableTargets.put(p.getUniqueId(), victim.getUniqueId());
         activeMudTrails.put(p.getUniqueId(), trail);
@@ -482,6 +468,10 @@ public class EarthGauntletManager implements Listener {
 
         Entity entity = Bukkit.getEntity(victimId);
         if (!(entity instanceof LivingEntity victim) || victim.isDead()) return;
+        if (plugin.getWorldGuardManager() != null
+                && !plugin.getWorldGuardManager().canAffectTarget(p, victim)) {
+            return;
+        }
 
         if (victim instanceof Player pVictim) {
             bossBarManager.removeDebuffBar(pVictim);
@@ -502,6 +492,11 @@ public class EarthGauntletManager implements Listener {
             @Override
             public void run() {
                 if (!p.isOnline() || !victim.isValid() || victim.isDead()) { this.cancel(); return; }
+                if (plugin.getWorldGuardManager() != null
+                        && !plugin.getWorldGuardManager().canAffectTarget(p, victim)) {
+                    this.cancel();
+                    return;
+                }
 
                 Location currentVLoc = victim.getLocation();
                 Location targetPLoc = p.getLocation().add(0, 1, 0);
@@ -514,7 +509,7 @@ public class EarthGauntletManager implements Listener {
                 double beamDist = diff.length();
                 if (beamDist > 0.5) {
                     Vector directionStep = diff.normalize();
-                    for (double d = 0; d < beamDist; d += 0.5) {
+                    for (double d = 0; d < beamDist; d += 0.4) {
                         Location point = currentVLoc.clone().add(0, 1, 0).add(directionStep.clone().multiply(d));
                         point.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, point, 1, 0.0, 0.0, 0.0, 0.0, mudBlockData);
                     }
@@ -531,7 +526,7 @@ public class EarthGauntletManager implements Listener {
                 }
 
                 if (ticks % 2 == 0) {
-                    victim.getWorld().playSound(currentVLoc, Sound.BLOCK_PACKED_MUD_BREAK, 1f, 1f);
+                    victim.getWorld().playSound(currentVLoc, Sound.BLOCK_PACKED_MUD_BREAK, 1f, 0.4f);
                 }
 
                 Vector pullVec = targetPLoc.toVector().subtract(currentVLoc.toVector());
@@ -564,8 +559,8 @@ public class EarthGauntletManager implements Listener {
 
                 BlockState state = trail.poll();
                 state.update(true, false);
-                state.getBlock().getWorld().playSound(state.getLocation(), Sound.BLOCK_MUD_BREAK, 1f, 1f);
-                state.getBlock().getWorld().spawnParticle(Particle.BLOCK, state.getLocation().add(0.5, 1.0, 0.5), 30, 0.5, 0.5, 0.5, 1.5, mudBlockData);
+                state.getBlock().getWorld().playSound(state.getLocation(), Sound.BLOCK_MUD_BREAK, 1f, 0.4f);
+                ParticleUtils.spawnBlockDispersion(plugin, state.getLocation().add(0.5, 0.5, 0.5), mudBlockData, 2.5);
             }
         }.runTaskTimer(plugin, 0L, 2L);
     }
@@ -585,5 +580,24 @@ public class EarthGauntletManager implements Listener {
         if (trail != null) {
             clearTrailGradually(trail);
         }
+    }
+
+    public void cleanupAll() {
+        for (BukkitTask task : activeMeteorStrikes.values()) {
+            if (task != null) task.cancel();
+        }
+        activeMeteorStrikes.clear();
+        pullableTargets.clear();
+        stunnedTargets.clear();
+        for (LinkedList<BlockState> trail : activeMudTrails.values()) {
+            if (trail != null) {
+                while (!trail.isEmpty()) {
+                    BlockState s = trail.poll();
+                    if (s != null) s.update(true, false);
+                }
+            }
+        }
+        activeMudTrails.clear();
+        bossBarManager.clearAll();
     }
 }

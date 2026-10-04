@@ -149,10 +149,10 @@ public class ShadowBladeManager {
                         world.spawnParticle(Particle.ELECTRIC_SPARK, headLoc, 0, sparkVel.getX(), sparkVel.getY(), sparkVel.getZ(), 0.12);
                     }
 
-                    double tailLength = plugin.getConfig().getDouble("shadow-blade.leap.tail-length", 2.2);
-                    for (double d = 0.15; d <= tailLength; d += 0.12) {
+                    double tailLength = plugin.getConfig().getDouble("shadow-blade.leap.tail-length", 2.5);
+                    for (double d = 0.05; d <= tailLength; d += 0.04) {
                         double factor = 1.0 - (d / tailLength);
-                        double spread = 0.22 * Math.pow(factor, 1.5);
+                        double spread = 0.18 * Math.pow(factor, 1.5);
 
                         Location tailLoc = actualTargetLoc.clone().subtract(dir.clone().multiply(d));
 
@@ -164,6 +164,10 @@ public class ShadowBladeManager {
 
                             Vector dustVel = dir.clone().multiply(-0.25 * factor);
                             world.spawnParticle(Particle.DUST, pLoc, 0, dustVel.getX(), dustVel.getY(), dustVel.getZ(), 1.0, blackDustTail);
+                        }
+
+                        if (Math.random() < 0.35) {
+                            world.spawnParticle(Particle.ELECTRIC_SPARK, tailLoc, 1, 0.02, 0.02, 0.02, 0.01);
                         }
                     }
                 }
@@ -218,6 +222,7 @@ public class ShadowBladeManager {
                 t.getScale().set(0.6f, 0.6f, 0.6f);
                 ent.setTransformation(t);
             });
+            plugin.getVisualCleanupManager().track(dagger);
 
             new BukkitRunnable() {
                 final Location curr = forwardCenter.clone();
@@ -249,11 +254,11 @@ public class ShadowBladeManager {
                     dagger.setTransformation(t);
 
                     Vector flyVec = currentDir.clone().normalize();
-                    double backOffset = plugin.getConfig().getDouble("shadow-blade.daggers.trail-offset-back", 0.35);
+                    double backOffset = plugin.getConfig().getDouble("shadow-blade.daggers.trail-offset-back", 0.85);
                     Location handleLoc = curr.clone().subtract(flyVec.clone().multiply(backOffset));
 
-                    Vector backStep = flyVec.clone().multiply(-0.12);
-                    int sparkCount = plugin.getConfig().getInt("shadow-blade.daggers.spark-count", 6);
+                    Vector backStep = flyVec.clone().multiply(-0.18);
+                    int sparkCount = plugin.getConfig().getInt("shadow-blade.daggers.spark-count", 8);
 
                     for (int i = 0; i < sparkCount; i++) {
                         Location sparkLoc = handleLoc.clone().add(backStep.clone().multiply(i));
@@ -426,7 +431,7 @@ public class ShadowBladeManager {
             final double step = 1.0 / (seconds * 20.0);
             @Override
             public void run() {
-                if (!p.isOnline()) {
+                if (!p.isOnline() || !barMap.containsKey(p.getUniqueId()) || barMap.get(p.getUniqueId()) != bar) {
                     bar.removeAll();
                     this.cancel();
                     return;
@@ -460,5 +465,18 @@ public class ShadowBladeManager {
         BossBar daggersBar = daggersCooldownBars.remove(uuid);
         if (leapBar != null) leapBar.removeAll();
         if (daggersBar != null) daggersBar.removeAll();
+    }
+
+    public void clearAllBars() {
+        leapCooldownBars.values().forEach(BossBar::removeAll);
+        daggersCooldownBars.values().forEach(BossBar::removeAll);
+        leapCooldownBars.clear();
+        daggersCooldownBars.clear();
+        leapCooldowns.clear();
+        daggersCooldowns.clear();
+        backstabCooldowns.clear();
+        activeLeaps.clear();
+        currentLeapLocs.clear();
+        leapStartTimes.clear();
     }
 }

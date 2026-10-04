@@ -24,7 +24,7 @@ public class VulcanCooldownManager {
 
     public static void startCooldown(Player player, int seconds) {
         UUID uuid = player.getUniqueId();
-        String title = AltarLegendaryWH.getInstance().tr("§6§lГнев вулкана", "§6§lᴠᴜʟᴄᴀɴ ᴡʀᴀᴛʜ");
+        String title = AltarLegendaryWH.getInstance().tr("§6§lГнев Вулкана", "§6§lᴠᴜʟᴄᴀɴ's ᴡʀᴀᴛʜ");
 
         BossBar bossBar = TextUtils.bossBar(
                 ChatColor.YELLOW + ChatColor.stripColor(title),

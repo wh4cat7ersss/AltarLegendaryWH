@@ -1,0 +1,29 @@
+# Altars configuration / Настройки алтарей
+
+settings:
+  display:
+    billboard: VERTICAL # Billboard options: CENTER, VERTICAL, HORIZONTAL, FIXED
+    item:
+      offset:
+        x: 0.5
+        y: 1.5
+        z: 0.5
+    title:
+      offset:
+        x: 0.5
+        y: 3.2
+        z: 0.5
+      scale:
+        x: 1.0
+        y: 1.0
+        z: 1.0
+    recipe:
+      offset:
+        x: 0.5
+        y: 3.5
+        z: 0.5
+      scale:
+        x: 0.8
+        y: 0.8
+        z: 0.8
+

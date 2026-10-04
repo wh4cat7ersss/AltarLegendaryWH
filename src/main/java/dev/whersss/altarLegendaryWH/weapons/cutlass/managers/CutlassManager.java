@@ -92,7 +92,7 @@ public class CutlassManager {
 
             @Override
             public void run() {
-                if (ticksLeft-- <= 0 || !player.isOnline()) {
+                if (ticksLeft-- <= 0 || !player.isOnline() || !activeBars.containsKey(barKey) || activeBars.get(barKey) != bar) {
                     removeOldBar(barKey);
                     cancel();
                     return;
@@ -298,7 +298,6 @@ public class CutlassManager {
 
     public void playCutlassSwingFX(Player player) {
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1f, 1.6f);
-        player.getWorld().playSound(player.getLocation(), Sound.ITEM_TRIDENT_THROW, 1.1f, 1.5f);
 
         Location eyeLoc = player.getEyeLocation();
         Vector look = eyeLoc.getDirection().normalize();

@@ -18,6 +18,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -47,11 +49,13 @@ public class WindWeaverListener implements Listener {
     }
 
     public static boolean isWindWeaver(ItemStack item) {
-        return item != null
-                && item.getType() == Material.NETHERITE_SWORD
-                && item.hasItemMeta()
-                && item.getItemMeta().hasCustomModelData()
-                && item.getItemMeta().getCustomModelData() == 12;
+        if (item == null || !item.hasItemMeta()) return false;
+        org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        if (meta.getPersistentDataContainer().has(new org.bukkit.NamespacedKey(AltarLegendaryWH.getInstance(), "windweaver"), org.bukkit.persistence.PersistentDataType.BYTE)) {
+            return true;
+        }
+        return meta.hasCustomModelData() && (meta.getCustomModelData() == 12 || meta.getCustomModelData() == 3006);
     }
 
     public boolean onLeapCooldown(Player player) {
@@ -93,6 +97,7 @@ public class WindWeaverListener implements Listener {
 
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent event) {
+        if (event.isCancelled()) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         if (!isWindWeaver(item)) return;
@@ -123,6 +128,25 @@ public class WindWeaverListener implements Listener {
         player.playSound(player.getLocation(), Sound.ENTITY_WIND_CHARGE_WIND_BURST, 1.0f, 0.8f);
         player.setVelocity(dir.multiply(velocity));
         player.setFallDistance(0);
+
+        int duration = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.speed-duration", 3) * 20;
+        int amplifier = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.speed-amplifier", 4) - 1;
+
+        PotionEffect oldSpeed = player.getPotionEffect(PotionEffectType.SPEED);
+        boolean hadSpeed = oldSpeed != null && oldSpeed.getAmplifier() < amplifier;
+
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
+
+        if (hadSpeed) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (player.isOnline()) {
+                        player.addPotionEffect(oldSpeed);
+                    }
+                }
+            }.runTaskLater(plugin, duration);
+        }
 
         Location start = player.getLocation().add(0, 1.0, 0);
         for (int i = 0; i < 5; i++) {
@@ -301,7 +325,7 @@ public class WindWeaverListener implements Listener {
     }
 
     private void startCooldownBar(Player player, int seconds, String title, Map<UUID, BossBar> barMap, Map<UUID, Long> cooldowns) {
-        BossBar bar = Bukkit.createBossBar(title, BarColor.YELLOW, BarStyle.SOLID);
+        BossBar bar = TextUtils.bossBar(title, BarColor.YELLOW, BarStyle.SOLID);
         bar.addPlayer(player);
         barMap.put(player.getUniqueId(), bar);
 
@@ -311,7 +335,7 @@ public class WindWeaverListener implements Listener {
 
             @Override
             public void run() {
-                if (!player.isOnline() || !barMap.containsKey(player.getUniqueId())) {
+                if (!player.isOnline() || !barMap.containsKey(player.getUniqueId()) || barMap.get(player.getUniqueId()) != bar) {
                     bar.removeAll();
                     cancel();
                     return;

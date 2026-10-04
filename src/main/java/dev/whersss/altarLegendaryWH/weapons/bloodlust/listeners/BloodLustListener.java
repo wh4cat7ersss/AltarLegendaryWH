@@ -37,8 +37,13 @@ public class BloodLustListener implements Listener {
     }
 
     public static boolean isBloodLust(ItemStack item) {
-        if (item == null || item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) return false;
-        return item.getItemMeta().getPersistentDataContainer().has(AltarLegendaryWH.getInstance().getKillsKey(), PersistentDataType.INTEGER);
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        if (meta.getPersistentDataContainer().has(new org.bukkit.NamespacedKey(AltarLegendaryWH.getInstance(), "bloodlust"), PersistentDataType.BYTE)) {
+            return true;
+        }
+        return item.getType() == Material.NETHERITE_SWORD && meta.getPersistentDataContainer().has(AltarLegendaryWH.getInstance().getKillsKey(), PersistentDataType.INTEGER);
     }
 
     @EventHandler
@@ -51,7 +56,7 @@ public class BloodLustListener implements Listener {
                 updateItemLore(item, kills);
 
                 p.sendActionBar(TextUtils.legacy(plugin.tr("&cЖажда крови пополняется новыми жертвами", "&cʙʟᴏᴏᴅʟᴜsᴛ feeds on new victims")));
-                abilityManager.playKillVisual(p);
+                abilityManager.playKillVisual(p, e.getEntity().getLocation());
             }
         }
     }
@@ -85,6 +90,7 @@ public class BloodLustListener implements Listener {
 
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent e) {
+        if (e.isCancelled()) return;
         Player p = e.getPlayer();
         ItemStack item = p.getInventory().getItemInMainHand();
 
@@ -92,7 +98,6 @@ public class BloodLustListener implements Listener {
 
         e.setCancelled(true);
 
-        if (plugin.isAboveLegendaryHeight(p)) return;
 
         if (p.isSneaking()) {
             if (getKills(item) >= 3) abilityManager.castBloodTrail(p);
@@ -124,6 +129,25 @@ public class BloodLustListener implements Listener {
     }
 
     @EventHandler
+    public void onItemHeld(org.bukkit.event.player.PlayerItemHeldEvent event) {
+        Player p = event.getPlayer();
+        if (abilityManager.isInBloodTrail(p)) {
+            ItemStack newItem = p.getInventory().getItem(event.getNewSlot());
+            if (!isBloodLust(newItem)) {
+                abilityManager.cancelBloodTrail(p, true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onDrop(org.bukkit.event.player.PlayerDropItemEvent event) {
+        Player p = event.getPlayer();
+        if (abilityManager.isInBloodTrail(p) && isBloodLust(event.getItemDrop().getItemStack())) {
+            abilityManager.cancelBloodTrail(p, true);
+        }
+    }
+
+    @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
         if (abilityManager.isInBloodTrail(p)) {
@@ -131,3 +155,4 @@ public class BloodLustListener implements Listener {
         }
     }
 }
+

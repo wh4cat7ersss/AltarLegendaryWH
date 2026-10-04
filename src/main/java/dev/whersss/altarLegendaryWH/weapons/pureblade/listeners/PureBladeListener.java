@@ -13,6 +13,9 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
+
 @SuppressWarnings("deprecation")
 public class PureBladeListener implements Listener {
 
@@ -23,20 +26,24 @@ public class PureBladeListener implements Listener {
     }
 
     private boolean isPureBlade(ItemStack item) {
-        if (item == null || item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) return false;
+        if (item == null || !item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
-        return meta != null && meta.hasCustomModelData() && meta.getCustomModelData() == 7;
+        if (meta == null) return false;
+        if (meta.getPersistentDataContainer().has(new NamespacedKey(AltarLegendaryWH.getInstance(), "pure_blade"), PersistentDataType.BYTE)) {
+            return true;
+        }
+        return meta.hasCustomModelData() && (meta.getCustomModelData() == 7 || meta.getCustomModelData() == 3008);
     }
 
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent event) {
+        if (event.isCancelled()) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
         if (!isPureBlade(item)) return;
 
         event.setCancelled(true);
-        if (AltarLegendaryWH.getInstance().isAboveLegendaryHeight(player)) return;
 
         if (player.isSneaking()) {
             abilityManager.castCycloneSlash(player);

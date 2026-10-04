@@ -20,6 +20,8 @@ public class PureBladeManager {
     private final AltarLegendaryWH plugin;
     private final PureBossBarManager bossBarManager;
     private final Random random = new Random();
+    /** Angle (radians) of the cyclone blade ends relative to the model's local +X axis. Change to Math.PI / 2 if the trails are 90° off the blade. */
+    private static final double BLADE_PHASE = 0.0;
 
     public PureBladeManager(AltarLegendaryWH plugin, PureBossBarManager bossBarManager) {
         this.plugin = plugin;
@@ -102,6 +104,7 @@ public class PureBladeManager {
                     ItemDisplay popCube = (ItemDisplay) p.getWorld().spawnEntity(p.getLocation().add(0, 1, 0), EntityType.ITEM_DISPLAY);
                     popCube.setItemStack(cubeItem);
                     popCube.setTeleportDuration(1);
+                    plugin.getVisualCleanupManager().track(popCube);
 
                     float initialSize = 0.2f + random.nextFloat() * 0.35f;
                     Vector randomDir = Vector.getRandom().subtract(new Vector(0.5, 0.5, 0.5)).normalize().multiply(0.15);
@@ -112,7 +115,8 @@ public class PureBladeManager {
                         @Override
                         public void run() {
                             size -= 0.015f;
-                            if (size <= 0) {
+                            if (size <= 0 || !popCube.isValid()) {
+                                plugin.getVisualCleanupManager().untrack(popCube);
                                 popCube.remove();
                                 this.cancel();
                                 return;
@@ -138,9 +142,11 @@ public class PureBladeManager {
 
         try {
             Color whiteColor = Color.fromRGB(255, 255, 255);
-            p.getWorld().spawnParticle(Particle.FLASH, p.getLocation().add(0, 1, 0), 3, 0.2, 0.5, 0.2, 0, whiteColor);
-        } catch (Exception e) {
-            e.printStackTrace();
+            p.getWorld().spawnParticle(Particle.FLASH, p.getLocation().add(0, 1.0, 0), 3, 0.2, 0.5, 0.2, 0, whiteColor);
+        } catch (Throwable t) {
+            try {
+                p.getWorld().spawnParticle(Particle.FLASH, p.getLocation().add(0, 1.0, 0), 3, 0.2, 0.5, 0.2, 0);
+            } catch (Throwable ignored) {}
         }
 
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_WARDEN_SONIC_BOOM, 1.0f, 1.0f);
@@ -206,6 +212,7 @@ public class PureBladeManager {
         display.setInterpolationDelay(0);
         display.setInterpolationDuration(3);
         display.setTeleportDuration(3);
+        plugin.getVisualCleanupManager().track(display);
 
         Transformation t = display.getTransformation();
         t.getScale().set(scaleStart, scaleStart, scaleStart);
@@ -231,7 +238,8 @@ public class PureBladeManager {
 
             @Override
             public void run() {
-                if (scale <= 0) {
+                if (scale <= 0 || !display.isValid()) {
+                    plugin.getVisualCleanupManager().untrack(display);
                     display.remove();
                     this.cancel();
                     return;
@@ -322,12 +330,23 @@ public class PureBladeManager {
             slashItem.setItemMeta(meta);
         }
 
-        double CYCLONE_HEIGHT = 5.0;
+        Location spawnLoc = p.getLocation();
+        spawnLoc.setPitch(0);
+        spawnLoc.setYaw(0);
 
-        ItemDisplay display = (ItemDisplay) p.getWorld().spawnEntity(p.getLocation().add(0, CYCLONE_HEIGHT, 0), EntityType.ITEM_DISPLAY);
-        display.setItemStack(slashItem);
-        display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
-        display.setTeleportDuration(1);
+        ItemDisplay display = p.getWorld().spawn(spawnLoc, ItemDisplay.class, d -> {
+            d.setItemStack(slashItem);
+            d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+            d.setInterpolationDuration(1);
+            d.setInterpolationDelay(0);
+            Transformation initialTrans = d.getTransformation();
+            initialTrans.getScale().set(12.0f, 12.0f, 12.0f);
+            initialTrans.getTranslation().set(0, 0.45f + (12.0f - 3.0f) * 0.5f, 0);
+            d.setTransformation(initialTrans);
+        });
+
+        p.addPassenger(display);
+        plugin.getVisualCleanupManager().track(display);
 
         new BukkitRunnable() {
             int ticks = 0;
@@ -337,11 +356,12 @@ public class PureBladeManager {
             float minScale = 3.0f;
             int shrinkDuration = 40;
             int totalDuration = 50;
-            double BASE_HEIGHT = 1.0;
 
             @Override
             public void run() {
-                if (!p.isOnline() || p.isDead() || ticks > totalDuration) {
+                if (!p.isOnline() || p.isDead() || ticks > totalDuration || !display.isValid()) {
+                    p.removePassenger(display);
+                    plugin.getVisualCleanupManager().untrack(display);
                     display.remove();
                     if (p.isOnline()) {
                         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BREEZE_CHARGE, 1.0f, 1.0f);
@@ -359,59 +379,74 @@ public class PureBladeManager {
                     currentScale -= ((12.0f - minScale) / shrinkDuration);
                 }
 
-                Location baseLoc = p.getLocation();
-                baseLoc.setPitch(0);
-
-                Location displayLoc = baseLoc.clone();
-                displayLoc.add(0, BASE_HEIGHT + (currentScale / 2.0), 0);
-                displayLoc.setYaw(0);
-
-                entityYaw += 85f;
-
-                display.teleport(displayLoc);
+                entityYaw += 65f;
+                if (entityYaw >= 360f) entityYaw -= 360f;
 
                 display.setInterpolationDelay(0);
                 display.setInterpolationDuration(1);
 
+                float yTranslation = 0.45f + (currentScale - minScale) * 0.5f;
+
                 Transformation t = display.getTransformation();
                 t.getScale().set(currentScale, currentScale, currentScale);
-                t.getTranslation().set(0, 0, 0);
+                t.getTranslation().set(0, yTranslation, 0);
                 t.getLeftRotation().set(new Quaternionf().rotateY((float) Math.toRadians(entityYaw)));
                 display.setTransformation(t);
 
+                Location baseLoc = p.getLocation();
+                baseLoc.setPitch(0);
                 double particleRadius = (currentScale / 2.0) + 0.2;
-                double fixedParticleY = baseLoc.getY() + 1.1;
+                // Positioned slightly above the slash disk as requested
+                double fixedParticleY = baseLoc.getY() + 1.25;
 
-                if (ticks % 2 == 0) {
-                    for (int j = 0; j < 30; j++) {
-                        double angle = Math.random() * Math.PI * 2;
-                        double r = (particleRadius * 0.4) + (Math.random() * (particleRadius * 0.6));
+                // Air cutting edges: 2 trailing lines of sparks & crits following the 2 blade tips
+                double curA = -Math.toRadians(entityYaw) + BLADE_PHASE;
+                double sweep = Math.toRadians(65.0); // angle swept since last tick
+                int trailSteps = 14;
 
-                        Location windTopLoc = baseLoc.clone().add(Math.cos(angle) * r, BASE_HEIGHT + (currentScale / 2.0) + 0.5, Math.sin(angle) * r);
+                for (int side = 0; side < 2; side++) {
+                    double tipA = curA + side * Math.PI;
 
-                        double dx = -Math.sin(angle);
-                        double dz = Math.cos(angle);
+                    for (int s = 0; s < trailSteps; s++) {
+                        double f = (double) s / (double) trailSteps; // 0 = at blade tip, 1 = oldest point of trail
+                        double a = tipA + sweep * f; // follow arc backwards
+                        double r = particleRadius * (1.0 - f * 0.06) + (f * f * 0.28);
+                        double cos = Math.cos(a);
+                        double sin = Math.sin(a);
 
-                        p.getWorld().spawnParticle(Particle.CLOUD, windTopLoc, 0, dx, 0.02, dz, 0.4);
-                    }
+                        double px = baseLoc.getX() + cos * r;
+                        double py = fixedParticleY + 0.05 + Math.sin(f * Math.PI) * 0.06;
+                        double pz = baseLoc.getZ() + sin * r;
+                        Location trailLoc = new Location(p.getWorld(), px, py, pz);
 
-                    for (int i = 0; i < 35; i++) {
-                        double angle = Math.random() * Math.PI * 2;
-                        Location critLoc = new Location(p.getWorld(),
-                                baseLoc.getX() + Math.cos(angle) * particleRadius,
-                                fixedParticleY,
-                                baseLoc.getZ() + Math.sin(angle) * particleRadius);
-                        p.getWorld().spawnParticle(Particle.CRIT, critLoc, 1, 0, 0, 0, 0);
+                        // Velocity: tangent air drag + slight outward fling
+                        double tangential = 0.12 * (1.0 - f * 0.5);
+                        double outward = 0.04 + f * 0.05;
+                        double vx = sin * tangential + cos * outward;
+                        double vz = -cos * tangential + sin * outward;
+
+                        if (s == 0) {
+                            // Blade tip cutting edge: bright electric spark and crit
+                            p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, trailLoc, 1, 0, 0, 0, 0);
+                            p.getWorld().spawnParticle(Particle.CRIT, trailLoc, 1, 0, 0, 0, 0);
+                        } else if (s % 2 == 0) {
+                            // Points along the 2 lines: alternate electric spark and crit
+                            p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, trailLoc, 1, vx * 0.3, 0.01, vz * 0.3, 0.01);
+                        } else {
+                            p.getWorld().spawnParticle(Particle.CRIT, trailLoc, 1, vx * 0.3, 0.01, vz * 0.3, 0.01);
+                        }
                     }
                 }
 
-                for (int i = 0; i < 50; i++) {
-                    double angle = Math.random() * Math.PI * 2;
-                    Location edgeLoc = new Location(p.getWorld(),
-                            baseLoc.getX() + Math.cos(angle) * particleRadius,
-                            fixedParticleY,
-                            baseLoc.getZ() + Math.sin(angle) * particleRadius);
-                    p.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, edgeLoc, 1, 0, 0, 0, 0);
+                // Chaotic air clouds swirling around, above and below the cyclone
+                for (int c = 0; c < 4; c++) {
+                    double randAngle = Math.random() * Math.PI * 2;
+                    double randR = particleRadius * (0.35 + Math.random() * 0.75);
+                    double cx = baseLoc.getX() + Math.cos(randAngle) * randR;
+                    double cy = fixedParticleY + (Math.random() - 0.45) * 1.2;
+                    double cz = baseLoc.getZ() + Math.sin(randAngle) * randR;
+                    Location cloudLoc = new Location(p.getWorld(), cx, cy, cz);
+                    p.getWorld().spawnParticle(Particle.CLOUD, cloudLoc, 1, 0.08, 0.05, 0.08, 0.02);
                 }
 
                 if (ticks % 2 == 0) {

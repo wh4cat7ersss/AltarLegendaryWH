@@ -48,8 +48,9 @@ public class FrostBossBarManager {
 
             @Override
             public void run() {
-                if (!player.isOnline() || ticksLeft <= 0) {
+                if (!player.isOnline() || ticksLeft <= 0 || !activeBars.containsKey(uuid) || activeBars.get(uuid).get(ability) != bar) {
                     bar.removePlayer(player);
+                    bar.removeAll();
                     Map<String, BossBar> playerBars = activeBars.get(uuid);
                     if (playerBars != null) {
                         playerBars.remove(ability);
@@ -78,10 +79,20 @@ public class FrostBossBarManager {
         }
     }
 
+    public void clearAll() {
+        for (Map<String, BossBar> bars : activeBars.values()) {
+            for (BossBar bar : bars.values()) {
+                bar.removeAll();
+            }
+        }
+        activeBars.clear();
+        cooldownEnds.clear();
+    }
+
     private String resolveTitle(String ability, String fallback) {
         return switch (ability) {
-            case "ScytheThrow" -> plugin.tr("§b§lБросок косы", "§b§lsᴄʏᴛʜᴇ ᴛʜʀᴏᴡ");
-            case "CommandOfIce" -> plugin.tr("§b§lПовеление льда", "§b§lᴄᴏᴍᴍᴀɴᴅ ᴏғ ɪᴄᴇ");
+            case "ScytheThrow" -> plugin.tr("§b§lброᴄоᴋ ᴋоᴄы", "§b§lsᴄʏᴛʜᴇ ᴛʜʀᴏᴡ");
+            case "CommandOfIce" -> plugin.tr("§b§lпоʙᴇлᴇниᴇ льдᴀ", "§b§lᴄᴏᴍᴍᴀɴᴅ ᴏғ ɪᴄᴇ");
             default -> fallback;
         };
     }

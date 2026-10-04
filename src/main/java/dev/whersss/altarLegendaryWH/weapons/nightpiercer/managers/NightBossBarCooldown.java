@@ -37,6 +37,12 @@ public class NightBossBarCooldown extends BukkitRunnable {
 
     @Override
     public void run() {
+        if (!activeBars.containsKey(key) || activeBars.get(key) != bar) {
+            bar.removeAll();
+            this.cancel();
+            return;
+        }
+
         if (current <= 0) {
             bar.removeAll();
             activeBars.remove(key, bar);
@@ -58,5 +64,12 @@ public class NightBossBarCooldown extends BukkitRunnable {
             }
             return false;
         });
+    }
+
+    public static void clearAll() {
+        for (BossBar bar : activeBars.values()) {
+            bar.removeAll();
+        }
+        activeBars.clear();
     }
 }

@@ -35,6 +35,10 @@ public final class TextUtils {
         return new ShadowBossBar(title, color, style);
     }
 
+    public static void removePlayerFromAllBossBars(org.bukkit.entity.Player player) {
+        ShadowBossBar.removePlayerFromAll(player);
+    }
+
     public static void clearBossBars() {
         ShadowBossBar.clearAll();
     }

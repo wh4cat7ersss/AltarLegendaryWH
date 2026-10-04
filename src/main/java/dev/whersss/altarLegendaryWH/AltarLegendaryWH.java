@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH;
 
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import net.kyori.adventure.text.Component;
 
 import dev.whersss.altarLegendaryWH.commands.AltarLegendaryCommand;
 import dev.whersss.altarLegendaryWH.commands.AltarLegendaryTabCompleter;
@@ -42,6 +43,9 @@ import dev.whersss.altarLegendaryWH.weapons.hyperion.managers.HyperionCooldownMa
 import dev.whersss.altarLegendaryWH.weapons.witherblade.managers.WitherManager;
 import dev.whersss.altarLegendaryWH.weapons.witherblade.listeners.WitherBladeListener;
 
+import dev.whersss.altarLegendaryWH.weapons.crazyslots.managers.CrazySlotsManager;
+import dev.whersss.altarLegendaryWH.weapons.crazyslots.listeners.CrazySlotsListener;
+
 import dev.whersss.altarLegendaryWH.weapons.earthgauntlet.managers.EarthGauntletManager;
 import dev.whersss.altarLegendaryWH.weapons.earthgauntlet.listeners.EarthGauntletListener;
 
@@ -56,6 +60,12 @@ import dev.whersss.altarLegendaryWH.items.copperpickaxe.listeners.CopperPickaxeL
 import dev.whersss.altarLegendaryWH.items.weaponshandle.WeaponsHandleItem;
 import dev.whersss.altarLegendaryWH.items.illusioncore.IllusionCoreItem;
 import dev.whersss.altarLegendaryWH.items.vulcanskull.VulcanSkullItem;
+import dev.whersss.altarLegendaryWH.altars.Altar;
+import dev.whersss.altarLegendaryWH.altars.AltarManager;
+import dev.whersss.altarLegendaryWH.altars.AltarLanguageManager;
+import dev.whersss.altarLegendaryWH.altars.commands.EditAltarCommand;
+import dev.whersss.altarLegendaryWH.altars.listeners.AltarListener;
+import dev.whersss.altarLegendaryWH.altars.listeners.AltarBlockListener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -75,7 +85,18 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 
+import dev.whersss.altarLegendaryWH.weapons.paladinsbattleaxe.managers.PaladinsBattleAxeManager;
+import dev.whersss.altarLegendaryWH.weapons.paladinsbattleaxe.listeners.PaladinsBattleAxeListener;
+import dev.whersss.altarLegendaryWH.integrations.worldguard.WorldGuardManager;
+import dev.whersss.altarLegendaryWH.integrations.worldguard.WorldGuardAbilityGate;
+import dev.whersss.altarLegendaryWH.managers.VisualCleanupManager;
+
 public class AltarLegendaryWH extends JavaPlugin {
+    @Override
+    public void onLoad() {
+        WorldGuardManager.registerFlag();
+    }
+
 
     private static AltarLegendaryWH instance;
 
@@ -85,6 +106,16 @@ public class AltarLegendaryWH extends JavaPlugin {
     private NamespacedKey paleGunKey;
     private NamespacedKey hyperionKey;
     private NamespacedKey witherKey;
+    private NamespacedKey paladinsBattleAxeKey;
+    private NamespacedKey knightfallTierKey;
+    private PaladinsBattleAxeManager paladinsBattleAxeManager;
+    private PaladinsBattleAxeListener paladinsBattleAxeListener;
+    private CrazySlotsManager crazySlotsManager;
+    private CrazySlotsListener crazySlotsListener;
+    private WorldGuardManager worldGuardManager;
+    private VisualCleanupManager visualCleanupManager;
+    private EditAltarCommand editAltarCommand;
+
 
     private FriendManager friendManager;
     private CleanDamageManager cleanDamageManager;
@@ -110,6 +141,13 @@ public class AltarLegendaryWH extends JavaPlugin {
     private FileConfiguration weaponsConfig;
     private File itemsFile;
     private FileConfiguration itemsConfig;
+    private File altarsConfigFile;
+    private FileConfiguration altarsConfig;
+    private File modelsFile;
+    private FileConfiguration modelsConfig;
+    private AltarManager altarManager;
+    private AltarLanguageManager altarLanguageManager;
+    private final java.util.Map<Integer, Boolean> wasAltarOnCooldown = new java.util.HashMap<>();
 
     @Override
     public void onEnable() {
@@ -117,6 +155,8 @@ public class AltarLegendaryWH extends JavaPlugin {
         saveDefaultConfig();
         saveDefaultWeaponsConfig();
         saveDefaultItemsConfig();
+        saveDefaultAltarsConfig();
+        saveDefaultModelsConfig();
 
         killsKey = new NamespacedKey(this, "bloodlust_kills");
         vulcanKey = new NamespacedKey(this, "vulcan_crossbow");
@@ -124,6 +164,19 @@ public class AltarLegendaryWH extends JavaPlugin {
         paleGunKey = new NamespacedKey(this, "pale_gun");
         hyperionKey = new NamespacedKey(this, "hyperion_sword");
         witherKey = new NamespacedKey(this, "wither_blade");
+        knightfallTierKey = new NamespacedKey(this, "knightfall_tier");
+        visualCleanupManager = new VisualCleanupManager(this);
+        worldGuardManager = new WorldGuardManager(this);
+        getServer().getPluginManager().registerEvents(new WorldGuardAbilityGate(this, worldGuardManager), this);
+
+        paladinsBattleAxeKey = new NamespacedKey(this, "paladins_battle_axe");
+        paladinsBattleAxeManager = new PaladinsBattleAxeManager(this);
+        paladinsBattleAxeListener = new PaladinsBattleAxeListener(this, paladinsBattleAxeManager);
+        getServer().getPluginManager().registerEvents(paladinsBattleAxeListener, this);
+
+        crazySlotsManager = new CrazySlotsManager(this);
+        crazySlotsListener = new CrazySlotsListener(this, crazySlotsManager);
+        getServer().getPluginManager().registerEvents(crazySlotsListener, this);
 
         friendManager = new FriendManager(this);
         cleanDamageManager = new CleanDamageManager(this);
@@ -150,7 +203,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         PluginCommand cmd = getCommand("altarlegendary");
         if (cmd != null) {
             cmd.setExecutor(new AltarLegendaryCommand(this));
-            cmd.setTabCompleter(new AltarLegendaryTabCompleter());
+            cmd.setTabCompleter(new AltarLegendaryTabCompleter(this));
         }
 
         PluginCommand friendCmd = getCommand("friendlist");
@@ -175,7 +228,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.weapons.knightfall.listeners.KnightfallListener(this, knightfallManager), this);
         new KnightfallPassiveTask(this).runTaskTimer(this, 0L, 20L);
         getServer().getPluginManager().registerEvents(new ShadowBladeListener(this, shadowBladeManager), this);
-        new ShadowBladePassiveTask().runTaskTimer(this, 0L, 20L);
+        new ShadowBladePassiveTask().runTaskTimer(this, 0L, 2L);
         getServer().getPluginManager().registerEvents(windWeaverListener, this);
         getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.items.wardenheart.listeners.WardenHeartDropListener(this), this);
 
@@ -194,6 +247,39 @@ public class AltarLegendaryWH extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new CopperPickaxeListener(this), this);
 
+        altarLanguageManager = new AltarLanguageManager(this);
+        altarLanguageManager.reload();
+        cleanupPhantomAltarEntities();
+
+        altarManager = new AltarManager(this);
+        altarManager.loadAltars();
+
+        editAltarCommand = new EditAltarCommand(this);
+
+        getServer().getPluginManager().registerEvents(new AltarListener(this), this);
+        getServer().getPluginManager().registerEvents(new AltarBlockListener(this), this);
+
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            if (altarManager == null) return;
+            for (Integer id : altarManager.getAltarsIds()) {
+                Altar altar = altarManager.getAltar(id);
+                if (altar == null) continue;
+
+                altar.rotateItemDisplay();
+
+                long remaining = altar.getCooldownRemaining();
+                boolean currentlyOnCooldown = remaining > 0;
+
+                if (currentlyOnCooldown) {
+                    altar.updateRecipeDisplay();
+                } else if (wasAltarOnCooldown.getOrDefault(id, false)) {
+                    altar.spawnEntities();
+                    handleAltarCooldownEnd(altar);
+                }
+                wasAltarOnCooldown.put(id, currentlyOnCooldown);
+            }
+        }, 0L, 1L);
+
         registerRecipes();
 
         new BukkitRunnable() {
@@ -206,8 +292,10 @@ public class AltarLegendaryWH extends JavaPlugin {
                         if (item.getItemMeta().hasCustomModelData()) {
                             int cmd = item.getItemMeta().getCustomModelData();
                             boolean hasDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
+                            int tier = item.getItemMeta().getPersistentDataContainer().getOrDefault(knightfallTierKey, PersistentDataType.INTEGER,
+                                    (cmd >= 3003 || cmd == 3) ? 3 : (hasDensity ? 2 : ((cmd >= 3002 || cmd == 2) ? 1 : 0)));
 
-                            if ((kills >= 4 && cmd < 1) || (kills >= 8 && !hasDensity) || (kills >= 10 && cmd < 3)) {
+                            if ((kills >= 4 && tier < 1) || (kills >= 8 && tier < 2) || (kills >= 10 && tier < 3)) {
                                 p.sendActionBar(TextUtils.legacy(tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
                             }
                         }
@@ -328,11 +416,21 @@ public class AltarLegendaryWH extends JavaPlugin {
         if (bloodBossBarManager != null) bloodBossBarManager.clearAll();
         if (bloodAbilityManager != null) bloodAbilityManager.cleanup();
         if (nightHealthManager != null) nightHealthManager.revertAll();
+        NightBossBarCooldown.clearAll();
         if (pureBossBarManager != null) pureBossBarManager.clearAll();
+        if (frostBossBarManager != null) frostBossBarManager.clearAll();
         if (paleGunAbilityManager != null) paleGunAbilityManager.clearAll();
         if (windWeaverListener != null) windWeaverListener.removeAllBars();
+        if (knightfallManager != null) knightfallManager.clearAllBars();
+        if (shadowBladeManager != null) shadowBladeManager.clearAllBars();
+        if (witherManager != null) witherManager.clearAllBars();
+        if (earthGauntletManager != null) earthGauntletManager.cleanupAll();
         if (friendManager != null) friendManager.saveFriends();
         if (cutlassManager != null) cutlassManager.cleanupAll();
+        if (visualCleanupManager != null) visualCleanupManager.cleanupAll();
+        if (paladinsBattleAxeManager != null) paladinsBattleAxeManager.clearAllBars();
+        if (crazySlotsManager != null) crazySlotsManager.forceRevertAll();
+
         if (cleanDamageManager != null) cleanDamageManager.clear();
         if (copperArmorTask != null) copperArmorTask.cleanup();
         TextUtils.clearBossBars();
@@ -341,6 +439,11 @@ public class AltarLegendaryWH extends JavaPlugin {
         VulcanChargeManager.cancelAll();
 
         HyperionCooldownManager.clearAllBars();
+
+        if (altarManager != null) {
+            altarManager.saveAltars();
+            altarManager.cleanupEntities();
+        }
 
         getLogger().info("AltarLegendaryWH выключен!");
     }
@@ -352,6 +455,7 @@ public class AltarLegendaryWH extends JavaPlugin {
     public NamespacedKey getPaleGunKey() { return paleGunKey; }
     public NamespacedKey getHyperionKey() { return hyperionKey; }
     public NamespacedKey getWitherKey() { return witherKey; }
+    public NamespacedKey getKnightfallTierKey() { return knightfallTierKey; }
 
     public FriendManager getFriendManager() { return friendManager; }
     public CleanDamageManager getCleanDamageManager() { return cleanDamageManager; }
@@ -385,7 +489,6 @@ public class AltarLegendaryWH extends JavaPlugin {
     public boolean isAboveLegendaryHeight(Player player) {
         return isLimitsEnabled() && player.getLocation().getY() > getLegendaryMaxY();
     }
-
     public void resetAllCooldowns(Player player) {
         if (boneCooldownManager != null) boneCooldownManager.resetPlayer(player);
         if (bloodBossBarManager != null) bloodBossBarManager.resetPlayer(player);
@@ -402,5 +505,104 @@ public class AltarLegendaryWH extends JavaPlugin {
         if (windWeaverListener != null) windWeaverListener.resetPlayer(player);
         VulcanCooldownManager.resetPlayer(player);
         HyperionCooldownManager.resetPlayer(player);
+        if (paladinsBattleAxeManager != null) paladinsBattleAxeManager.resetCooldowns(player);
+        if (crazySlotsManager != null) crazySlotsManager.resetPlayer(player);
+        TextUtils.removePlayerFromAllBossBars(player);
     }
+
+    private void handleAltarCooldownEnd(Altar altar) {
+        if (altar.getResultItem() == null || altar.getLocation() == null) return;
+
+        org.bukkit.Location loc = altar.getLocation();
+        String coordsText = loc.getBlockX() + " " + loc.getBlockY() + " " + loc.getBlockZ();
+
+        Component msg = altarLanguageManager.component("altar.ready_prefix")
+                .append(Component.text(coordsText))
+                .append(altarLanguageManager.component("altar.ready_suffix"));
+
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            try {
+                p.playSound(p.getLocation(), org.bukkit.Sound.ITEM_GOAT_HORN_SOUND_1, 1.0f, 1.0f);
+            } catch (Throwable t) {
+                p.playSound(p.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
+            }
+            p.sendMessage(msg);
+        }
+    }
+
+    private void cleanupPhantomAltarEntities() {
+        NamespacedKey tagKey = new NamespacedKey(this, "altar_entity");
+        Bukkit.getWorlds().forEach(world -> {
+            world.getEntities().forEach(entity -> {
+                if (entity.getPersistentDataContainer().has(tagKey, PersistentDataType.BYTE)) {
+                    entity.remove();
+                }
+            });
+        });
+    }
+
+    public void saveDefaultAltarsConfig() {
+        altarsConfigFile = new File(getDataFolder(), "altars.yml");
+        if (!altarsConfigFile.exists()) {
+            saveResource("altars.yml", false);
+        }
+        altarsConfig = YamlConfiguration.loadConfiguration(altarsConfigFile);
+    }
+
+    public void reloadAltarsConfig() {
+        if (altarsConfigFile == null) {
+            altarsConfigFile = new File(getDataFolder(), "altars.yml");
+        }
+        altarsConfig = YamlConfiguration.loadConfiguration(altarsConfigFile);
+    }
+
+    public void saveAltarsConfig() {
+        try {
+            if (altarsConfig != null && altarsConfigFile != null) {
+                altarsConfig.save(altarsConfigFile);
+            }
+        } catch (Exception e) {
+            getLogger().severe("Could not save altars.yml: " + e.getMessage());
+        }
+    }
+
+    public FileConfiguration getAltarsConfig() {
+        if (altarsConfig == null) {
+            reloadAltarsConfig();
+        }
+        return altarsConfig;
+    }
+
+    public void saveDefaultModelsConfig() {
+        modelsFile = new File(getDataFolder(), "models.yml");
+        if (!modelsFile.exists()) {
+            saveResource("models.yml", false);
+        }
+        modelsConfig = YamlConfiguration.loadConfiguration(modelsFile);
+    }
+
+    public void reloadModelsConfig() {
+        if (modelsFile == null) {
+            modelsFile = new File(getDataFolder(), "models.yml");
+        }
+        modelsConfig = YamlConfiguration.loadConfiguration(modelsFile);
+    }
+
+    public FileConfiguration getModelsConfig() {
+        if (modelsConfig == null) {
+            reloadModelsConfig();
+        }
+        return modelsConfig;
+    }
+
+        public NamespacedKey getPaladinsBattleAxeKey() { return paladinsBattleAxeKey; }
+    public PaladinsBattleAxeManager getPaladinsBattleAxeManager() { return paladinsBattleAxeManager; }
+    public CrazySlotsManager getCrazySlotsManager() { return crazySlotsManager; }
+    public WorldGuardManager getWorldGuardManager() { return worldGuardManager; }
+    public VisualCleanupManager getVisualCleanupManager() { return visualCleanupManager; }
+    public PaleGunAbilityManager getPaleGunAbilityManager() { return paleGunAbilityManager; }
+    public EditAltarCommand getEditAltarCommand() { return editAltarCommand; }
+
+    public AltarManager getAltarManager() { return altarManager; }
+    public AltarLanguageManager getAltarLanguageManager() { return altarLanguageManager; }
 }

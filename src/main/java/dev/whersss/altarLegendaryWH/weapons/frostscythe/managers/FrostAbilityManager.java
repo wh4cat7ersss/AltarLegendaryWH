@@ -2,8 +2,10 @@ package dev.whersss.altarLegendaryWH.weapons.frostscythe.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.weapons.frostscythe.tasks.FrostScytheTask;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -65,7 +67,8 @@ public class FrostAbilityManager {
             double y = i * sin;
             double z = -(i * i) * 0.25;
             Vector point = right.clone().multiply(x).add(up.clone().multiply(y)).add(forward.clone().multiply(z));
-            center.getWorld().spawnParticle(Particle.BLOCK, center.clone().add(point), 1, 0, 0, 0, 0, blueIceData);
+            Location pLoc = center.clone().add(point);
+            center.getWorld().spawnParticle(Particle.BLOCK, pLoc, 1, 0.0, 0.0, 0.0, 0.0, blueIceData);
         }
     }
     public void playMassiveDustSweep(Location center, Vector dir) {
@@ -80,8 +83,8 @@ public class FrostAbilityManager {
 
             Vector point = right.clone().multiply(i).add(forward.clone().multiply(z));
             Location spawnLoc = center.clone().add(point);
-            center.getWorld().spawnParticle(Particle.SNOWFLAKE, spawnLoc, 1, 0.05, 0.05, 0.05, 0.0);
-            center.getWorld().spawnParticle(Particle.ENCHANTED_HIT, spawnLoc, 4, 0.15, 0.15, 0.15, 0.0);
+            center.getWorld().spawnParticle(Particle.SNOWFLAKE, spawnLoc, 1, 0.0, 0.0, 0.0, 0.0);
+            center.getWorld().spawnParticle(Particle.ENCHANTED_HIT, spawnLoc, 1, 0.0, 0.0, 0.0, 0.0);
         }
     }
 
@@ -89,58 +92,12 @@ public class FrostAbilityManager {
         center.getWorld().playSound(center, Sound.ITEM_TRIDENT_THROW, 1.15f, 0.4f);
         center.getWorld().playSound(center, Sound.BLOCK_GLASS_BREAK, 1.5f, 1.0f);
 
-        Location baseLoc = center.clone().add(0, 0.55, 0);
-
-        List<Vector> velocities = new ArrayList<>();
-        for (int i = 0; i < 45; i++) {
-            double u = ThreadLocalRandom.current().nextDouble();
-            double v = ThreadLocalRandom.current().nextDouble();
-            double theta = u * 2.0 * Math.PI;
-            double phi = Math.acos(2.0 * v - 1.0);
-
-            double speed = ThreadLocalRandom.current().nextDouble() * 0.25 + 0.15;
-
-            double dx = Math.sin(phi) * Math.cos(theta) * speed;
-            double dy = Math.abs(Math.cos(phi)) * speed + 0.1;
-            double dz = Math.sin(phi) * Math.sin(theta) * speed;
-
-            velocities.add(new Vector(dx, dy, dz));
-        }
-
-        new BukkitRunnable() {
-            int tick = 0;
-            final int maxTicks = 6;
-
-            @Override
-            public void run() {
-                if (tick > maxTicks) {
-                    cancel();
-                    return;
-                }
-
-                for (Vector vel : velocities) {
-                    Location particleLoc = baseLoc.clone().add(
-                            vel.getX() * tick,
-                            (vel.getY() * tick) - (0.02 * tick * tick),
-                            vel.getZ() * tick
-                    );
-
-                    baseLoc.getWorld().spawnParticle(
-                            Particle.BLOCK,
-                            particleLoc,
-                            1,
-                            0.0, 0.0, 0.0,
-                            0.0,
-                            blueIceData
-                    );
-                }
-                tick++;
-            }
-        }.runTaskTimer(plugin, 0, 1);
+        Location baseLoc = center.clone().add(0, 0.2, 0);
+        center.getWorld().spawnParticle(Particle.SNOWFLAKE, baseLoc, 30, 0.4, 0.4, 0.4, 0.08);
+        ParticleUtils.spawnBlockDispersion(plugin, baseLoc, blueIceData, 4.2, 85);
     }
 
     public void executeScytheThrow(Player p, ItemStack scytheItem, EquipmentSlot hand) {
-        if (plugin.isAboveLegendaryHeight(p)) return;
         bossBarManager.setCooldown(p, "ScytheThrow", "§b§lsᴄʏᴛʜᴇ ᴛʜʀᴏᴡ", 30);
 
         ItemStack throwItem = scytheItem.clone();
@@ -161,7 +118,6 @@ public class FrostAbilityManager {
     }
 
     public void castCommandOfIce(Player p) {
-        if (plugin.isAboveLegendaryHeight(p)) return;
         if (isOnCooldown(p, "CommandOfIce")) return;
         bossBarManager.setCooldown(p, "CommandOfIce", "§b§lᴄᴏᴍᴍᴀɴᴅ ᴏғ ɪᴄᴇ", 45);
 
@@ -200,6 +156,7 @@ public class FrostAbilityManager {
                             ent.setTransformation(t);
                             ent.setTeleportDuration(3);
                         });
+                        plugin.getVisualCleanupManager().track(block);
 
                         block.setInterpolationDelay(0);
                         block.setInterpolationDuration(36);
@@ -344,54 +301,9 @@ public class FrostAbilityManager {
 
     private void breakIce(Location loc) {
         loc.getWorld().playSound(loc, Sound.BLOCK_GLASS_BREAK, 1.5f, 1.0f);
-        Location baseLoc = loc.clone().add(0, 0.45, 0);
-
-        List<Vector> velocities = new ArrayList<>();
-        for (int i = 0; i < 35; i++) {
-            double u = ThreadLocalRandom.current().nextDouble();
-            double v = ThreadLocalRandom.current().nextDouble();
-            double theta = u * 2.0 * Math.PI;
-            double phi = Math.acos(2.0 * v - 1.0);
-
-            double speed = ThreadLocalRandom.current().nextDouble() * 0.2 + 0.1;
-
-            double dirX = Math.sin(phi) * Math.cos(theta) * speed;
-            double dirY = Math.abs(Math.cos(phi)) * speed + 0.15;
-            double dirZ = Math.sin(phi) * Math.sin(theta) * speed;
-
-            velocities.add(new Vector(dirX, dirY, dirZ));
-        }
-
-        new BukkitRunnable() {
-            int tick = 0;
-            final int maxTicks = 5;
-
-            @Override
-            public void run() {
-                if (tick > maxTicks) {
-                    cancel();
-                    return;
-                }
-
-                for (Vector vel : velocities) {
-                    Location particleLoc = baseLoc.clone().add(
-                            vel.getX() * tick,
-                            (vel.getY() * tick) - (0.02 * tick * tick),
-                            vel.getZ() * tick
-                    );
-
-                    loc.getWorld().spawnParticle(
-                            Particle.BLOCK,
-                            particleLoc,
-                            1,
-                            0.0, 0.0, 0.0,
-                            0.0,
-                            blueIceData
-                    );
-                }
-                tick++;
-            }
-        }.runTaskTimer(plugin, 0, 1);
+        Location baseLoc = loc.clone().add(0, 0.2, 0);
+        loc.getWorld().spawnParticle(Particle.SNOWFLAKE, baseLoc, 25, 0.35, 0.35, 0.35, 0.06);
+        ParticleUtils.spawnBlockDispersion(plugin, baseLoc, blueIceData, 4.2, 85);
     }
 
     public void applyFreeze(Player p, LivingEntity victim, int seconds, int slownessAmp) {

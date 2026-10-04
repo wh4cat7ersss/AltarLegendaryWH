@@ -1,5 +1,6 @@
 package dev.whersss.altarLegendaryWH.commands;
 
+import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,37 +16,45 @@ import java.util.stream.Collectors;
 
 public class AltarLegendaryTabCompleter implements TabCompleter {
 
+    private final AltarLegendaryWH plugin;
+
+    public AltarLegendaryTabCompleter(AltarLegendaryWH plugin) {
+        this.plugin = plugin;
+    }
+
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            completions.addAll(Arrays.asList("give", "show", "reload", "cooldownreset", "discord"));
-        }
-        else if (args.length == 2 && args[0].equalsIgnoreCase("show")) {
+            completions.addAll(Arrays.asList("give", "show", "altar", "help", "reload", "cooldown", "discord"));
+        } else if (args.length >= 2 && args[0].equalsIgnoreCase("altar")) {
+            if (plugin.getEditAltarCommand() != null) {
+                return plugin.getEditAltarCommand().completeSubcommand(sender, Arrays.copyOfRange(args, 1, args.length));
+            }
+            return List.of();
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("show")) {
             completions.addAll(Arrays.asList("weapons", "items"));
-        }
-        else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("cooldown")) {
+            completions.add("reset");
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("cooldown") && args[1].equalsIgnoreCase("reset")) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                completions.add(p.getName());
+            }
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("give")) {
             completions.addAll(Arrays.asList(
-                    "boneblade", "bloodlust", "nightpiercer", "vulcan", "frost_scythe",
+                    "boneblade", "bloodlust", "nightpiercer", "vulcans_crossbow", "vulcan", "frost_scythe",
                     "pale_gun", "pure_blade", "knightfall", "shadow_blade", "windweaver", "hyperion",
-                    "wither_blade", "earth_gauntlet", "cutlass",
-                    "warden_heart", "vulcan_skull", "weapons_handle", "illusion_core",
+                    "wither_blade", "earth_gauntlet", "cutlass", "paladins_battle_axe", "crazyslots",
+                    "warden_heart", "vulcans_skull", "vulcan_skull", "weapons_handle", "illusion_core",
                     "copper_helmet", "copper_chestplate", "copper_leggings", "copper_boots",
-                    "copper_pickaxe", "vampire_shard", "pale_shard", "hyperion_shard"
+                    "copper_pickaxe", "vampire_shard", "pale_shard", "hyperion_shard", "altar"
             ));
-        }
-        else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("give")) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 completions.add(p.getName());
             }
-        }
-        else if (args.length == 2 && args[0].equalsIgnoreCase("cooldownreset")) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                completions.add(p.getName());
-            }
-        }
-        else if (args.length == 4 && args[0].equalsIgnoreCase("give")) {
+        } else if (args.length == 4 && args[0].equalsIgnoreCase("give")) {
             String w = args[1].toLowerCase();
             if (w.equals("bloodlust") || w.equals("knightfall")) {
                 completions.addAll(Arrays.asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));

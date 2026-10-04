@@ -14,6 +14,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -43,17 +45,27 @@ public class BladeListener implements Listener {
         this.plugin = plugin;
     }
 
+    private boolean isBoneBlade(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "bone_blade"), PersistentDataType.BYTE)) return true;
+        if (meta.hasCustomModelData()) {
+            int cmd = meta.getCustomModelData();
+            return cmd == 1 || cmd == 3000;
+        }
+        return false;
+    }
+
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent event) {
+        if (event.isCancelled()) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) return;
-        if (!item.getItemMeta().hasCustomModelData() || item.getItemMeta().getCustomModelData() != 1) return;
+        if (!isBoneBlade(item)) return;
 
         event.setCancelled(true);
 
-        if (plugin.isAboveLegendaryHeight(player)) return;
 
         if (player.isSneaking()) {
             if (plugin.getBoneCooldownManager().isOnCageCooldown(player)) return;
@@ -78,6 +90,44 @@ public class BladeListener implements Listener {
                 newLoc.setYaw(to.getYaw());
                 event.setTo(newLoc);
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        stunnedEntities.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onStunnedEntityDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+        if (!stunnedEntities.contains(event.getEntity().getUniqueId())) return;
+
+        if (event.getEntity() instanceof Player p) {
+            if (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR) {
+                return;
+            }
+            if (p.isInvulnerable()) {
+                p.setInvulnerable(false);
+            }
+        } else {
+            if (event.getEntity().isInvulnerable()) {
+                event.getEntity().setInvulnerable(false);
+            }
+        }
+
+        if (event instanceof org.bukkit.event.entity.EntityDamageByEntityEvent byEntity) {
+            if (byEntity.getDamager() instanceof Player damager && event.getEntity() instanceof Player victim) {
+                if (plugin.getFriendManager().isFriend(damager.getUniqueId(), victim.getUniqueId())) {
+                    return;
+                }
+            }
+        }
+
+        if (event.isCancelled()) {
+            event.setCancelled(false);
+        }
+        if (event.getEntity() instanceof LivingEntity living) {
+            living.setNoDamageTicks(0);
         }
     }
 
@@ -217,11 +267,33 @@ public class BladeListener implements Listener {
         }.runTaskTimer(plugin, 0, 1);
     }
 
+    private void removeEssentialsGodMode(Player player) {
+        try {
+            org.bukkit.plugin.Plugin ess = Bukkit.getPluginManager().getPlugin("Essentials");
+            if (ess != null) {
+                java.lang.reflect.Method getUser = ess.getClass().getMethod("getUser", Player.class);
+                Object user = getUser.invoke(ess, player);
+                if (user != null) {
+                    java.lang.reflect.Method isGod = user.getClass().getMethod("isGodModeEnabled");
+                    if (Boolean.TRUE.equals(isGod.invoke(user))) {
+                        java.lang.reflect.Method setGod = user.getClass().getMethod("setGodModeEnabled", boolean.class);
+                        setGod.invoke(user, false);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     private void applyBoneStun(LivingEntity target) {
         stunnedEntities.add(target.getUniqueId());
         int stunTicks = plugin.getWeaponsConfig().getInt("bone-blade.cage.stun-duration", 4) * 20;
 
+        target.setInvulnerable(false);
+        target.setNoDamageTicks(0);
+
         if (target instanceof Player p) {
+            removeEssentialsGodMode(p);
             Component titleText = TextUtils.legacy(plugin.tr("&eОглушен!", "&eStunned!"));
             Title title = Title.title(titleText, TextUtils.empty(), Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(stunTicks * 50L / 2), Duration.ofMillis(250)));
             p.showTitle(title);
@@ -236,6 +308,7 @@ public class BladeListener implements Listener {
 
         for (int i = 0; i < 3; i++) {
             blocks[i] = target.getWorld().spawn(target.getLocation().add(0, 1.0, 0), BlockDisplay.class);
+            plugin.getVisualCleanupManager().track(blocks[i]);
             blocks[i].setBlock(Material.BONE_BLOCK.createBlockData());
             blocks[i].setTeleportDuration(1);
             rotationSpeeds[i] = new Vector3f((random.nextFloat() * 0.25f) - 0.125f, (random.nextFloat() * 0.25f) - 0.125f, (random.nextFloat() * 0.25f) - 0.125f);
@@ -259,6 +332,10 @@ public class BladeListener implements Listener {
                     }
                     cancel();
                     return;
+                }
+
+                if (target.isInvulnerable() && (!(target instanceof Player player) || player.getGameMode() != GameMode.CREATIVE)) {
+                    target.setInvulnerable(false);
                 }
 
                 double currentScale = 0.35;
@@ -316,6 +393,7 @@ public class BladeListener implements Listener {
 
         for (int i = 0; i < 45; i++) {
             ItemDisplay bone = loc.getWorld().spawn(loc, ItemDisplay.class);
+            plugin.getVisualCleanupManager().track(bone);
             bone.setItemStack(new ItemStack(Material.BONE));
             bone.setInterpolationDuration(1);
             bone.setTeleportDuration(1);
@@ -351,6 +429,7 @@ public class BladeListener implements Listener {
 
     private void spawnSmallFallingBone(Location loc, boolean hasTrail) {
         ItemDisplay bone = loc.getWorld().spawn(loc, ItemDisplay.class);
+        plugin.getVisualCleanupManager().track(bone);
         bone.setItemStack(new ItemStack(Material.BONE));
         bone.setInterpolationDuration(1);
         bone.setTeleportDuration(1);
@@ -393,7 +472,7 @@ public class BladeListener implements Listener {
         Player killer = victim.getKiller();
         ItemStack item = killer.getInventory().getItemInMainHand();
 
-        if (item.getType() == Material.NETHERITE_SWORD && item.hasItemMeta() && item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() == 1) {
+        if (isBoneBlade(item)) {
             Location loc = victim.getLocation().add(0, 1, 0);
             victim.getWorld().playSound(loc, Sound.ENTITY_SKELETON_DEATH, 1.2f, 0.8f);
             victim.getWorld().spawnParticle(Particle.DUST, loc, 20, 0.4, 0.4, 0.4, 0.1, BONE_COLOR);

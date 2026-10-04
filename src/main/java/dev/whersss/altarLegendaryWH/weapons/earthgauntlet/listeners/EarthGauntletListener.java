@@ -32,17 +32,14 @@ public class EarthGauntletListener implements Listener {
 
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent e) {
+        if (e.isCancelled()) return;
         Player p = e.getPlayer();
 
-        ItemStack item = e.getOffHandItem();
-        if (!isEarthGauntlet(item)) {
-            item = e.getMainHandItem();
-            if (!isEarthGauntlet(item)) return;
-        }
+        ItemStack item = p.getInventory().getItemInMainHand();
+        if (!isEarthGauntlet(item)) return;
 
         e.setCancelled(true);
 
-        if (plugin.isAboveLegendaryHeight(p)) return;
 
         if (p.isSneaking()) {
             manager.castMudslide(p);

@@ -56,6 +56,7 @@ public class FrostScytheTask extends BukkitRunnable {
         this.direction = owner.getEyeLocation().getDirection().normalize().multiply(flightSpeed);
 
         this.display = (ItemDisplay) owner.getWorld().spawnEntity(owner.getEyeLocation(), EntityType.ITEM_DISPLAY);
+        plugin.getVisualCleanupManager().track(display);
 
         ItemStack visualItem = new ItemStack(Material.NETHERITE_AXE);
         ItemMeta meta = visualItem.getItemMeta();

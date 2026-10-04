@@ -5,10 +5,6 @@ limits:
   # for the "on" type — true, for the "off" type — false
   # для выключения пишите - true, для выключения - false
 
-  max-y-height: 200.0
-  # A setting that specifies the altitude above which legendary weapons will not function (designed for high-altitude FFA spawn points).
-  # Настройка которая указывает начиная какой высоты не будут работать легендарные оружия (сделано для спавнов которые находятся высоко для ффа)
-
   max-legendary-weapons: 4
   # the maximum number of weapons a player can carry in their inventory
   # максимум оружий которые игрок может носить в инвентаре
@@ -19,3 +15,7 @@ limits:
 
   # Legendary weapons are now stored in `weapons.yml`.
   # Конфиг лег теперь в weapons.yml
+
+# Player heads drop on death / Выпадение голов игроков при смерти
+player-heads:
+  enabled: true

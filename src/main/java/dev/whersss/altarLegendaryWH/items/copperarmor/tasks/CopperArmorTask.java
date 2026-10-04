@@ -195,18 +195,6 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
     @Override
     public void run() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (plugin.isAboveLegendaryHeight(player)) {
-                removeIfInfinite(player, PotionEffectType.WATER_BREATHING);
-                removeIfInfinite(player, PotionEffectType.RESISTANCE);
-                removeIfInfinite(player, PotionEffectType.FIRE_RESISTANCE);
-                removeBootsSpeed(player);
-                if (hasActiveGlow(player.getUniqueId())) {
-                    endHelmetAbility(player);
-                }
-                stopCharging(player);
-                continue;
-            }
-
             if (isCopperArmor(player.getInventory().getHelmet(), "helmet")) {
                 if (player.isInWater()) {
                     applyInfinite(player, PotionEffectType.WATER_BREATHING);

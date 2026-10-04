@@ -33,16 +33,18 @@ public class KnightfallPassiveTask extends BukkitRunnable {
             ItemStack item = p.getInventory().getItemInMainHand();
             boolean isHoldingKnightfall = false;
 
-            if (item != null && item.getType() == Material.MACE && item.hasItemMeta()) {
+            if (item != null && item.hasItemMeta() && (item.getType() == Material.MACE || item.getItemMeta().getPersistentDataContainer().has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER))) {
                 if (item.getItemMeta().getPersistentDataContainer().has(plugin.getKillsKey(), PersistentDataType.INTEGER)) {
                     int kills = item.getItemMeta().getPersistentDataContainer().get(plugin.getKillsKey(), PersistentDataType.INTEGER);
 
                     int cmd = item.getItemMeta().hasCustomModelData() ? item.getItemMeta().getCustomModelData() : 1;
                     boolean hasDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
+                    int tier = item.getItemMeta().getPersistentDataContainer().getOrDefault(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER,
+                            (cmd >= 3003 || cmd == 3) ? 3 : (hasDensity ? 2 : ((cmd >= 3002 || cmd == 2) ? 1 : 0)));
 
-                    boolean needsUpgrade = (kills >= 4 && cmd < 2) ||
-                            (kills >= 8 && !hasDensity) ||
-                            (kills >= 10 && cmd < 3);
+                    boolean needsUpgrade = (kills >= 4 && tier < 1) ||
+                            (kills >= 8 && tier < 2) ||
+                            (kills >= 10 && tier < 3);
 
                     if (needsUpgrade) {
                         p.sendActionBar(TextUtils.legacy(plugin.tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));

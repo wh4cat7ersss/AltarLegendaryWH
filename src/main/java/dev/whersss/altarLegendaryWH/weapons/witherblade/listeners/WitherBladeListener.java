@@ -35,23 +35,25 @@ public class WitherBladeListener implements Listener {
     }
 
     private boolean isWitherBlade(ItemStack item) {
-        if (item == null || item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) return false;
+        if (item == null || !item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
-        if (!meta.hasCustomModelData()) return false;
+        if (meta == null) return false;
 
-        return meta.getPersistentDataContainer().has(AltarLegendaryWH.getInstance().getWitherKey(), PersistentDataType.BYTE)
-                && meta.getCustomModelData() == 9;
+        if (meta.getPersistentDataContainer().has(AltarLegendaryWH.getInstance().getWitherKey(), PersistentDataType.BYTE)) {
+            return true;
+        }
+        return meta.hasCustomModelData() && (meta.getCustomModelData() == 9 || meta.getCustomModelData() == 3003);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSwapHand(PlayerSwapHandItemsEvent e) {
+        if (e.isCancelled()) return;
         Player p = e.getPlayer();
         ItemStack item = p.getInventory().getItemInMainHand();
 
         if (!isWitherBlade(item)) return;
 
         e.setCancelled(true);
-        if (plugin.isAboveLegendaryHeight(p)) return;
 
         if (p.isSneaking()) {
             if (manager.isOnAuraCooldown(p)) {
@@ -78,7 +80,6 @@ public class WitherBladeListener implements Listener {
                     }
                 }
 
-                if (plugin.isAboveLegendaryHeight(p)) return;
 
                 manager.addAttackCharge(p);
             }

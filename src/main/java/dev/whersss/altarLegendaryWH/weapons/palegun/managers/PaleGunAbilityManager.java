@@ -12,6 +12,9 @@ import org.bukkit.World;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.Location;
+import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -33,6 +36,7 @@ public class PaleGunAbilityManager {
     private final Map<UUID, BossBar> rootsBars = new HashMap<>();
     private final Set<PaleRootsTask> activeRoots = new HashSet<>();
     private final Set<PaleProjectileTask> activeProjectiles = new HashSet<>();
+    private final Map<UUID, PaleRootsTask> rootDisplays = new HashMap<>();
 
     public PaleGunAbilityManager(AltarLegendaryWH plugin) {
         this.plugin = plugin;
@@ -73,6 +77,37 @@ public class PaleGunAbilityManager {
 
     public void untrackRootTask(PaleRootsTask task) {
         activeRoots.remove(task);
+        rootDisplays.values().removeIf(rootTask -> rootTask == task);
+    }
+
+    public void trackRootDisplay(BlockDisplay display, PaleRootsTask task) {
+        if (display != null && task != null) {
+            rootDisplays.put(display.getUniqueId(), task);
+        }
+    }
+
+    public void untrackRootDisplay(Entity display) {
+        if (display != null) {
+            rootDisplays.remove(display.getUniqueId());
+        }
+    }
+
+    public boolean isPaleRootDisplay(Entity entity) {
+        return entity != null && rootDisplays.containsKey(entity.getUniqueId());
+    }
+
+    public boolean handleRootDisplayHit(Entity entity, Location hitLocation) {
+        if (!(entity instanceof BlockDisplay display)) {
+            return false;
+        }
+
+        PaleRootsTask task = rootDisplays.get(display.getUniqueId());
+        if (task == null) {
+            return false;
+        }
+
+        task.breakDisplay(display, hitLocation);
+        return true;
     }
 
     public void resetPlayer(Player player) {
@@ -101,6 +136,7 @@ public class PaleGunAbilityManager {
             task.forceCleanup();
         }
         activeRoots.clear();
+        rootDisplays.clear();
 
         for (BossBar bar : rootsBars.values()) {
             bar.removeAll();
@@ -134,7 +170,8 @@ public class PaleGunAbilityManager {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!player.isOnline()) {
+                if (!player.isOnline() || !rootsBars.containsKey(uuid) || rootsBars.get(uuid) != bar) {
+                    bar.removeAll();
                     removeRootsCooldown(uuid);
                     cancel();
                     return;

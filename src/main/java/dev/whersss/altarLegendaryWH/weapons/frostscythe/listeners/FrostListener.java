@@ -24,6 +24,7 @@ import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.Location;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -47,9 +48,13 @@ public class FrostListener implements Listener {
     private boolean isFrostScythe(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
 
-        return meta != null &&
-                meta.hasCustomModelData() &&
+        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "frost_scythe"), PersistentDataType.BYTE)) {
+            return true;
+        }
+
+        return meta.hasCustomModelData() &&
                 meta.getCustomModelData() == 4 &&
                 (item.getType() == Material.NETHERITE_SWORD || item.getType() == Material.TRIDENT);
     }
@@ -80,10 +85,19 @@ public class FrostListener implements Listener {
     private void forceResetHands(Player p) {
         ItemStack main = p.getInventory().getItemInMainHand();
         ItemStack off = p.getInventory().getItemInOffHand();
+        boolean changed = false;
 
-        if (isFrostScythe(main)) setScytheModel(main, false);
-        if (isFrostScythe(off)) setScytheModel(off, false);
-        p.updateInventory();
+        if (isFrostScythe(main)) {
+            setScytheModel(main, false);
+            changed = true;
+        }
+        if (isFrostScythe(off)) {
+            setScytheModel(off, false);
+            changed = true;
+        }
+        if (changed && p.getGameMode() != GameMode.CREATIVE) {
+            p.updateInventory();
+        }
     }
 
     private void startCooldownCheck(Player p) {
@@ -120,7 +134,6 @@ public class FrostListener implements Listener {
         if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (p.isSneaking()) {
                 e.setCancelled(true);
-                if (plugin.isAboveLegendaryHeight(p)) return;
                 abilityManager.castCommandOfIce(p);
             } else {
                 if (abilityManager.isOnCooldown(p, "ScytheThrow")) {
@@ -233,8 +246,8 @@ public class FrostListener implements Listener {
         if (isFrostScythe(item)) {
             morphScythe(item, Material.NETHERITE_SWORD);
             e.getItemDrop().setItemStack(item);
+            forceResetHands(e.getPlayer());
         }
-        forceResetHands(e.getPlayer());
     }
 
     @EventHandler

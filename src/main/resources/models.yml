@@ -1,0 +1,117 @@
+# =========================================================
+# AltarLegendaryWH - Models & Visuals Configuration
+# =========================================================
+# Здесь настраиваются материалы, кастом модел даты (CustomModelData),
+# Item Models (1.21.4+), стили тултипов (tooltip-style) и символы.
+# Любые изменения подтягиваются командой /al reload или перезагрузкой.
+# =========================================================
+
+symbols:
+  # Специальные символы в лорах
+  crouch-rmb: "\uE80E"
+  charges-icon: "\uE80D"
+
+weapons:
+  bone_blade:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3000
+    item-model: ""
+    tooltip-style: "minecraft:bone"
+
+  bloodlust:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3001
+    item-model: ""
+    tooltip-style: "minecraft:red"
+
+  nightpiercer:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3009
+    item-model: ""
+    tooltip-style: "minecraft:red"
+
+  vulcan_crossbow:
+    material: "CROSSBOW"
+    custom-model-data: 3000
+    item-model: ""
+    tooltip-style: "minecraft:vulcan"
+
+  pale_gun:
+    material: "CROSSBOW"
+    custom-model-data: 3001
+    item-model: ""
+    tooltip-style: "minecraft:gold"
+
+  pure_blade:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3008
+    item-model: ""
+    tooltip-style: "minecraft:pure"
+
+  knightfall:
+    material: "MACE"
+    tooltip-style: "minecraft:pure"
+    levels:
+      level-1:
+        custom-model-data: 3001
+        item-model: ""
+      level-2:
+        custom-model-data: 3002
+        item-model: ""
+      level-3:
+        custom-model-data: 3003
+        item-model: ""
+
+  shadow_blade:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3007
+    item-model: ""
+    tooltip-style: "minecraft:pure"
+
+  windweaver:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3006
+    item-model: ""
+    tooltip-style: "minecraft:pure"
+
+  hyperion:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3005
+    item-model: ""
+    tooltip-style: "minecraft:gold"
+
+  wither_blade:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3003
+    item-model: ""
+    tooltip-style: "minecraft:pure"
+
+  earth_gauntlet:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3004
+    item-model: ""
+    tooltip-style: "minecraft:earth"
+
+  cutlass:
+    material: "NETHERITE_SWORD"
+    custom-model-data: 3002
+    item-model: ""
+    tooltip-style: "minecraft:tidebreaker"
+
+  frost_scythe:
+    material: "TRIDENT"
+    custom-model-data: 4
+    item-model: ""
+    tooltip-style: "minecraft:frost"
+
+  paladins_battle_axe:
+    material: "NETHERITE_AXE"
+    custom-model-data: 2
+    item-model: ""
+    tooltip-style: "minecraft:gold"
+
+  crazyslots:
+    material: "CLAY_BALL"
+    custom-model-data: 4
+    item-model: ""
+    tooltip-style: "minecraft:pure"

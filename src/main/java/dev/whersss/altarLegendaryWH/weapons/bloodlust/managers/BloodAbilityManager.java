@@ -2,6 +2,7 @@ package dev.whersss.altarLegendaryWH.weapons.bloodlust.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.weapons.bloodlust.listeners.BloodLustListener;
 import net.kyori.adventure.text.Component;
@@ -39,7 +40,7 @@ public class BloodAbilityManager {
     public void updateHandCheck(Player p) {
         if (isInBloodTrail(p)) {
             ItemStack item = p.getInventory().getItemInMainHand();
-            if (!BloodLustListener.isBloodLust(item)) cancelBloodTrail(p, false);
+            if (!BloodLustListener.isBloodLust(item)) cancelBloodTrail(p, true);
         }
     }
 
@@ -100,7 +101,7 @@ public class BloodAbilityManager {
         String barId = "BloodInfection";
 
         if (victim instanceof Player pVictim) {
-            bossBarManager.setDebuffBar(pVictim, barId, plugin.tr("§4§l! §c§lКРОВОТЕЧЕНИЕ §4§l!", "§4§l! §c§lBLEEDING §4§l!"), maxHits);
+            bossBarManager.setDebuffBar(pVictim, barId, plugin.tr("§4§l! §c§lᴋроʙоᴛᴇчᴇниᴇ §4§l!", "§4§l! §c§lʙʟᴇᴇᴅɪɴɢ §4§l!"), maxHits);
         }
 
         final Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.5f);
@@ -132,8 +133,15 @@ public class BloodAbilityManager {
                 }
 
                 Location effectLoc = victim.getLocation().add(0, 1, 0);
-                victim.getWorld().spawnParticle(Particle.BLOCK, effectLoc, 45, 0.4, 0.5, 0.4, 0, bloodBlockData);
-                victim.getWorld().spawnParticle(Particle.DUST, effectLoc, 30, 0.4, 0.5, 0.4, 0, redDust);
+
+                // Envelop victim in swirling bloody aura of red dust and redstone block shards
+                for (int i = 0; i < 20; i++) {
+                    double angle = (2 * Math.PI / 20) * i;
+                    double yOff = 0.2 + (i / 20.0) * 1.6;
+                    Location swirl = victim.getLocation().add(Math.cos(angle) * 0.65, yOff, Math.sin(angle) * 0.65);
+                    victim.getWorld().spawnParticle(Particle.DUST, swirl, 2, 0.05, 0.05, 0.05, 0.0, redDust);
+                }
+                victim.getWorld().spawnParticle(Particle.DUST, effectLoc, 35, 0.35, 0.45, 0.35, 0.0, redDust);
 
                 launchBloodSteal(effectLoc, attacker);
 
@@ -161,7 +169,7 @@ public class BloodAbilityManager {
                     return;
                 }
 
-                Location targetLoc = attacker.getLocation().add(0, 1.0, 0);
+                Location targetLoc = attacker.getLocation().add(0, 1.2, 0);
                 Vector dir = targetLoc.toVector().subtract(current.toVector());
 
                 if (dir.lengthSquared() < 1.0) {
@@ -171,9 +179,19 @@ public class BloodAbilityManager {
                     return;
                 }
 
-                dir.normalize().multiply(0.6);
+                Location prev = current.clone();
+                dir.normalize().multiply(0.7);
                 current.add(dir);
-                current.getWorld().spawnParticle(Particle.BLOCK, current, 1, 0.0, 0.0, 0.0, 0, bloodBlockData);
+
+                // Static non-falling BLOCK_CRUMBLE particles forming a solid line to the owner
+                Vector stepVec = current.toVector().subtract(prev.toVector());
+                double dist = stepVec.length();
+                int steps = Math.max(1, (int) Math.ceil(dist / 0.22));
+                Vector subStep = stepVec.clone().multiply(1.0 / steps);
+                for (int s = 0; s <= steps; s++) {
+                    Location pt = prev.clone().add(subStep.clone().multiply(s));
+                    pt.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, pt, 1, 0.0, 0.0, 0.0, 0, bloodBlockData);
+                }
                 life++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
@@ -185,7 +203,7 @@ public class BloodAbilityManager {
         bossBarManager.setCooldown(
                 p,
                 "BloodTrail",
-                plugin.tr("§4§lКровавый след", "§4§lʙʟᴏᴏᴅ ᴛʀᴀɪʟ"),
+                plugin.tr("§4§lᴋроʙᴀʙый ᴄлᴇд", "§4§lʙʟᴏᴏᴅ ᴛʀᴀɪʟ"),
                 plugin.getWeaponsConfig().getInt("bloodlust.blood-trail.cooldown")
         );
 
@@ -260,7 +278,10 @@ public class BloodAbilityManager {
         if (savedEffects.containsKey(p.getUniqueId())) {
             savedEffects.remove(p.getUniqueId()).forEach(p::addPotionEffect);
         }
-        if (forceJump) p.setVelocity(p.getVelocity().setY(0.5));
+        if (forceJump) {
+            p.setVelocity(p.getVelocity().setY(0.55));
+            p.getWorld().spawnParticle(Particle.BLOCK, p.getLocation().add(0, 0.2, 0), 20, 0.3, 0.1, 0.3, 0, bloodBlockData);
+        }
     }
 
     public boolean isInBloodTrail(Player p) {
@@ -268,46 +289,81 @@ public class BloodAbilityManager {
     }
 
     public void playKillVisual(Player attacker) {
+        playKillVisual(attacker, null);
+    }
+
+    public void playKillVisual(Player attacker, Location victimLoc) {
+        if (attacker == null || !attacker.isOnline()) return;
         attacker.getWorld().playSound(attacker.getLocation(), "bloodlust.kill", 1.0f, 1.0f);
 
-        List<Location> startPoints = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            double offsetX = (random.nextDouble() - 0.5) * 3.0;
-            double offsetZ = (random.nextDouble() - 0.5) * 3.0;
-            double offsetY = 2.5 + random.nextDouble() * 1.5;
-            startPoints.add(attacker.getLocation().add(offsetX, offsetY, offsetZ));
-        }
+        Location origin = (victimLoc != null) ? victimLoc.clone().add(0, 1.0, 0)
+                : attacker.getLocation().add(attacker.getLocation().getDirection().multiply(2.5)).add(0, 1.0, 0);
 
-        final Particle.DustOptions redDust = new Particle.DustOptions(Color.RED, 1.25f);
+        final Particle.DustOptions crimsonDust = new Particle.DustOptions(Color.fromRGB(220, 20, 20), 1.5f);
+        final Particle.DustOptions tailDust = new Particle.DustOptions(Color.fromRGB(160, 10, 10), 0.9f);
+
+        int numComets = 6;
+        List<Location> cometLocs = new ArrayList<>();
+        List<Double> phases = new ArrayList<>();
+        List<Double> spiralSpeeds = new ArrayList<>();
+
+        for (int i = 0; i < numComets; i++) {
+            double ox = (random.nextDouble() - 0.5) * 0.8;
+            double oy = (random.nextDouble() - 0.2) * 0.8;
+            double oz = (random.nextDouble() - 0.5) * 0.8;
+            cometLocs.add(origin.clone().add(ox, oy, oz));
+            phases.add(random.nextDouble() * Math.PI * 2);
+            spiralSpeeds.add(0.35 + random.nextDouble() * 0.3);
+        }
 
         new BukkitRunnable() {
             int ticks = 0;
 
             @Override
             public void run() {
-                if (!attacker.isOnline() || ticks > 100) {
-                    this.cancel();
+                if (!attacker.isOnline() || ticks > 60) {
+                    cancel();
                     return;
                 }
 
                 Location target = attacker.getLocation().add(0, 1.2, 0);
                 boolean allReached = true;
 
-                for (int i = 0; i < startPoints.size(); i++) {
-                    Location current = startPoints.get(i);
-                    Vector direction = target.toVector().subtract(current.toVector());
+                for (int i = 0; i < cometLocs.size(); i++) {
+                    Location comet = cometLocs.get(i);
+                    Vector toTarget = target.toVector().subtract(comet.toVector());
+                    double distSq = toTarget.lengthSquared();
 
-                    if (direction.lengthSquared() > 0.6) {
+                    if (distSq > 0.8) {
                         allReached = false;
-                        direction.normalize().multiply(0.3);
-                        current.add(direction);
-                        current.getWorld().spawnParticle(Particle.DUST, current, 8, 0.08, 0.08, 0.08, 0.0, redDust);
+                        double speed = Math.min(0.85, 0.35 + (ticks * 0.035));
+                        Vector step = toTarget.normalize().multiply(speed);
+
+                        // Animated corkscrew / swirl around trajectory line
+                        double phase = phases.get(i) + ticks * spiralSpeeds.get(i);
+                        Vector right = step.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+                        if (right.lengthSquared() < 0.001) right = new Vector(1, 0, 0);
+                        Vector up = right.clone().crossProduct(step).normalize();
+
+                        double swirlR = Math.max(0.08, 0.45 * Math.sin(Math.min(1.0, (double) ticks / 20.0) * Math.PI));
+                        Vector swirlOffset = right.multiply(Math.cos(phase) * swirlR).add(up.multiply(Math.sin(phase) * swirlR));
+
+                        comet.add(step).add(swirlOffset.multiply(0.35));
+
+                        // Comet head
+                        comet.getWorld().spawnParticle(Particle.DUST, comet, 3, 0.05, 0.05, 0.05, 0.0, crimsonDust);
+                        comet.getWorld().spawnParticle(Particle.BLOCK, comet, 1, 0.02, 0.02, 0.02, 0.0, bloodBlockData);
+
+                        // Comet tail
+                        Location tailLoc = comet.clone().subtract(step.clone().multiply(0.4));
+                        comet.getWorld().spawnParticle(Particle.DUST, tailLoc, 2, 0.04, 0.04, 0.04, 0.0, tailDust);
                     }
                 }
 
                 if (allReached) {
-                    attacker.getWorld().playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_BURP, 0.7f, 1.3f);
-                    this.cancel();
+                    attacker.getWorld().playSound(attacker.getLocation(), Sound.ENTITY_PLAYER_BURP, 0.8f, 1.2f);
+                    attacker.getWorld().spawnParticle(Particle.DUST, target, 35, 0.4, 0.4, 0.4, 0.0, crimsonDust);
+                    cancel();
                 }
 
                 ticks++;
@@ -321,7 +377,7 @@ public class BloodAbilityManager {
         bossBarManager.setCooldown(
                 p,
                 "BloodHook",
-                plugin.tr("§4§lКровавый крюк", "§4§lʙʟᴏᴏᴅ ʜᴏᴏᴋ"),
+                plugin.tr("§4§lᴋроʙᴀʙый ᴋрюᴋ", "§4§lʙʟᴏᴏᴅ ʜᴏᴏᴋ"),
                 plugin.getWeaponsConfig().getInt("bloodlust.blood-hook.cooldown")
         );
 
@@ -337,22 +393,22 @@ public class BloodAbilityManager {
             ent.setInterpolationDuration(1);
             ent.setTeleportDuration(1);
         });
+        plugin.getVisualCleanupManager().track(display);
 
         new BukkitRunnable() {
             double distanceTraveled = 0;
             float currentAngle = 0f;
-            boolean isMissed = false;
-            float scale = 1.0f;
-            double tailDistance = 0;
-
             final double maxDist = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.range");
             final double speed = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.speed", 1.3);
             final float flightYaw = startLoc.getYaw();
 
             @Override
             public void run() {
-                if (!p.isOnline() || (!display.isValid() && !isMissed)) {
-                    if (display.isValid()) display.remove();
+                if (!p.isOnline() || !display.isValid()) {
+                    if (display.isValid()) {
+                        plugin.getVisualCleanupManager().untrack(display);
+                        display.remove();
+                    }
                     this.cancel();
                     return;
                 }
@@ -361,40 +417,32 @@ public class BloodAbilityManager {
                 nextLoc.setYaw(flightYaw);
                 nextLoc.setPitch(0);
 
-                if (!isMissed) {
-                    if (distanceTraveled >= maxDist || nextLoc.getBlock().getType().isSolid()) {
-                        isMissed = true;
-                        p.getWorld().playSound(nextLoc, Sound.BLOCK_NETHER_GOLD_ORE_BREAK, 1f, 0.5f);
-                        playImpactBurst(nextLoc);
-                    } else {
-                        for (Entity e : nextLoc.getWorld().getNearbyEntities(nextLoc, 1.2, 1.2, 1.2)) {
-                            if (e instanceof LivingEntity victim && !victim.equals(p)) {
-                                if (victim instanceof Player targetPlayer) {
-                                    if (targetPlayer.getGameMode() == GameMode.SPECTATOR) continue;
-                                    if (plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) continue;
-                                }
-
-                                p.getWorld().playSound(nextLoc, Sound.ENTITY_PLAYER_ATTACK_CRIT, 1f, 0.5f);
-                                display.remove();
-                                playImpactBurst(victim.getLocation().add(0, 1.0, 0));
-
-                                double damage = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.damage", 8.0);
-                                plugin.getCleanDamageManager().apply(victim, p, damage);
-
-                                returnHook(p, nextLoc, victim);
-                                this.cancel();
-                                return;
-                            }
-                        }
-                    }
+                if (distanceTraveled >= maxDist || nextLoc.getBlock().getType().isSolid()) {
+                    p.getWorld().playSound(nextLoc, Sound.BLOCK_NETHER_GOLD_ORE_BREAK, 1f, 0.5f);
+                    p.getWorld().playSound(nextLoc, Sound.BLOCK_CHAIN_BREAK, 1f, 1.2f);
+                    playImpactBurst(nextLoc);
+                    plugin.getVisualCleanupManager().untrack(display);
+                    display.remove();
+                    this.cancel();
+                    return;
                 }
 
-                if (isMissed) {
-                    scale -= 0.08f;
-                    tailDistance += speed * 0.8;
+                for (Entity e : nextLoc.getWorld().getNearbyEntities(nextLoc, 1.2, 1.2, 1.2)) {
+                    if (e instanceof LivingEntity victim && !victim.equals(p)) {
+                        if (victim instanceof Player targetPlayer) {
+                            if (targetPlayer.getGameMode() == GameMode.SPECTATOR) continue;
+                            if (plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) continue;
+                        }
 
-                    if (scale <= 0) {
+                        p.getWorld().playSound(nextLoc, Sound.ENTITY_PLAYER_ATTACK_CRIT, 1f, 0.5f);
+                        plugin.getVisualCleanupManager().untrack(display);
                         display.remove();
+                        playImpactBurst(victim.getLocation().add(0, 1.0, 0));
+
+                        double damage = plugin.getWeaponsConfig().getDouble("bloodlust.blood-hook.damage", 8.0);
+                        plugin.getCleanDamageManager().apply(victim, p, damage);
+
+                        returnHook(p, nextLoc, victim);
                         this.cancel();
                         return;
                     }
@@ -407,9 +455,9 @@ public class BloodAbilityManager {
                 Quaternionf q = new Quaternionf().rotationAxis(currentAngle, rotAxis.x, rotAxis.y, rotAxis.z);
 
                 Transformation t = new Transformation(
-                        new Vector3f(-0.5f * scale, -0.5f * scale, -0.5f * scale).rotate(q),
+                        new Vector3f(-0.5f, -0.5f, -0.5f).rotate(q),
                         q,
-                        new Vector3f(scale, scale, scale),
+                        new Vector3f(1.0f, 1.0f, 1.0f),
                         new Quaternionf()
                 );
 
@@ -417,15 +465,6 @@ public class BloodAbilityManager {
                 display.teleport(nextLoc);
 
                 Location tailStart = p.getLocation().add(0, 1.0, 0);
-                if (isMissed) {
-                    Vector tailToHead = display.getLocation().toVector().subtract(tailStart.toVector());
-                    double maxTailLen = tailToHead.length();
-                    if (tailDistance > maxTailLen) tailDistance = maxTailLen;
-                    if (maxTailLen > 0) {
-                        tailStart.add(tailToHead.normalize().multiply(tailDistance));
-                    }
-                }
-
                 renderChain(tailStart, display.getLocation());
 
                 distanceTraveled += speed;
@@ -475,30 +514,20 @@ public class BloodAbilityManager {
     private void renderChain(Location start, Location end) {
         Vector bridge = end.toVector().subtract(start.toVector());
         double dist = bridge.length();
-        Vector step = bridge.normalize().multiply(0.4);
+        Vector step = bridge.normalize().multiply(0.35);
         Location pLoc = start.clone();
 
-        for (double i = 0; i < dist; i += 0.4) {
+        for (double i = 0; i < dist; i += 0.35) {
             pLoc.add(step);
             pLoc.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, pLoc, 1, 0.0, 0.0, 0.0, 0, bloodBlockData);
         }
     }
 
     public void playImpactBurst(Location center) {
-        Location baseLoc = center.clone().add(0, 0.55, 0);
-
-        for (int i = 0; i < 45; i++) {
-            double u = ThreadLocalRandom.current().nextDouble();
-            double v = ThreadLocalRandom.current().nextDouble();
-            double theta = u * 2.0 * Math.PI;
-            double phi = Math.acos(2.0 * v - 1.0);
-            double speed = ThreadLocalRandom.current().nextDouble(0.15, 0.4);
-            double dx = Math.sin(phi) * Math.cos(theta) * speed;
-            double dy = Math.abs(Math.cos(phi)) * speed + 0.1;
-            double dz = Math.sin(phi) * Math.sin(theta) * speed;
-
-            baseLoc.getWorld().spawnParticle(Particle.BLOCK, baseLoc, 0, dx, dy, dz, 1.0, bloodBlockData);
-        }
+        Location baseLoc = center.clone().add(0, 0.2, 0);
+        Particle.DustOptions crimson = new Particle.DustOptions(Color.fromRGB(220, 20, 20), 1.5f);
+        center.getWorld().spawnParticle(Particle.DUST, baseLoc, 25, 0.4, 0.4, 0.4, 0.05, crimson);
+        ParticleUtils.spawnBlockDispersion(plugin, baseLoc, bloodBlockData, 4.8);
     }
     public void cleanup() {
         for (UUID uuid : new ArrayList<>(activePuddles)) {

@@ -4,6 +4,7 @@ import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
+import java.util.UUID;
 import dev.whersss.altarLegendaryWH.weapons.knightfall.managers.KnightfallManager;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
@@ -35,8 +36,11 @@ public class KnightfallListener implements Listener {
     }
 
     private boolean isKnightfall(ItemStack item) {
-        if (item == null || item.getType() != Material.MACE || !item.hasItemMeta()) return false;
-        return item.getItemMeta().getPersistentDataContainer().has(plugin.getKillsKey(), PersistentDataType.INTEGER);
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "knightfall"), PersistentDataType.BYTE)) return true;
+        if (meta.getPersistentDataContainer().has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
+        return item.getType() == Material.MACE && meta.getPersistentDataContainer().has(plugin.getKillsKey(), PersistentDataType.INTEGER);
     }
 
     private int getKills(ItemStack item) {
@@ -66,6 +70,18 @@ public class KnightfallListener implements Listener {
         if (isKnightfall(e.getItem())) e.setCancelled(true);
     }
 
+    private int getTier(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return 0;
+        Integer tier = item.getItemMeta().getPersistentDataContainer().get(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER);
+        if (tier != null) return tier;
+        int cmd = item.getItemMeta().hasCustomModelData() ? item.getItemMeta().getCustomModelData() : 1;
+        boolean hasDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
+        if (cmd >= 3003 || cmd == 3) return 3;
+        if (hasDensity) return 2;
+        if (cmd >= 3002 || cmd == 2) return 1;
+        return 0;
+    }
+
     @EventHandler
     public void onKill(EntityDeathEvent e) {
         if (e.getEntity().getKiller() != null) {
@@ -77,20 +93,31 @@ public class KnightfallListener implements Listener {
                     manager.playKillEffect(e.getEntity().getLocation());
 
                     int newKills = getKills(item) + 1;
-                    int currentCmd = item.getItemMeta().hasCustomModelData() ? item.getItemMeta().getCustomModelData() : 1;
-                    boolean currentDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
+                    int currentTier = getTier(item);
+                    int currentCmd = (currentTier >= 3) ? 3 : (currentTier >= 1 ? 2 : 1);
+                    boolean currentDensity = (currentTier >= 2);
 
                     ItemStack newWeapon = WeaponFactory.getKnightfallCustom(newKills, currentCmd, currentDensity);
                     newWeapon = applyHuntTagIfNecessary(item, newWeapon);
+                    if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(item)) {
+                        UUID csId = plugin.getCrazySlotsManager().getTransformedInstanceId(item);
+                        if (csId != null) {
+                            ItemMeta nm = newWeapon.getItemMeta();
+                            if (nm != null) {
+                                nm.getPersistentDataContainer().set(plugin.getCrazySlotsManager().getUniqueKey(), PersistentDataType.STRING, csId.toString());
+                                newWeapon.setItemMeta(nm);
+                            }
+                        }
+                    }
                     p.getInventory().setItemInMainHand(newWeapon);
 
                     p.sendMessage(TextUtils.legacy(plugin.tr("§cПадший Рыцарь теперь имеет " + newKills + " убийств(а/ов).", "§cknightfall now has " + newKills + " kills.")));
 
                     if (newKills == 2) p.sendMessage(TextUtils.legacy(plugin.tr("§eПадший рыцарь теперь имеет чары Порыв Ветра I.", "§eknightfall now has Wind Burst I.")));
 
-                    boolean needsUpgrade = (newKills >= 4 && currentCmd < 2) ||
-                            (newKills >= 8 && !currentDensity) ||
-                            (newKills >= 10 && currentCmd < 3);
+                    boolean needsUpgrade = (newKills >= 4 && currentTier < 1) ||
+                            (newKills >= 8 && currentTier < 2) ||
+                            (newKills >= 10 && currentTier < 3);
 
                     if (needsUpgrade) {
                         p.sendMessage(TextUtils.legacy(plugin.tr("§aНажмите §2[Смена руки] §aчтобы улучшить оружие.", "§aPress §2[OffHand] §ato upgrade the weapon.")));
@@ -102,42 +129,48 @@ public class KnightfallListener implements Listener {
 
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent e) {
+        if (e.isCancelled()) return;
         Player p = e.getPlayer();
         ItemStack item = p.getInventory().getItemInMainHand();
         if (!isKnightfall(item)) return;
 
         e.setCancelled(true);
 
-        if (plugin.isAboveLegendaryHeight(p)) return;
-
         int kills = getKills(item);
-        int cmd = item.getItemMeta().hasCustomModelData() ? item.getItemMeta().getCustomModelData() : 1;
-        boolean hasDensity = item.getItemMeta().hasEnchant(Enchantment.DENSITY);
+        int currentTier = getTier(item);
 
         if (p.isSneaking()) {
-            if (kills >= 10 && cmd == 3) {
+            if (kills >= 10 && currentTier >= 3) {
                 manager.throwHammer(p, item);
             }
         } else {
-            boolean upgraded = false;
-
-            if (kills >= 4 && cmd < 2) {
-                cmd = 2;
-                upgraded = true;
-            }
-            if (kills >= 8 && !hasDensity) {
-                hasDensity = true;
-                upgraded = true;
-            }
-            if (kills >= 10 && cmd < 3) {
-                cmd = 3;
-                upgraded = true;
+            int targetTier = currentTier;
+            if (kills >= 10 && currentTier < 3) {
+                targetTier = 3;
+            } else if (kills >= 8 && currentTier < 2) {
+                targetTier = 2;
+            } else if (kills >= 4 && currentTier < 1) {
+                targetTier = 1;
             }
 
-            if (upgraded) {
-                ItemStack newWeapon = WeaponFactory.getKnightfallCustom(kills, cmd, hasDensity);
+            if (targetTier > currentTier) {
+                int newCmd = (targetTier >= 3) ? 3 : (targetTier >= 1 ? 2 : 1);
+                boolean newDensity = (targetTier >= 2);
+
+                ItemStack newWeapon = WeaponFactory.getKnightfallCustom(kills, newCmd, newDensity);
                 newWeapon = applyHuntTagIfNecessary(item, newWeapon);
+                if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(item)) {
+                    UUID csId = plugin.getCrazySlotsManager().getTransformedInstanceId(item);
+                    if (csId != null) {
+                        ItemMeta nm = newWeapon.getItemMeta();
+                        if (nm != null) {
+                            nm.getPersistentDataContainer().set(plugin.getCrazySlotsManager().getUniqueKey(), PersistentDataType.STRING, csId.toString());
+                            newWeapon.setItemMeta(nm);
+                        }
+                    }
+                }
                 p.getInventory().setItemInMainHand(newWeapon);
+                p.updateInventory();
 
                 p.getWorld().playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
                 p.getWorld().playSound(p.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1f, 0.8f);
@@ -146,16 +179,16 @@ public class KnightfallListener implements Listener {
                 p.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, p.getLocation().add(0, 1, 0), 100, 0.5, 1.0, 0.5);
 
                 p.sendActionBar(TextUtils.legacy(plugin.tr("&6Оружие успешно улучшено.", "&6Weapon upgraded successfully.")));
-                p.sendMessage(TextUtils.legacy("§6Оружие успешно улучшено."));
+                p.sendMessage(TextUtils.legacy(plugin.tr("§6Оружие успешно улучшено.", "§6Weapon upgraded successfully.")));
 
-                if (cmd == 2 && !hasDensity) p.sendMessage(TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Абордажный Крюк Падшего Рыцаря.", "§eYou can now use knightfall's grappling hook.")));
-                if (hasDensity && cmd < 3) p.sendMessage(TextUtils.legacy(plugin.tr("§eПадший рыцарь теперь имеет чары Плотность II.", "§eknightfall now has Density II.")));
-                if (cmd == 3) p.sendMessage(TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Бросок Молота Падшего Рыцаря.", "§eYou can now use knightfall's hammer throw.")));
+                if (targetTier == 1) p.sendMessage(TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Абордажный Крюк Падшего Рыцаря.", "§eYou can now use knightfall's grappling hook.")));
+                if (targetTier == 2) p.sendMessage(TextUtils.legacy(plugin.tr("§eПадший рыцарь теперь имеет чары Плотность II.", "§eknightfall now has Density II.")));
+                if (targetTier == 3) p.sendMessage(TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Бросок Молота Падшего Рыцаря.", "§eYou can now use knightfall's hammer throw.")));
 
                 return;
             }
 
-            if (kills >= 4 && cmd >= 2) {
+            if (kills >= 4 && currentTier >= 1) {
                 manager.useHook(p);
             }
         }

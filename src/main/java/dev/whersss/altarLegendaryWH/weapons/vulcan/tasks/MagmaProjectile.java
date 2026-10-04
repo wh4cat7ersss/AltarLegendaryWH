@@ -9,6 +9,7 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -44,6 +45,7 @@ public class MagmaProjectile extends BukkitRunnable {
         this.velocity = velocity.multiply(1.8);
 
         this.display = (BlockDisplay) start.getWorld().spawnEntity(start, EntityType.BLOCK_DISPLAY);
+        AltarLegendaryWH.getInstance().getVisualCleanupManager().track(display);
         display.setBlock(Material.MAGMA_BLOCK.createBlockData());
         display.setInterpolationDuration(1);
         display.setTeleportDuration(1);
@@ -62,13 +64,26 @@ public class MagmaProjectile extends BukkitRunnable {
 
         velocity.setY(velocity.getY() - 0.05);
 
-        RayTraceResult rayResult = currentLoc.getWorld().rayTrace(
-                currentLoc, velocity.clone().normalize(), velocity.length() + 0.1,
-                FluidCollisionMode.NEVER, true, 0.5, entity -> entity != shooter && entity != display
+        Vector direction = velocity.clone().normalize();
+        double traceDistance = velocity.length() + 0.1;
+        AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
+        RayTraceResult blockHit = currentLoc.getWorld().rayTraceBlocks(
+                currentLoc, direction, traceDistance, FluidCollisionMode.NEVER, true
         );
+        RayTraceResult entityHit = currentLoc.getWorld().rayTraceEntities(
+                currentLoc, direction, traceDistance, 0.35,
+                entity -> entity != shooter
+                        && entity != display
+                        && (entity instanceof LivingEntity || plugin.getPaleGunAbilityManager().isPaleRootDisplay(entity))
+        );
+        RayTraceResult rayResult = nearestHit(currentLoc, blockHit, entityHit);
 
         if (rayResult != null) {
-            impact(rayResult.getHitPosition().toLocation(currentLoc.getWorld()), rayResult.getHitBlockFace());
+            Location hitLocation = rayResult.getHitPosition().toLocation(currentLoc.getWorld());
+            if (rayResult.getHitEntity() != null) {
+                plugin.getPaleGunAbilityManager().handleRootDisplayHit(rayResult.getHitEntity(), hitLocation);
+            }
+            impact(hitLocation, rayResult.getHitBlockFace());
             this.cancel();
             return;
         }
@@ -190,5 +205,13 @@ public class MagmaProjectile extends BukkitRunnable {
 
             new VulcanRestoreTask(plugin, oldBlocks, holoLoc, delaySeconds).start();
         }
+    }
+
+    private RayTraceResult nearestHit(Location origin, RayTraceResult first, RayTraceResult second) {
+        if (first == null) return second;
+        if (second == null) return first;
+        double firstDistance = first.getHitPosition().distanceSquared(origin.toVector());
+        double secondDistance = second.getHitPosition().distanceSquared(origin.toVector());
+        return firstDistance <= secondDistance ? first : second;
     }
 }

@@ -28,7 +28,7 @@ public class VulcanSkullItem {
             meta.setTooltipStyle(NamespacedKey.minecraft("vulcan"));
 
             MiniMessage mm = MiniMessage.miniMessage();
-            meta.displayName(TextUtils.shadow(mm.deserialize("<!italic><gradient:#ff5555:#aa0000:#ff5555>" + tr("Череп Вулкана", "ᴠᴜʟᴄᴀɴ sᴋᴜʟʟ") + "</gradient>")));
+            meta.displayName(TextUtils.shadow(mm.deserialize("<!italic><gradient:#ff5555:#aa0000:#ff5555>" + tr("Череп Вулкана", "ᴠᴜʟᴄᴀɴ's sᴋᴜʟʟ") + "</gradient>")));
 
             List<Component> lore = new ArrayList<>();
             lore.add(Component.empty());

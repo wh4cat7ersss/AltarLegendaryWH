@@ -30,6 +30,7 @@ public class CutlassListener implements Listener {
 
     @EventHandler
     public void onCutlassAbility(PlayerSwapHandItemsEvent event) {
+        if (event.isCancelled()) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
@@ -44,7 +45,6 @@ public class CutlassListener implements Listener {
             return;
         }
 
-        if (AltarLegendaryWH.getInstance().isAboveLegendaryHeight(player)) return;
         if (manager.checkCooldown(player, "thousand_cuts")) return;
         if (manager.isDoingThousandCuts(player)) return;
 

@@ -4,16 +4,16 @@ main: dev.whersss.altarLegendaryWH.AltarLegendaryWH
 api-version: '1.21'
 authors: [WHersss]
 description: Legendary weapons, copper armor and combat abilities for Paper 1.21.11
+softdepend: [WorldGuard]
 commands:
   altarlegendary:
     description: Manage legendary items, menus and cooldowns
-    usage: /altarlegendary <give|show [weapons|items]|reload|cooldownreset>
+    usage: /al <give|show [weapons|items]|altar|help|reload|cooldown reset>
     aliases: [al]
-    permission: altarlegendary.admin
   friendlist:
     description: Manage players ignored by friendly legendary abilities
     usage: /friendlist <add|remove|list>
-    aliases: [fl]
+    aliases: [fl, trust]
 permissions:
   altarlegendary.admin:
     description: Access to AltarLegendaryWH administration commands

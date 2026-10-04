@@ -60,9 +60,9 @@ public class HyperionCooldownManager {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!p.isOnline()) {
+                if (!p.isOnline() || !activeBars.containsKey(id) || activeBars.get(id) != bar) {
                     bar.removeAll();
-                    activeBars.remove(id);
+                    activeBars.remove(id, bar);
                     this.cancel();
                     return;
                 }

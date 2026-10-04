@@ -63,7 +63,7 @@ public class WitherManager {
 
                 @Override
                 public void run() {
-                    if (!player.isOnline()) {
+                    if (!player.isOnline() || !dashBars.containsKey(player.getUniqueId()) || dashBars.get(player.getUniqueId()) != bar) {
                         bar.removeAll();
                         cancel();
                         return;
@@ -97,7 +97,7 @@ public class WitherManager {
 
             @Override
             public void run() {
-                if (!player.isOnline()) {
+                if (!player.isOnline() || !auraBars.containsKey(player.getUniqueId()) || auraBars.get(player.getUniqueId()) != bar) {
                     bar.removeAll();
                     cancel();
                     return;
@@ -141,10 +141,9 @@ public class WitherManager {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     ItemStack item = player.getInventory().getItemInMainHand();
                     if (item != null
-                            && item.getType() == Material.NETHERITE_SWORD
                             && item.hasItemMeta()
-                            && item.getItemMeta().hasCustomModelData()
-                            && item.getItemMeta().getCustomModelData() == 9) {
+                            && (item.getItemMeta().getPersistentDataContainer().has(plugin.getWitherKey(), org.bukkit.persistence.PersistentDataType.BYTE)
+                                || (item.getItemMeta().hasCustomModelData() && (item.getItemMeta().getCustomModelData() == 9 || item.getItemMeta().getCustomModelData() == 3003)))) {
 
                         int charge = getAttackCharge(player);
                         StringBuilder bar = new StringBuilder("§8☠ §7- ");
@@ -173,5 +172,16 @@ public class WitherManager {
         BossBar auraBar = auraBars.remove(uuid);
         if (dashBar != null) dashBar.removeAll();
         if (auraBar != null) auraBar.removeAll();
+    }
+
+    public void clearAllBars() {
+        for (BossBar bar : dashBars.values()) bar.removeAll();
+        for (BossBar bar : auraBars.values()) bar.removeAll();
+        dashBars.clear();
+        auraBars.clear();
+        dashCharges.clear();
+        dashCooldowns.clear();
+        auraCooldowns.clear();
+        attackCharges.clear();
     }
 }

@@ -19,6 +19,7 @@ public class EarthBossBarManager {
     private final AltarLegendaryWH plugin;
 
     private final Map<UUID, Map<String, Long>> cooldowns = new HashMap<>();
+    private final Map<UUID, Map<String, BossBar>> cooldownBars = new HashMap<>();
     private final Map<UUID, Map<String, BossBar>> activeBars = new HashMap<>();
     private final Map<UUID, BossBar> debuffBars = new HashMap<>();
 
@@ -37,17 +38,23 @@ public class EarthBossBarManager {
         long expireTime = System.currentTimeMillis() + (seconds * 1000L);
         cooldowns.computeIfAbsent(player.getUniqueId(), key -> new HashMap<>()).put(ability, expireTime);
 
+        BossBar oldBar = cooldownBars.computeIfAbsent(player.getUniqueId(), key -> new HashMap<>()).remove(ability);
+        if (oldBar != null) {
+            oldBar.removeAll();
+        }
+
         BossBar bar = TextUtils.bossBar(
                 ChatColor.YELLOW + ChatColor.stripColor(resolveCooldownTitle(ability, name)),
                 BarColor.YELLOW,
                 BarStyle.SOLID
         );
         bar.addPlayer(player);
+        cooldownBars.get(player.getUniqueId()).put(ability, bar);
 
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!player.isOnline()) {
+                if (!player.isOnline() || !cooldownBars.containsKey(player.getUniqueId()) || cooldownBars.get(player.getUniqueId()).get(ability) != bar) {
                     bar.removeAll();
                     cancel();
                     return;
@@ -56,6 +63,14 @@ public class EarthBossBarManager {
                 long timeLeft = expireTime - System.currentTimeMillis();
                 if (timeLeft <= 0) {
                     bar.removeAll();
+
+                    Map<String, BossBar> pBars = cooldownBars.get(player.getUniqueId());
+                    if (pBars != null) {
+                        pBars.remove(ability);
+                        if (pBars.isEmpty()) {
+                            cooldownBars.remove(player.getUniqueId());
+                        }
+                    }
 
                     Map<String, Long> pCooldowns = cooldowns.get(player.getUniqueId());
                     if (pCooldowns != null) {
@@ -156,6 +171,12 @@ public class EarthBossBarManager {
     public void resetPlayer(Player player) {
         UUID uuid = player.getUniqueId();
         cooldowns.remove(uuid);
+        Map<String, BossBar> cdBars = cooldownBars.remove(uuid);
+        if (cdBars != null) {
+            for (BossBar bar : cdBars.values()) {
+                bar.removeAll();
+            }
+        }
         Map<String, BossBar> bars = activeBars.remove(uuid);
         if (bars != null) {
             for (BossBar bar : bars.values()) {
@@ -165,10 +186,30 @@ public class EarthBossBarManager {
         removeDebuffBar(player);
     }
 
+    public void clearAll() {
+        for (Map<String, BossBar> map : cooldownBars.values()) {
+            for (BossBar bar : map.values()) {
+                bar.removeAll();
+            }
+        }
+        cooldownBars.clear();
+        for (Map<String, BossBar> map : activeBars.values()) {
+            for (BossBar bar : map.values()) {
+                bar.removeAll();
+            }
+        }
+        activeBars.clear();
+        for (BossBar bar : debuffBars.values()) {
+            bar.removeAll();
+        }
+        debuffBars.clear();
+        cooldowns.clear();
+    }
+
     private String resolveCooldownTitle(String ability, String fallback) {
         return switch (ability) {
-            case "MeteorStrike" -> plugin.tr("§e§lМетеоритный удар", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ");
-            case "Mudslide" -> plugin.tr("§e§lОползень", "§e§lᴍᴜᴅsʟɪᴅᴇ");
+            case "MeteorStrike" -> plugin.tr("§e§lмᴇᴛᴇориᴛный удᴀр", "§e§lᴍᴇᴛᴇᴏʀ sᴛʀɪᴋᴇ");
+            case "Mudslide" -> plugin.tr("§e§lоползᴇнь", "§e§lᴍᴜᴅsʟɪᴅᴇ");
             default -> fallback;
         };
     }

@@ -37,6 +37,7 @@ public class VulcanRestoreTask {
         Location spawnLoc = holoLoc.clone().subtract(0, 2.0, 0);
 
         hologram = (TextDisplay) spawnLoc.getWorld().spawnEntity(spawnLoc, EntityType.TEXT_DISPLAY);
+        AltarLegendaryWH.getInstance().getVisualCleanupManager().track(hologram);
         hologram.setBillboard(Display.Billboard.CENTER);
         hologram.setShadowed(true);
         hologram.setBackgroundColor(org.bukkit.Color.fromARGB(0, 0, 0, 0));

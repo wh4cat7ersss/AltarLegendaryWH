@@ -132,8 +132,8 @@ shadow-blade:
     gravity: 0.035
     spin-speed: 0.10
     interpolation-ticks: 3
-    spark-count: 6
-    trail-offset-back: 0.35
+    spark-count: 8
+    trail-offset-back: 0.85
   passive:
     backstab-chance: 0.25
     backstab-cooldown: 4
@@ -194,11 +194,52 @@ cutlass:
 
 windweaver:
   wind-leap:
-    cooldown: 10
+    cooldown: 15
     velocity: 1.6
     burst-distance: 5.6
+    speed-duration: 3
+    speed-amplifier: 4
   wind-burst:
-    cooldown: 35
+    cooldown: 15
     knockback-power: 3.6
     upward-power: 1.2
     radius: 25.0
+paladins-battle-axe:
+  base:
+    damage: 10.0
+    attack-speed: 1.0
+  earth-shatter:
+    cooldown: 45
+    damage: 7.0
+    radius: 10
+    range: 40.0
+  stalwart-absorption:
+    cooldown: 45
+    duration-seconds: 5
+    absorption-ratio: 1.0
+    damage-cap: 30.0
+    min-shockwave-damage: 4.0
+    release-radius: 6.0
+    knockback: 2.0
+
+crazy-slots:
+  transform-duration: 30
+  cooldown: 60
+  bloodlust-kills: 5
+  knightfall-kills: 10
+  weapons-pool:
+    - "bloodlust"
+    - "boneblade"
+    - "cutlass"
+    - "earth_gauntlet"
+    - "frost_scythe"
+    - "hyperion"
+    - "knightfall"
+    - "nightpiercer"
+    - "paladins_battle_axe"
+    - "pale_gun"
+    - "pure_blade"
+    - "shadow_blade"
+    - "vulcans_crossbow"
+    - "windweaver"
+    - "wither_blade"

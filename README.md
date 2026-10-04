@@ -25,7 +25,7 @@ A server resource pack is recommended for custom models and sounds. The gameplay
 
 - `/al show` — open the legendary item menu.
 - `/al give <id> <player> [kills]` — give an item to a player.
-- `/al cooldownreset <player>` — reset a player's ability cooldowns.
+- `/al cooldown reset <player>` — reset a player's ability cooldowns.
 - `/al reload` — reload both configuration files and recipes.
 - `/fl add <player>` — add a friend who will not be affected by friendly abilities.
 - `/fl remove <player>` — remove a friend.
@@ -79,8 +79,7 @@ Armor effects are tracked by their source. Removing an armor piece only removes 
 Important settings:
 
 - `lang`: `ru_RU` or `en_US`.
-- `limits.enabled`: enables height and item-count restrictions.
-- `limits.max-y-height`: disables abilities and armor above this Y coordinate.
+- `limits.enabled`: enables item-count restrictions.
 - `limits.max-legendary-weapons`: maximum number of legendary weapons in an inventory.
 - `limits.max-copper-armor`: maximum number of copper armor pieces equipped at once.
 - `bone-blade`, `bloodlust`, `nightpiercer`, `vulcan_crossbow`, `pale-gun`, `frost-scythe`, `pure-blade`, `knightfall`, `shadow-blade`, `hyperion`, `wither-blade`, `earth-gauntlet`, and `cutlass` configure their respective abilities.

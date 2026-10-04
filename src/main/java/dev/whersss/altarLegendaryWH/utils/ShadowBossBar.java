@@ -140,9 +140,27 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
     }
 
 
+    static void removePlayerFromAll(Player player) {
+        if (player == null) return;
+        for (ShadowBossBar bar : List.copyOf(ACTIVE_BARS)) {
+            bar.removePlayer(player);
+            try {
+                player.hideBossBar(bar.delegate);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     static void clearAll() {
+        List<Player> online = List.copyOf(org.bukkit.Bukkit.getOnlinePlayers());
         for (ShadowBossBar bar : List.copyOf(ACTIVE_BARS)) {
             bar.removeAll();
+            for (Player p : online) {
+                try {
+                    p.hideBossBar(bar.delegate);
+                } catch (Throwable ignored) {
+                }
+            }
         }
         ACTIVE_BARS.clear();
     }

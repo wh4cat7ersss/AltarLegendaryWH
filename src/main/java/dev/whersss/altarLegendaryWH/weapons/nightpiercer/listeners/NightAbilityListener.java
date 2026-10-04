@@ -10,7 +10,9 @@ import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.boss.BarColor;
@@ -28,6 +30,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -54,12 +57,18 @@ public class NightAbilityListener implements Listener {
     }
 
     private boolean isNightpiercer(ItemStack item) {
-        if (item == null || item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) return false;
-        return item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() == 5;
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "nightpiercer"), PersistentDataType.BYTE)) {
+            return true;
+        }
+        return meta.hasCustomModelData() && (meta.getCustomModelData() == 5 || meta.getCustomModelData() == 3009);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSwapHand(PlayerSwapHandItemsEvent event) {
+        if (event.isCancelled()) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
         if (!isNightpiercer(item)) return;

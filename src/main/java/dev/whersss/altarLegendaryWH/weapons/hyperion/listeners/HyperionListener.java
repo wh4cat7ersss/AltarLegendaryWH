@@ -76,11 +76,11 @@ public class HyperionListener implements Listener {
 
     @EventHandler
     public void onSwap(PlayerSwapHandItemsEvent e) {
+        if (e.isCancelled()) return;
         Player p = e.getPlayer();
         if (isHyperion(p.getInventory().getItemInMainHand())) {
             e.setCancelled(true);
 
-            if (AltarLegendaryWH.getInstance().isAboveLegendaryHeight(p)) return;
 
             if (p.isSneaking()) {
                 if (HyperionCooldownManager.isOnScorchingCooldown(p) || HyperionTasks.ScorchingChargeTask.isCharging(p)) return;

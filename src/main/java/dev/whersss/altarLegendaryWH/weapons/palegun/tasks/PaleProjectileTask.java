@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.palegun.tasks;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.weapons.palegun.managers.PaleGunAbilityManager;
 import org.bukkit.Color;
 import org.bukkit.FluidCollisionMode;
@@ -12,7 +13,9 @@ import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -49,6 +52,7 @@ public class PaleProjectileTask extends BukkitRunnable {
         this.abilityManager = abilityManager;
 
         this.display = (BlockDisplay) start.getWorld().spawnEntity(start, EntityType.BLOCK_DISPLAY);
+        plugin.getVisualCleanupManager().track(display);
         display.setBlock(resinData);
         display.setInterpolationDuration(1);
         display.setTeleportDuration(1);
@@ -72,18 +76,25 @@ public class PaleProjectileTask extends BukkitRunnable {
         double gravity = plugin.getWeaponsConfig().getDouble("pale-gun.shoot.gravity-per-tick", 0.05);
         velocity.setY(velocity.getY() - gravity);
 
-        RayTraceResult hit = currentLoc.getWorld().rayTrace(
-                currentLoc,
-                velocity.clone().normalize(),
-                velocity.length() + 0.1,
-                FluidCollisionMode.NEVER,
-                true,
-                0.5,
-                entity -> entity != shooter && entity != display
+        Vector traceDirection = velocity.clone().normalize();
+        double traceDistance = velocity.length() + 0.1;
+        RayTraceResult blockHit = currentLoc.getWorld().rayTraceBlocks(
+                currentLoc, traceDirection, traceDistance, FluidCollisionMode.NEVER, true
         );
+        RayTraceResult entityHit = currentLoc.getWorld().rayTraceEntities(
+                currentLoc, traceDirection, traceDistance, 0.35,
+                entity -> entity != shooter
+                        && entity != display
+                        && (entity instanceof LivingEntity || abilityManager.isPaleRootDisplay(entity))
+        );
+        RayTraceResult hit = nearestHit(currentLoc, blockHit, entityHit);
 
         if (hit != null) {
-            impact(hit.getHitPosition().toLocation(currentLoc.getWorld()));
+            Location hitLocation = hit.getHitPosition().toLocation(currentLoc.getWorld());
+            if (hit.getHitEntity() != null) {
+                abilityManager.handleRootDisplayHit(hit.getHitEntity(), hitLocation);
+            }
+            impact(hitLocation);
             return;
         }
         Location previousLoc = currentLoc.clone();
@@ -100,8 +111,8 @@ public class PaleProjectileTask extends BukkitRunnable {
                 currentLoc.getWorld().spawnParticle(
                         Particle.BLOCK_CRUMBLE,
                         trailLoc,
-                        3,
-                        0.15, 0.15, 0.15,
+                        2,
+                        0.05, 0.05, 0.05,
                         0.0,
                         resinData
                 );
@@ -137,58 +148,21 @@ public class PaleProjectileTask extends BukkitRunnable {
         world.playSound(loc, Sound.BLOCK_RESIN_BREAK, 1.0f, 0.8f);
         world.playSound(loc, Sound.BLOCK_WOOD_BREAK, 1.0f, 0.5f);
 
-        List<Vector> velocities = new ArrayList<>();
-        for (int i = 0; i < 150; i++) {
-            double u = ThreadLocalRandom.current().nextDouble();
-            double v = ThreadLocalRandom.current().nextDouble();
-            double theta = u * 2.0 * Math.PI;
-            double phi = Math.acos(2.0 * v - 1.0);
-
-            double speed = ThreadLocalRandom.current().nextDouble() * 0.8 + 0.2;
-
-            double dx = Math.sin(phi) * Math.cos(theta) * speed * 1.6;
-            double dy = Math.abs(Math.cos(phi)) * speed + 0.3;
-            double dz = Math.sin(phi) * Math.sin(theta) * speed * 1.6;
-
-            velocities.add(new Vector(dx, dy, dz));
-        }
-
-        new BukkitRunnable() {
-            int tick = 0;
-            final int maxTicks = 5;
-
-            @Override
-            public void run() {
-                if (tick > maxTicks) {
-                    cancel();
-                    return;
-                }
-
-                for (int i = 0; i < velocities.size(); i++) {
-                    Vector vel = velocities.get(i);
-                    Location particleLoc = loc.clone().add(
-                            vel.getX() * tick,
-                            (vel.getY() * tick) - (0.05 * tick * tick),
-                            vel.getZ() * tick
-                    );
-
-                    BlockData data = (i % 6 == 0) ? paleOakData : resinData;
-
-                    loc.getWorld().spawnParticle(
-                            Particle.BLOCK_CRUMBLE,
-                            particleLoc,
-                            1,
-                            0.0, 0.0, 0.0,
-                            0.0,
-                            data
-                    );
-                }
-                tick++;
-            }
-        }.runTaskTimer(plugin, 0, 1);
+        Location baseLoc = loc.clone().add(0, 0.2, 0);
+        // 300 particles with wide horizontal spread
+        ParticleUtils.spawnBlockDispersion(plugin, baseLoc, resinData, 8.0, 200);
+        ParticleUtils.spawnBlockDispersion(plugin, baseLoc, paleOakData, 8.0, 100);
 
         createMistCloud(loc);
         forceCleanup();
+    }
+
+    private RayTraceResult nearestHit(Location origin, RayTraceResult first, RayTraceResult second) {
+        if (first == null) return second;
+        if (second == null) return first;
+        double firstDistance = first.getHitPosition().distanceSquared(origin.toVector());
+        double secondDistance = second.getHitPosition().distanceSquared(origin.toVector());
+        return firstDistance <= secondDistance ? first : second;
     }
 
     private void createMistCloud(Location loc) {

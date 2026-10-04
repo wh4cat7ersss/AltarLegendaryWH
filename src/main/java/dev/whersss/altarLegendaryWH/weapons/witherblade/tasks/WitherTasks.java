@@ -88,6 +88,7 @@ public class WitherTasks {
                 }
 
                 ItemDisplay drop = loc.getWorld().spawn(loc, ItemDisplay.class);
+                plugin.getVisualCleanupManager().track(drop);
                 drop.setItemStack(new ItemStack(Material.BONE));
                 drop.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
 
@@ -208,6 +209,7 @@ public class WitherTasks {
 
     public static void launchSlimeProjectile(AltarLegendaryWH plugin, Player shooter, Location start, Vector dir, double maxDist, boolean isDrip) {
         ItemDisplay slime = start.getWorld().spawn(start, ItemDisplay.class);
+        plugin.getVisualCleanupManager().track(slime);
         ItemStack slimeItem = new ItemStack(Material.FEATHER);
         ItemMeta meta = slimeItem.getItemMeta();
         if (meta != null) {

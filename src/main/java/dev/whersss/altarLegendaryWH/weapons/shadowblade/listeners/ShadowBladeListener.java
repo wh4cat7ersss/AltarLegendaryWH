@@ -14,8 +14,11 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 
 public class ShadowBladeListener implements Listener {
@@ -29,8 +32,13 @@ public class ShadowBladeListener implements Listener {
     }
 
     public static boolean isShadowBlade(ItemStack item) {
-        if (item == null || item.getType() != Material.NETHERITE_SWORD || !item.hasItemMeta()) return false;
-        return item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() == 10;
+        if (item == null || !item.hasItemMeta()) return false;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+        if (meta.getPersistentDataContainer().has(new NamespacedKey(AltarLegendaryWH.getInstance(), "shadow_blade"), PersistentDataType.BYTE)) {
+            return true;
+        }
+        return meta.hasCustomModelData() && (meta.getCustomModelData() == 10 || meta.getCustomModelData() == 3007);
     }
 
     @EventHandler
@@ -52,7 +60,6 @@ public class ShadowBladeListener implements Listener {
 
             if (!isShadowBlade(item)) return;
             if (player.isSneaking()) {
-                if (plugin.isAboveLegendaryHeight(player)) return;
                 manager.castShadowLeap(player);
             }
         }
@@ -60,12 +67,12 @@ public class ShadowBladeListener implements Listener {
 
     @EventHandler
     public void onSwapHand(PlayerSwapHandItemsEvent event) {
+        if (event.isCancelled()) return;
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
         if (isShadowBlade(item)) {
             event.setCancelled(true);
-            if (plugin.isAboveLegendaryHeight(player)) return;
             manager.castShadowDaggers(player, item);
         }
     }
@@ -74,7 +81,6 @@ public class ShadowBladeListener implements Listener {
     public void onHit(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
         if (!(event.getEntity() instanceof LivingEntity victim)) return;
-        if (plugin.isAboveLegendaryHeight(player)) return;
 
         ItemStack item = player.getInventory().getItemInMainHand();
         if (isShadowBlade(item)) {

@@ -13,6 +13,8 @@ import dev.whersss.altarLegendaryWH.items.vulcanskull.VulcanSkullItem;
 import dev.whersss.altarLegendaryWH.items.wardenheart.WardenHeartItem;
 import dev.whersss.altarLegendaryWH.items.weaponshandle.WeaponsHandleItem;
 import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
+import dev.whersss.altarLegendaryWH.menus.AltarHelpDialog;
+import java.util.Arrays;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -82,7 +84,9 @@ public class AltarLegendaryCommand implements CommandExecutor {
                         WeaponFactory.getHyperion(),
                         WeaponFactory.getWitherBlade(),
                         WeaponFactory.getEarthGauntlet(),
-                        WeaponFactory.getCutlass()
+                        WeaponFactory.getCutlass(),
+                        WeaponFactory.getPaladinsBattleAxe(),
+                        WeaponFactory.getCrazySlots()
                 ));
     }
 
@@ -112,11 +116,30 @@ public class AltarLegendaryCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset|discord> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset|discord> ...")));
+            sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|altar|help|reload|cooldown reset|discord> ...", "Usage: /al <give|show weapons|show items|altar|help|reload|cooldown reset|discord> ...")));
             return true;
         }
 
         String subCommand = args[0].toLowerCase();
+
+                if (subCommand.equals("help")) {
+            if (sender instanceof Player player) {
+                AltarHelpDialog.open(player, plugin);
+            } else {
+                AltarHelpDialog.sendChatFallback(null, !plugin.isEnglish());
+            }
+            return true;
+        }
+
+        if (subCommand.equals("altar")) {
+            if (args.length == 1) {
+                plugin.getEditAltarCommand().executeSubcommand(sender, new String[]{"help"});
+            } else {
+                String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
+                plugin.getEditAltarCommand().executeSubcommand(sender, subArgs);
+            }
+            return true;
+        }
 
         if (subCommand.equals("discord")) {
             String text = plugin.tr(
@@ -144,23 +167,28 @@ public class AltarLegendaryCommand implements CommandExecutor {
                 plugin.reloadConfig();
                 plugin.reloadWeaponsConfig();
                 plugin.reloadItemsConfig();
+                plugin.reloadModelsConfig();
                 plugin.registerRecipes();
                 sender.sendMessage(TextUtils.legacy("§2" + plugin.tr("Конфиг был перезагружен!", "Config reloaded!")));
             }
-            case "cooldownreset" -> {
-                if (args.length < 2) {
-                    sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al cooldownreset <игрок>", "Usage: /al cooldownreset <player>")));
-                    return true;
-                }
+            case "cooldown" -> {
+                if (args.length >= 2 && args[1].equalsIgnoreCase("reset")) {
+                    if (args.length < 3) {
+                        sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al cooldown reset <игрок>", "Usage: /al cooldown reset <player>")));
+                        return true;
+                    }
 
-                Player target = Bukkit.getPlayer(args[1]);
-                if (target == null) {
-                    sender.sendMessage(TextUtils.legacy("§c" + plugin.tr("Игрок не найден.", "Player not found.")));
-                    return true;
-                }
+                    Player target = Bukkit.getPlayer(args[2]);
+                    if (target == null) {
+                        sender.sendMessage(TextUtils.legacy("§c" + plugin.tr("Игрок не найден.", "Player not found.")));
+                        return true;
+                    }
 
-                plugin.resetAllCooldowns(target);
-                sender.sendMessage(TextUtils.legacy("§a" + plugin.tr("Перезарядки сброшены для ", "Cooldowns reset for ") + target.getName()));
+                    plugin.resetAllCooldowns(target);
+                    sender.sendMessage(TextUtils.legacy("§a" + plugin.tr("Перезарядки сброшены для ", "Cooldowns reset for ") + target.getName()));
+                } else {
+                    sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al cooldown reset <игрок>", "Usage: /al cooldown reset <player>")));
+                }
             }
             case "show" -> {
                 if (sender instanceof Player player) {
@@ -200,7 +228,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                     case "boneblade" -> WeaponFactory.getBoneBlade();
                     case "bloodlust" -> WeaponFactory.getBloodLust(kills);
                     case "nightpiercer" -> WeaponFactory.getNightpiercer();
-                    case "vulcan" -> WeaponFactory.getVulcanCrossbow();
+                    case "vulcan", "vulcans_crossbow", "vulcan_crossbow" -> WeaponFactory.getVulcanCrossbow();
                     case "pale_gun" -> WeaponFactory.getPaleGun();
                     case "frost_scythe" -> WeaponFactory.getFrostScythe();
                     case "pure_blade" -> WeaponFactory.getPureBlade();
@@ -211,8 +239,10 @@ public class AltarLegendaryCommand implements CommandExecutor {
                     case "wither_blade" -> WeaponFactory.getWitherBlade();
                     case "earth_gauntlet" -> WeaponFactory.getEarthGauntlet();
                     case "cutlass" -> WeaponFactory.getCutlass();
+                    case "paladins_battle_axe", "paladin_axe", "battle_axe", "paladin" -> WeaponFactory.getPaladinsBattleAxe();
+                    case "crazyslots", "crazy_slots", "slots" -> WeaponFactory.getCrazySlots();
                     case "warden_heart" -> WardenHeartItem.create();
-                    case "vulcan_skull" -> VulcanSkullItem.create();
+                    case "vulcan_skull", "vulcans_skull" -> VulcanSkullItem.create();
                     case "weapons_handle" -> WeaponsHandleItem.create();
                     case "illusion_core" -> IllusionCoreItem.create();
                     case "copper_helmet" -> CopperArmorFactory.getHelmet();
@@ -223,6 +253,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                     case "vampire_shard" -> VampireShardItem.create();
                     case "pale_shard" -> PaleShardItem.create();
                     case "hyperion_shard" -> HyperionShardItem.create();
+                    case "altar" -> plugin.getAltarManager().createAltarItem();
                     default -> null;
                 };
 
@@ -244,7 +275,7 @@ public class AltarLegendaryCommand implements CommandExecutor {
                         : "";
                 sender.sendMessage(TextUtils.legacy("§2" + target.getName() + " " + plugin.tr("получил §6", "received §6") + itemName + suffix));
             }
-            default -> sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|reload|cooldownreset|discord> ...", "Usage: /al <give|show weapons|show items|reload|cooldownreset|discord> ...")));
+            default -> sender.sendMessage(TextUtils.legacy("§e" + plugin.tr("Использование: /al <give|show weapons|show items|altar|help|reload|cooldown reset|discord> ...", "Usage: /al <give|show weapons|show items|altar|help|reload|cooldown reset|discord> ...")));
         }
         return true;
     }

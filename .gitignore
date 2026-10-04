@@ -7,3 +7,9 @@
 *.log
 *.jar
 dependency-reduced-pom.xml
+*.txt
+*.zip
+/Altars/
+/WeaponsAndItems/
+/com/
+/tmp_paladin_jar/

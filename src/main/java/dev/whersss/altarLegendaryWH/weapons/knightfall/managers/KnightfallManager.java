@@ -2,6 +2,7 @@ package dev.whersss.altarLegendaryWH.weapons.knightfall.managers;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.utils.CombatUtils;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -10,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -62,7 +64,6 @@ public class KnightfallManager {
     }
 
     public void triggerCloak(Player player) {
-        if (plugin.isAboveLegendaryHeight(player)) return;
 
         int duration = plugin.getWeaponsConfig().getInt("knightfall.cloak.duration", 3) * 20;
         int cooldown = plugin.getWeaponsConfig().getInt("knightfall.cloak.cooldown", 8);
@@ -105,7 +106,7 @@ public class KnightfallManager {
                     cancel();
                 } else {
                     player.sendActionBar(TextUtils.legacy(
-                            plugin.tr("&c[ &c&lНЕВИДИМОСТЬ &c]", "&c[ &c&lɪɴᴠɪsɪʙɪʟɪᴛʏ &c]")));
+                            plugin.tr("&c[ &c&lнᴇʙидимоᴄᴛь &c]", "&c[ &c&lɪɴᴠɪsɪʙɪʟɪᴛʏ &c]")));
                     ticks++;
                 }
             }
@@ -113,7 +114,7 @@ public class KnightfallManager {
     }
 
     private void startCloakCooldownBar(Player player, int seconds) {
-        BossBar bar = TextUtils.bossBar(yellowTitle(plugin.tr("Плащ", "ᴄʟᴏᴀᴋ")), BarColor.YELLOW, BarStyle.SOLID);
+        BossBar bar = TextUtils.bossBar(yellowTitle(plugin.tr("плᴀщ", "ᴄʟᴏᴀᴋ")), BarColor.YELLOW, BarStyle.SOLID);
         bar.addPlayer(player);
         cloakCooldownBars.put(player.getUniqueId(), bar);
 
@@ -123,7 +124,7 @@ public class KnightfallManager {
 
             @Override
             public void run() {
-                if (!player.isOnline()) {
+                if (!player.isOnline() || !cloakCooldownBars.containsKey(player.getUniqueId()) || cloakCooldownBars.get(player.getUniqueId()) != bar) {
                     bar.removeAll();
                     cancel();
                     return;
@@ -188,7 +189,7 @@ public class KnightfallManager {
             hookBars.put(player.getUniqueId(), bar);
         }
         BossBar bar = hookBars.get(player.getUniqueId());
-        bar.setTitle(yellowTitle(plugin.tr("Абордажный крюк x", "ɢʀᴀᴘᴘʟɪɴɢ ʜᴏᴏᴋ x") + usedCharges));
+        bar.setTitle(yellowTitle(plugin.tr("ᴀбордᴀжный ᴋрюᴋ x", "ɢʀᴀᴘᴘʟɪɴɢ ʜᴏᴏᴋ x") + usedCharges));
         bar.setProgress(Math.max(0, Math.min(1.0, 1.0 - timeRemainingRaw)));
     }
 
@@ -220,6 +221,7 @@ public class KnightfallManager {
                     ent.setTeleportDuration(0);
                     updateChainSegmentRotation(ent);
                 });
+                plugin.getVisualCleanupManager().track(display);
                 chainLinks.add(display);
             } else {
                 BlockDisplay display = chainLinks.get(i);
@@ -245,7 +247,10 @@ public class KnightfallManager {
         int points = Math.max(1, (int) Math.ceil(length / step));
         for (int i = 0; i <= points; i++) {
             Location point = startLoc.clone().add(dir.clone().multiply(i * step));
-            point.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, point, 2, 0.015, 0.015, 0.015, chainData);
+            point.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, point, 1, 0.0, 0.0, 0.0, 0.0, chainData);
+            if (i % 14 == 0) {
+                point.getWorld().spawnParticle(Particle.CRIT, point, 1, 0.0, 0.0, 0.0, 0.0);
+            }
         }
     }
 
@@ -266,49 +271,76 @@ public class KnightfallManager {
     }
 
     public void playKillEffect(Location loc) {
-        Particle.DustOptions blackDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 2.5f);
-        loc.getWorld().spawnParticle(Particle.DUST, loc.clone().add(0, 1, 0), 100, 0.5, 1.0, 0.5, blackDust);
+        if (loc == null || loc.getWorld() == null) return;
+        World world = loc.getWorld();
+        Location baseLoc = loc.clone().add(0, 0.8, 0);
+
+        world.playSound(baseLoc, Sound.ENTITY_WITHER_SHOOT, 0.9f, 0.6f);
+        world.playSound(baseLoc, Sound.ENTITY_WARDEN_HEARTBEAT, 1.2f, 1.4f);
+
+        Particle.DustOptions coreBlackDust = new Particle.DustOptions(Color.fromRGB(15, 15, 20), 1.8f);
+        Particle.DustOptions voidPurpleDust = new Particle.DustOptions(Color.fromRGB(75, 10, 110), 1.5f);
+        Particle.DustOptions tailDust = new Particle.DustOptions(Color.fromRGB(30, 20, 40), 0.9f);
+
+        world.spawnParticle(Particle.DUST, baseLoc, 35, 0.4, 0.6, 0.4, 0.05, coreBlackDust);
+        world.spawnParticle(Particle.ELECTRIC_SPARK, baseLoc, 20, 0.3, 0.5, 0.3, 0.1);
 
         new BukkitRunnable() {
             int ticks = 0;
-            final java.util.List<Location> particlesLocs = new java.util.ArrayList<>();
-            final java.util.List<Vector> directions = new java.util.ArrayList<>();
+            final int maxTicks = 35;
+            final int cometCount = 7;
+            final List<Location> heads = new ArrayList<>();
+            final List<Double> angles = new ArrayList<>();
+            final List<Double> swirlSpeeds = new ArrayList<>();
+            final List<Double> vYs = new ArrayList<>();
+            final List<Double> radii = new ArrayList<>();
+            final List<Vector> drift = new ArrayList<>();
 
             {
-                for (int i = 0; i < 25; i++) {
-                    double x = (Math.random() - 0.5) * 1.5;
-                    double z = (Math.random() - 0.5) * 1.5;
-                    particlesLocs.add(loc.clone().add(x, 1.0, z));
-
-                    double motionX = (Math.random() - 0.5) * 1.1;
-                    double motionY = 0.25 + (Math.random() * 0.35);
-                    double motionZ = (Math.random() - 0.5) * 1.1;
-                    directions.add(new Vector(motionX, motionY, motionZ));
+                for (int i = 0; i < cometCount; i++) {
+                    double startAngle = i * (2 * Math.PI / cometCount) + (Math.random() - 0.5) * 0.4;
+                    double r = 0.35 + Math.random() * 0.3;
+                    angles.add(startAngle);
+                    radii.add(r);
+                    swirlSpeeds.add((Math.random() > 0.5 ? 1.0 : -1.0) * (0.18 + Math.random() * 0.16));
+                    vYs.add(0.32 + Math.random() * 0.22);
+                    drift.add(new Vector((Math.random() - 0.5) * 0.08, 0, (Math.random() - 0.5) * 0.08));
+                    heads.add(baseLoc.clone().add(Math.cos(startAngle) * r, (Math.random() - 0.5) * 0.3, Math.sin(startAngle) * r));
                 }
             }
 
             @Override
             public void run() {
-                if (ticks > 40) {
+                if (ticks++ >= maxTicks) {
                     cancel();
                     return;
                 }
-                for (int i = 0; i < particlesLocs.size(); i++) {
-                    Location pLoc = particlesLocs.get(i);
-                    Vector moveDir = directions.get(i);
 
-                    pLoc.add(moveDir.getX(), moveDir.getY(), moveDir.getZ());
+                for (int i = 0; i < cometCount; i++) {
+                    Location head = heads.get(i);
+                    double angle = angles.get(i) + swirlSpeeds.get(i);
+                    angles.set(i, angle);
+                    double r = radii.get(i) + 0.015;
+                    radii.set(i, r);
+                    double vy = Math.max(0.12, vYs.get(i) * 0.98);
+                    vYs.set(i, vy);
 
-                    loc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, pLoc, 1, 0, 0, 0, 0.0);
-                    loc.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, blackDust);
+                    Vector d = drift.get(i);
+                    head.add(d.getX(), vy, d.getZ());
+                    Location currentLoc = head.clone().add(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+
+                    Particle.DustOptions headDust = (i % 2 == 0) ? coreBlackDust : voidPurpleDust;
+                    world.spawnParticle(Particle.DUST, currentLoc, 2, 0.04, 0.04, 0.04, headDust);
+                    world.spawnParticle(Particle.ELECTRIC_SPARK, currentLoc, 1, 0.02, 0.02, 0.02, 0.01);
+
+                    Location tailLoc = currentLoc.clone().subtract(0, vy * 0.5, 0);
+                    world.spawnParticle(Particle.DUST, tailLoc, 1, 0.02, 0.02, 0.02, tailDust);
                 }
-                ticks++;
             }
-        }.runTaskTimer(plugin, 5L, 1L);
+        }.runTaskTimer(plugin, 1L, 1L);
     }
 
     public void useHook(Player player) {
-        if (plugin.isAboveLegendaryHeight(player)) return;
 
         int charges = getCharges(player);
         if (charges <= 0) return;
@@ -377,9 +409,7 @@ public class KnightfallManager {
     }
 
     private void pullPlayer(Player player, Location target, List<BlockDisplay> chainLinks, boolean isFloor) {
-        target.getWorld().spawnParticle(Particle.EXPLOSION, target, 1, 0.0, 0.0, 0.0, 0.0);
-        target.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target, 1, 0.0, 0.0, 0.0, 0.0);
-        target.getWorld().spawnParticle(Particle.BLOCK, target, 25, 0.3, 0.3, 0.3, Material.IRON_CHAIN.createBlockData());
+        target.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, target, 25, 0.25, 0.25, 0.25, 0.05, Material.IRON_CHAIN.createBlockData());
         player.getWorld().playSound(target, Sound.BLOCK_CHAIN_BREAK, 1f, 1.5f);
 
         new BukkitRunnable() {
@@ -451,7 +481,6 @@ public class KnightfallManager {
     }
 
     public void throwHammer(Player player, ItemStack item) {
-        if (plugin.isAboveLegendaryHeight(player)) return;
         if (throwCooldowns.getOrDefault(player.getUniqueId(), 0L) > System.currentTimeMillis()) return;
 
         int cooldown = plugin.getWeaponsConfig().getInt("knightfall.throw.cooldown", 20);
@@ -479,6 +508,7 @@ public class KnightfallManager {
             t.getLeftRotation().set(new Quaternionf().rotateX((float) Math.toRadians(90)));
             ent.setTransformation(t);
         });
+        plugin.getVisualCleanupManager().track(display);
 
         new BukkitRunnable() {
             final int flyingState = 0;
@@ -520,8 +550,11 @@ public class KnightfallManager {
                         if (target instanceof LivingEntity entity) {
                             if (!(entity instanceof Player targetPlayer)
                                     || !plugin.getFriendManager().isFriend(player.getUniqueId(), targetPlayer.getUniqueId())) {
-                                targetVictim = entity;
-                                break;
+                                if (plugin.getWorldGuardManager() == null
+                                        || plugin.getWorldGuardManager().canAffectTarget(player, entity)) {
+                                    targetVictim = entity;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -679,7 +712,7 @@ public class KnightfallManager {
     }
 
     private void startThrowCooldownBar(Player player, int seconds) {
-        BossBar bar = TextUtils.bossBar(yellowTitle(plugin.tr("Бросок молота", "ʜᴀᴍᴍᴇʀ ᴛʜʀᴏᴡ")), BarColor.YELLOW, BarStyle.SOLID);
+        BossBar bar = TextUtils.bossBar(yellowTitle(plugin.tr("броᴄоᴋ молоᴛᴀ", "ʜᴀᴍᴍᴇʀ ᴛʜʀᴏᴡ")), BarColor.YELLOW, BarStyle.SOLID);
         bar.addPlayer(player);
         throwCooldownBars.put(player.getUniqueId(), bar);
 
@@ -689,7 +722,7 @@ public class KnightfallManager {
 
             @Override
             public void run() {
-                if (!player.isOnline()) {
+                if (!player.isOnline() || !throwCooldownBars.containsKey(player.getUniqueId()) || throwCooldownBars.get(player.getUniqueId()) != bar) {
                     bar.removeAll();
                     cancel();
                     return;
@@ -724,6 +757,19 @@ public class KnightfallManager {
         if (hookBar != null) hookBar.removeAll();
         if (cloakBar != null) cloakBar.removeAll();
         if (throwBar != null) throwBar.removeAll();
+    }
+
+    public void clearAllBars() {
+        hookBars.values().forEach(BossBar::removeAll);
+        cloakCooldownBars.values().forEach(BossBar::removeAll);
+        throwCooldownBars.values().forEach(BossBar::removeAll);
+        hookBars.clear();
+        cloakCooldownBars.clear();
+        throwCooldownBars.clear();
+        hookCharges.clear();
+        hookNextCharge.clear();
+        cloakCooldowns.clear();
+        throwCooldowns.clear();
     }
 }
 

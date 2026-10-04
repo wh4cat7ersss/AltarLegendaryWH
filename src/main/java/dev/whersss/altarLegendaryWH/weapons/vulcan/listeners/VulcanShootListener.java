@@ -28,10 +28,6 @@ public class VulcanShootListener implements Listener {
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
         if (!bow.getItemMeta().getPersistentDataContainer().has(plugin.getVulcanKey(), PersistentDataType.BYTE)) return;
 
-        if (plugin.isAboveLegendaryHeight(player)) {
-            event.setCancelled(true);
-            return;
-        }
 
         Location eyeLoc = player.getEyeLocation();
         Vector dir = eyeLoc.getDirection().normalize();

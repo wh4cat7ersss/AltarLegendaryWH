@@ -122,10 +122,13 @@ public class HyperionTasks {
                 chargingPlayers.remove(p);
                 if (ticks >= 20) {
                     p.swingMainHand();
+                    try {
+                        p.resetCooldown();
+                    } catch (Throwable ignored) {}
                     Location eyeLoc = p.getEyeLocation();
                     Location sweepLoc = eyeLoc.clone().add(eyeLoc.getDirection().multiply(1.5));
                     p.getWorld().spawnParticle(Particle.SWEEP_ATTACK, sweepLoc, 1, 0.0, 0.0, 0.0, 0.0);
-                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1f, 0.5f);
+                    p.getWorld().playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1f, 1.0f);
                     HyperionCooldownManager.setScorchingCooldown(p);
                     new ScorchingBladeTask(p).runTaskTimer(AltarLegendaryWH.getInstance(), 0, 1);
                 }
@@ -133,14 +136,16 @@ public class HyperionTasks {
                 return;
             }
             if (ticks == 0) {
-                Location center = startLoc.clone().add(0, 0.1, 0);
-                for (int i = 0; i < 65; i++) {
-                    double angle = i * (2.0 * Math.PI) / 65;
+                Location center = startLoc.clone().add(0, 0.30, 0);
+                int rays = 64;
+                for (int i = 0; i < rays; i++) {
+                    double angle = i * (2.0 * Math.PI) / rays;
                     double dx = Math.cos(angle);
                     double dz = Math.sin(angle);
-                    center.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, center, 0, dx, 0.0, dz, 0.15);
-                    center.getWorld().spawnParticle(Particle.FLAME, center, 0, dx, 0.0, dz, 0.25);
-                    center.getWorld().spawnParticle(Particle.FLAME, center, 0, dx, 0.0, dz, 0.35);
+                    Location spawnPoint = center.clone().add(dx * 0.4, 0.0, dz * 0.4);
+                    center.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, spawnPoint, 0, dx, 0.02, dz, 0.15);
+                    center.getWorld().spawnParticle(Particle.FLAME, spawnPoint, 0, dx, 0.02, dz, 0.25);
+                    center.getWorld().spawnParticle(Particle.FLAME, spawnPoint, 0, dx, 0.02, dz, 0.35);
                 }
             }
             ticks++;
@@ -183,6 +188,7 @@ public class HyperionTasks {
 
             for (int i = 0; i < DISPLAY_COUNT; i++) {
                 BlockDisplay bd = shooter.getWorld().spawn(currentLoc, BlockDisplay.class);
+                AltarLegendaryWH.getInstance().getVisualCleanupManager().track(bd);
                 bd.setBlock(Material.FIRE.createBlockData());
                 bd.setInterpolationDelay(0);
                 bd.setInterpolationDuration(1);
@@ -202,13 +208,16 @@ public class HyperionTasks {
 
         @Override
         public void run() {
-            int maxTicks = 18;
-            int lavaPhaseTick = (int) (maxTicks * 0.65);
+            int maxTicks = 32;
+            int lavaPhaseTick = 24;
 
             if (ticks >= maxTicks) {
                 for (int i = 0; i < DISPLAY_COUNT; i++) {
                     if (blocks[i] != null && blocks[i].isValid()) {
-                        spawnRealLavaColumn(blocks[i].getLocation(), i, DISPLAY_COUNT - 1);
+                        if (isLavaPhase) {
+                            spawnRealLavaColumn(blocks[i].getLocation(), i, DISPLAY_COUNT - 1);
+                        }
+                        AltarLegendaryWH.getInstance().getVisualCleanupManager().untrack(blocks[i]);
                         blocks[i].remove();
                     }
                 }
@@ -259,37 +268,34 @@ public class HyperionTasks {
 
                 RayTraceResult ray = bLoc.getWorld().rayTrace(bLoc, dir, 1.3, FluidCollisionMode.NEVER, true, 0.5, e -> e != shooter && e instanceof LivingEntity);
 
-                if (ray != null) {
-                    if (ray.getHitEntity() instanceof LivingEntity victim) {
-                        if (!hitVictims.contains(victim.getUniqueId())) {
-                            boolean isFriend = false;
-                            if (victim instanceof Player targetPlayer) {
-                                if (AltarLegendaryWH.getInstance().getFriendManager().isFriend(shooter.getUniqueId(), targetPlayer.getUniqueId())) {
-                                    isFriend = true;
-                                }
-                            }
-
-                            if (!isFriend) {
-                                hitVictims.add(victim.getUniqueId());
-                                AltarLegendaryWH.getInstance().getCleanDamageManager().apply(victim, shooter, pureDamage);
-                                new HallowedFlamesTask(victim, shooter).runTaskTimer(AltarLegendaryWH.getInstance(), 0, 1);
+                if (ray != null && ray.getHitEntity() instanceof LivingEntity victim) {
+                    if (!hitVictims.contains(victim.getUniqueId())) {
+                        boolean isFriend = false;
+                        if (victim instanceof Player targetPlayer) {
+                            if (AltarLegendaryWH.getInstance().getFriendManager().isFriend(shooter.getUniqueId(), targetPlayer.getUniqueId())) {
+                                isFriend = true;
                             }
                         }
-                        spawnRealLavaColumn(bLoc, i, DISPLAY_COUNT - 1);
-                        blocks[i].remove();
-                        blocks[i] = null;
-                    } else if (ray.getHitBlock() != null && ray.getHitBlock().getType().isSolid()) {
-                        spawnRealLavaColumn(bLoc, i, DISPLAY_COUNT - 1);
-                        blocks[i].remove();
-                        blocks[i] = null;
+
+                        if (!isFriend) {
+                            hitVictims.add(victim.getUniqueId());
+                            AltarLegendaryWH.getInstance().getCleanDamageManager().apply(victim, shooter, pureDamage);
+                            new HallowedFlamesTask(victim, shooter).runTaskTimer(AltarLegendaryWH.getInstance(), 0, 1);
+                        }
                     }
-                } else if (bLoc.getBlock().getType().isSolid()) {
-                    spawnRealLavaColumn(bLoc, i, DISPLAY_COUNT - 1);
-                    blocks[i].remove();
-                    blocks[i] = null;
+                    if (isLavaPhase) {
+                        spawnRealLavaColumn(bLoc, i, DISPLAY_COUNT - 1);
+                    }
                 }
             }
             if (isLavaPhase) {
+                if (ticks % 2 == 0) {
+                    for (int i = 0; i < DISPLAY_COUNT; i += 4) {
+                        if (blocks[i] != null && blocks[i].isValid()) {
+                            spawnRealLavaColumn(blocks[i].getLocation(), i, DISPLAY_COUNT - 1);
+                        }
+                    }
+                }
                 currentLoc.getWorld().spawnParticle(Particle.DRIPPING_LAVA, currentLoc, 25, totalWidth / 2, 0.8, totalWidth / 2, 0.1);
                 currentLoc.getWorld().spawnParticle(Particle.FALLING_LAVA, currentLoc, 15, totalWidth / 2, 0.8, totalWidth / 2, 0.1);
             } else {
@@ -325,7 +331,7 @@ public class HyperionTasks {
                     if (block.getType() == Material.LAVA) {
                         block.setBlockData(oldData);
                     }
-                }, 20L);
+                }, 12L);
             }
         }
     }
@@ -405,6 +411,7 @@ public class HyperionTasks {
                 }
 
                 lance = targetLoc.getWorld().spawn(targetLoc, ItemDisplay.class);
+                AltarLegendaryWH.getInstance().getVisualCleanupManager().track(lance);
 
                 ItemStack customLanceItem = new ItemStack(Material.FEATHER);
                 ItemMeta meta = customLanceItem.getItemMeta();

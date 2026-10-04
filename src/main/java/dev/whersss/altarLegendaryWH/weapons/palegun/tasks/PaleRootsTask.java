@@ -1,6 +1,7 @@
 package dev.whersss.altarLegendaryWH.weapons.palegun.tasks;
 
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
+import dev.whersss.altarLegendaryWH.utils.ParticleUtils;
 import dev.whersss.altarLegendaryWH.weapons.palegun.managers.PaleGunAbilityManager;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -93,7 +94,7 @@ public class PaleRootsTask extends BukkitRunnable {
             if (partIndex == 0) {
                 updateDirection();
                 if (archIndex > 0) {
-                    currentArchBase.add(currentForward.clone().multiply(3.05));
+                    currentArchBase.add(currentForward.clone().multiply(3.10));
 
                     currentArchBase.setY(currentArchBase.getY() + 2.0);
                     while (currentArchBase.getY() > owner.getWorld().getMinHeight() && !currentArchBase.getBlock().getType().isSolid()) {
@@ -136,7 +137,7 @@ public class PaleRootsTask extends BukkitRunnable {
         for (BlockDisplay display : spawnedDisplays) {
             if (display != null && display.isValid()) {
                 Location loc = display.getLocation();
-                loc.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, loc, 60, 0.4, 0.4, 0.4, 0.05, paleOakData);
+                ParticleUtils.spawnBlockDispersion(plugin, loc, paleOakData, 2.0, 36);
                 display.remove();
             }
         }
@@ -168,7 +169,7 @@ public class PaleRootsTask extends BukkitRunnable {
 
         BlockData paleOakData = Material.PALE_OAK_WOOD.createBlockData();
         Location particleLoc = targetLoc.clone().add(currentForward.clone().multiply(1.2));
-        targetLoc.getWorld().spawnParticle(Particle.BLOCK_CRUMBLE, particleLoc, 45, 0.4, 0.4, 0.4, 0.02, paleOakData);
+        ParticleUtils.spawnBlockDispersion(plugin, particleLoc, paleOakData, 0.5, 4);
 
         Location dirLoc = currentArchBase.clone();
         dirLoc.setDirection(currentForward);
@@ -195,9 +196,10 @@ public class PaleRootsTask extends BukkitRunnable {
                 .rotateY(yawRad)
                 .rotateX((float) Math.toRadians(roll));
 
+        Vector3f uniformScale = new Vector3f(1.0f, 1.0f, 1.0f);
         Vector3f targetTransVec = new Vector3f(-0.5f, -0.5f, -0.5f).rotate(targetRot);
         Transformation targetTrans = new Transformation(
-                targetTransVec, targetRot, new Vector3f(1f, 1f, 1f), new Quaternionf()
+                targetTransVec, targetRot, uniformScale, new Quaternionf()
         );
 
         Transformation initialTrans;
@@ -212,13 +214,14 @@ public class PaleRootsTask extends BukkitRunnable {
 
             Vector3f prevTransVec = new Vector3f(-0.5f, -0.5f, -0.5f).rotate(prevRot);
             initialTrans = new Transformation(
-                    prevTransVec, prevRot, new Vector3f(1f, 1f, 1f), new Quaternionf()
+                    prevTransVec, prevRot, uniformScale, new Quaternionf()
             );
         }
 
         BlockDisplay display = (BlockDisplay) targetLoc.getWorld().spawnEntity(initialLoc, EntityType.BLOCK_DISPLAY);
         display.setBlock(paleOakData);
         display.setTransformation(initialTrans);
+        plugin.getVisualCleanupManager().track(display);
         spawnedDisplays.add(display);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -264,5 +267,18 @@ public class PaleRootsTask extends BukkitRunnable {
                 hitCooldowns.put(target.getUniqueId(), 10);
             }
         }
+    }
+
+    public void breakDisplay(BlockDisplay display, Location hitLocation) {
+        if (display == null || !spawnedDisplays.remove(display)) {
+            return;
+        }
+
+        Location loc = hitLocation != null ? hitLocation : display.getLocation();
+        BlockData paleOakData = Material.PALE_OAK_WOOD.createBlockData();
+        ParticleUtils.spawnBlockDispersion(plugin, loc, paleOakData, 3.0);
+        abilityManager.untrackRootDisplay(display);
+        plugin.getVisualCleanupManager().untrack(display);
+        display.remove();
     }
 }
