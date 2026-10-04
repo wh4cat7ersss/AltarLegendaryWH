@@ -98,6 +98,11 @@ public class FrostAbilityManager {
     }
 
     public void executeScytheThrow(Player p, ItemStack scytheItem, EquipmentSlot hand) {
+        if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+            plugin.getWorldGuardManager().notifyDenied(p);
+            return;
+        }
+
         bossBarManager.setCooldown(p, "ScytheThrow", "§b§lsᴄʏᴛʜᴇ ᴛʜʀᴏᴡ", 30);
 
         ItemStack throwItem = scytheItem.clone();
@@ -118,6 +123,10 @@ public class FrostAbilityManager {
     }
 
     public void castCommandOfIce(Player p) {
+        if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+            plugin.getWorldGuardManager().notifyDenied(p);
+            return;
+        }
         if (isOnCooldown(p, "CommandOfIce")) return;
         bossBarManager.setCooldown(p, "CommandOfIce", "§b§lᴄᴏᴍᴍᴀɴᴅ ᴏғ ɪᴄᴇ", 45);
 
@@ -271,7 +280,8 @@ public class FrostAbilityManager {
 
                 current.getWorld().spawnParticle(Particle.SNOWFLAKE, current, 10, 0.4, 0.4, 0.4, 0.05);
 
-                if (current.getBlock().getType().isSolid()) {
+                if (current.getBlock().getType().isSolid()
+                        || (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().isLocationAllowed(current, p))) {
                     breakIce(current);
                     block.remove();
                     this.cancel();
@@ -284,6 +294,10 @@ public class FrostAbilityManager {
                         if (victim instanceof Player targetPlayer) {
                             if (targetPlayer.getGameMode() == GameMode.SPECTATOR) continue;
                             if (plugin.getFriendManager().isFriend(p.getUniqueId(), targetPlayer.getUniqueId())) continue;
+                        }
+
+                        if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canAffectTarget(p, victim)) {
+                            continue;
                         }
 
                         breakIce(current);

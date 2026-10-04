@@ -101,7 +101,7 @@ weapons:
   frost_scythe:
     material: "TRIDENT"
     custom-model-data: 4
-    item-model: ""
+    item-model: "minecraft:netherite_sword"
     tooltip-style: "minecraft:frost"
 
   paladins_battle_axe:

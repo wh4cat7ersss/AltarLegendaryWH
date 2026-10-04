@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTeleportEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
@@ -139,6 +140,20 @@ public class WorldGuardAbilityGate implements Listener {
         if (!worldGuardManager.canUseAbilities(player)) {
             event.setCancelled(true);
             worldGuardManager.notifyDenied(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+        if (event.getEntity().getShooter() instanceof Player player) {
+            if (!worldGuardManager.canUseAbilities(player)) {
+                ItemStack main = player.getInventory().getItemInMainHand();
+                ItemStack off = player.getInventory().getItemInOffHand();
+                if (isLegendaryWeapon(main) || isLegendaryWeapon(off)) {
+                    event.setCancelled(true);
+                    notifyDenied(player, isLegendaryWeapon(main) ? main : off);
+                }
+            }
         }
     }
 

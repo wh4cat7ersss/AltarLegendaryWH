@@ -41,6 +41,8 @@ public class FrostScytheTask extends BukkitRunnable {
     private boolean returning = false;
     private float roll = 0;
     private int orbitTicks = 0;
+    private int ticksLived = 0;
+    private int returnTicks = 0;
 
     private final Set<UUID> hitOutward = new HashSet<>();
     private final Set<UUID> hitOnReturn = new HashSet<>();
@@ -58,12 +60,8 @@ public class FrostScytheTask extends BukkitRunnable {
         this.display = (ItemDisplay) owner.getWorld().spawnEntity(owner.getEyeLocation(), EntityType.ITEM_DISPLAY);
         plugin.getVisualCleanupManager().track(display);
 
-        ItemStack visualItem = new ItemStack(Material.NETHERITE_AXE);
-        ItemMeta meta = visualItem.getItemMeta();
-        if (meta != null) {
-            meta.setCustomModelData(1);
-            visualItem.setItemMeta(meta);
-        }
+        ItemStack visualItem = item.clone();
+        FrostListener.setScytheModel(visualItem, false);
 
         display.setItemStack(visualItem);
         display.setInterpolationDuration(MOTION_INTERPOLATION_TICKS);
@@ -77,7 +75,13 @@ public class FrostScytheTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (!owner.isOnline() || !display.isValid()) {
+        ticksLived++;
+        if (ticksLived > 300) {
+            forceFinish();
+            return;
+        }
+
+        if (!owner.isOnline()) {
             dropItem(display.isValid() ? display.getLocation() : null);
             return;
         }
@@ -87,6 +91,10 @@ public class FrostScytheTask extends BukkitRunnable {
         }
 
         Location current = display.getLocation();
+        if (current.getWorld() == null) {
+            forceFinish();
+            return;
+        }
 
         current.getWorld().spawnParticle(Particle.SNOWFLAKE, current, 6, 0.22, 0.22, 0.22, 0.03);
 
@@ -98,6 +106,14 @@ public class FrostScytheTask extends BukkitRunnable {
     }
 
     private void handleFlight(Location current) {
+        Location nextLocation = current.clone().add(direction);
+
+        if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().isLocationAllowed(nextLocation, owner)) {
+            abilityManager.playImpactBurst(current, direction.clone().normalize());
+            startReturn();
+            return;
+        }
+
         double speed = direction.length();
         RayTraceResult result = current.getWorld().rayTrace(
                 current,
@@ -117,11 +133,13 @@ public class FrostScytheTask extends BukkitRunnable {
             }
             if (result.getHitEntity() instanceof LivingEntity victim) {
                 if (isValidTarget(victim) && !hitOutward.contains(victim.getUniqueId())) {
-                    Location sweepLoc = victim.getLocation().clone().add(0, 1.2, 0).subtract(direction.clone().normalize().multiply(1.2));
-                    abilityManager.playSweepEffect(sweepLoc, direction);
-                    abilityManager.playImpactBurst(victim.getLocation().clone().add(0, 1, 0), direction.clone().normalize());
-                    abilityManager.applyFreeze(owner, victim, 3, 0);
-                    CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.damage", 12.0), owner));
+                    if (plugin.getWorldGuardManager() == null || plugin.getWorldGuardManager().canAffectTarget(owner, victim)) {
+                        Location sweepLoc = victim.getLocation().clone().add(0, 1.2, 0).subtract(direction.clone().normalize().multiply(1.2));
+                        abilityManager.playSweepEffect(sweepLoc, direction);
+                        abilityManager.playImpactBurst(victim.getLocation().clone().add(0, 1, 0), direction.clone().normalize());
+                        abilityManager.applyFreeze(owner, victim, 3, 0);
+                        CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.damage", 12.0), owner));
+                    }
                     hitOutward.add(victim.getUniqueId());
                 }
                 startReturn();
@@ -138,7 +156,6 @@ public class FrostScytheTask extends BukkitRunnable {
         transformation.getLeftRotation().set(new Quaternionf().rotateY(roll));
         display.setTransformation(transformation);
 
-        Location nextLocation = current.clone().add(direction);
         display.teleport(nextLocation);
 
         if (current.distance(owner.getLocation()) > 40) {
@@ -147,6 +164,12 @@ public class FrostScytheTask extends BukkitRunnable {
     }
 
     private void handleReturn(Location current) {
+        returnTicks++;
+        if (returnTicks > 140) {
+            forceFinish();
+            return;
+        }
+
         Location target = owner.getEyeLocation().subtract(0, 0.5, 0);
         Vector toOwner = target.toVector().subtract(current.toVector());
         double distance = toOwner.length();
@@ -154,45 +177,26 @@ public class FrostScytheTask extends BukkitRunnable {
         for (Entity entity : current.getWorld().getNearbyEntities(current, 1.5, 1.5, 1.5)) {
             if (entity instanceof LivingEntity victim && !victim.equals(owner)) {
                 if (isValidTarget(victim) && !hitOnReturn.contains(victim.getUniqueId())) {
-                    Location sweepLoc = victim.getLocation().clone().add(0, 1.2, 0).subtract(toOwner.clone().normalize().multiply(1.2));
-                    abilityManager.playSweepEffect(sweepLoc, toOwner.clone().normalize());
-                    abilityManager.playImpactBurst(victim.getLocation().clone().add(0, 1, 0), toOwner.clone().normalize());
-                    abilityManager.applyFreeze(owner, victim, 3, 0);
-                    CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.damage", 12.0), owner));
+                    if (plugin.getWorldGuardManager() == null || plugin.getWorldGuardManager().canAffectTarget(owner, victim)) {
+                        Location sweepLoc = victim.getLocation().clone().add(0, 1.2, 0).subtract(toOwner.clone().normalize().multiply(1.2));
+                        abilityManager.playSweepEffect(sweepLoc, toOwner.clone().normalize());
+                        abilityManager.playImpactBurst(victim.getLocation().clone().add(0, 1, 0), toOwner.clone().normalize());
+                        abilityManager.applyFreeze(owner, victim, 3, 0);
+                        CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.throw.damage", 12.0), owner));
+                    }
                     hitOnReturn.add(victim.getUniqueId());
                 }
             }
         }
 
         if (distance <= 1.5) {
-            if (owner.getInventory().firstEmpty() != -1) {
-                ItemStack returnItem = item.clone();
-                boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
-                returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
+            forceFinish();
+            return;
+        }
 
-                FrostListener.setScytheModel(returnItem, false);
-
-                owner.getInventory().addItem(returnItem);
-                owner.playSound(owner.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1f, 1.2f);
-                cleanup();
-                return;
-            }
-            orbitTicks++;
-            if (orbitTicks >= 300) {
-                dropItem(current);
-                return;
-            }
-
-            roll += 0.4f;
-            display.setInterpolationDelay(0);
-            display.setInterpolationDuration(MOTION_INTERPOLATION_TICKS);
-            display.setTeleportDuration(MOTION_INTERPOLATION_TICKS);
-            Transformation transformation = display.getTransformation();
-            transformation.getLeftRotation().set(new Quaternionf().rotateY(roll));
-            display.setTransformation(transformation);
-
-            Vector lerp = target.clone().add(0, 1.5, 0).toVector().subtract(current.toVector()).multiply(0.15);
-            display.teleport(current.clone().add(lerp));
+        Location nextReturnLoc = current.clone().add(toOwner.normalize().multiply(returnSpeed));
+        if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().isLocationAllowed(nextReturnLoc, owner)) {
+            forceFinish();
             return;
         }
 
@@ -204,8 +208,27 @@ public class FrostScytheTask extends BukkitRunnable {
         transformation.getLeftRotation().set(new Quaternionf().rotateY(roll));
         display.setTransformation(transformation);
 
-        current.add(toOwner.normalize().multiply(returnSpeed));
-        display.teleport(current);
+        display.teleport(nextReturnLoc);
+    }
+
+    private void forceFinish() {
+        if (owner != null && owner.isOnline() && !owner.isDead()) {
+            ItemStack returnItem = item.clone();
+            boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
+            returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
+            FrostListener.setScytheModel(returnItem, false);
+
+            if (owner.getInventory().firstEmpty() != -1) {
+                owner.getInventory().addItem(returnItem);
+                owner.playSound(owner.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1f, 1.2f);
+            } else {
+                owner.getWorld().dropItemNaturally(owner.getLocation(), returnItem);
+            }
+        } else if (display.isValid()) {
+            dropItem(display.getLocation());
+            return;
+        }
+        cleanup();
     }
 
     private boolean isValidTarget(LivingEntity victim) {
@@ -241,7 +264,9 @@ public class FrostScytheTask extends BukkitRunnable {
         if (display.isValid()) {
             display.remove();
         }
-        cancel();
+        try {
+            cancel();
+        } catch (IllegalStateException ignored) {}
     }
 }
 

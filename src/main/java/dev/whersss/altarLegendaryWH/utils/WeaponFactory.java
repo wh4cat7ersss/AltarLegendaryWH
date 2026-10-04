@@ -62,16 +62,20 @@ public class WeaponFactory {
     }
 
     public static void applyModelSettings(ItemMeta meta, String weaponKey, int defaultCmd, String defaultTooltip) {
+        applyModelSettings(meta, weaponKey, defaultCmd, "", defaultTooltip);
+    }
+
+    public static void applyModelSettings(ItemMeta meta, String weaponKey, int defaultCmd, String defaultItemModel, String defaultTooltip) {
         if (meta == null) return;
         AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
         int cmd = defaultCmd;
-        String itemModel = "";
+        String itemModel = defaultItemModel;
         String tooltip = defaultTooltip;
 
         if (plugin.getModelsConfig() != null) {
             String path = "weapons." + weaponKey;
             cmd = plugin.getModelsConfig().getInt(path + ".custom-model-data", defaultCmd);
-            itemModel = plugin.getModelsConfig().getString(path + ".item-model", "");
+            itemModel = plugin.getModelsConfig().getString(path + ".item-model", defaultItemModel);
             tooltip = plugin.getModelsConfig().getString(path + ".tooltip-style", defaultTooltip);
         }
 
@@ -359,7 +363,7 @@ public class WeaponFactory {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.displayName(gradientTitle("#00AAAA", "#55FFFF", "#00AAAA", tr("Морозная Коса", "ꜰʀᴏsᴛ sᴄʏᴛʜᴇ")));
-            applyModelSettings(meta, "frost_scythe", 4, "minecraft:frost");
+            applyModelSettings(meta, "frost_scythe", 4, "minecraft:netherite_sword", "minecraft:frost");
             meta.addEnchant(Enchantment.SHARPNESS, 5, true);
             meta.addEnchant(Enchantment.SWEEPING_EDGE, 3, true);
             meta.addEnchant(Enchantment.LOOTING, 3, true);

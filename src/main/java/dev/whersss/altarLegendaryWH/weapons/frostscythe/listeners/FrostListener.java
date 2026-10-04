@@ -54,8 +54,13 @@ public class FrostListener implements Listener {
             return true;
         }
 
+        int expectedCmd = 4;
+        if (plugin.getModelsConfig() != null) {
+            expectedCmd = plugin.getModelsConfig().getInt("weapons.frost_scythe.custom-model-data", 4);
+        }
+
         return meta.hasCustomModelData() &&
-                meta.getCustomModelData() == 4 &&
+                (meta.getCustomModelData() == expectedCmd || meta.getCustomModelData() == 4) &&
                 (item.getType() == Material.NETHERITE_SWORD || item.getType() == Material.TRIDENT);
     }
 
@@ -63,11 +68,26 @@ public class FrostListener implements Listener {
         if (item == null || !item.hasItemMeta()) return;
         try {
             ItemMeta meta = item.getItemMeta();
+            if (meta == null) return;
+            AltarLegendaryWH plugin = AltarLegendaryWH.getInstance();
             String keyStr = "minecraft:netherite_sword";
-            String[] parts = keyStr.split(":");
-            NamespacedKey key = new NamespacedKey(parts[0], parts[1]);
-
-            meta.setItemModel(key);
+            int cmd = 4;
+            if (plugin != null && plugin.getModelsConfig() != null) {
+                String configured = plugin.getModelsConfig().getString("weapons.frost_scythe.item-model");
+                if (configured != null && !configured.isBlank()) {
+                    keyStr = configured.trim();
+                }
+                cmd = plugin.getModelsConfig().getInt("weapons.frost_scythe.custom-model-data", 4);
+            }
+            if (cmd > 0) {
+                meta.setCustomModelData(cmd);
+            }
+            if (keyStr != null && !keyStr.isBlank()) {
+                NamespacedKey key = NamespacedKey.fromString(keyStr);
+                if (key != null) {
+                    meta.setItemModel(key);
+                }
+            }
             item.setItemMeta(meta);
         } catch (Throwable ignored) {
         }
@@ -131,6 +151,14 @@ public class FrostListener implements Listener {
 
         if (!isFrostScythe(item)) return;
 
+        if (e.isCancelled()) return;
+
+        if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+            e.setCancelled(true);
+            plugin.getWorldGuardManager().notifyDenied(p);
+            return;
+        }
+
         if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (p.isSneaking()) {
                 e.setCancelled(true);
@@ -156,6 +184,12 @@ public class FrostListener implements Listener {
                             @Override
                             public void run() {
                                 if (!p.isOnline()) {
+                                    this.cancel();
+                                    return;
+                                }
+
+                                if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+                                    forceResetHands(p);
                                     this.cancel();
                                     return;
                                 }
@@ -214,6 +248,13 @@ public class FrostListener implements Listener {
 
             if (item != null) {
                 e.setCancelled(true);
+
+                if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+                    plugin.getWorldGuardManager().notifyDenied(p);
+                    p.updateInventory();
+                    return;
+                }
+
                 p.updateInventory();
 
                 if (!abilityManager.isOnCooldown(p, "ScytheThrow")) {
