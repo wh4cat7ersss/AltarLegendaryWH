@@ -18,6 +18,10 @@ public class PassiveAuraTask extends BukkitRunnable {
     private final AltarLegendaryWH plugin;
     private final Map<UUID, Integer> trackerCooldowns = new HashMap<>();
 
+    private final Map<UUID, PotionEffect> savedSpeed = new HashMap<>();
+    private final Map<UUID, Long> savedSpeedTime = new HashMap<>();
+    private final Map<UUID, PotionEffect> savedStrength = new HashMap<>();
+    private final Map<UUID, Long> savedStrengthTime = new HashMap<>();
     private final Map<UUID, Boolean> wasHolding = new HashMap<>();
 
     public PassiveAuraTask(AltarLegendaryWH plugin) {
@@ -39,15 +43,29 @@ public class PassiveAuraTask extends BukkitRunnable {
                 int speedAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.speed-amplifier", 1);
                 int strAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.strength-amplifier", 0);
 
+                if (!heldBefore) {
+                    PotionEffect curSpeed = p.getPotionEffect(PotionEffectType.SPEED);
+                    if (curSpeed != null && !isBloodlustPassiveEffect(curSpeed, speedAmp) && !dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {
+                        savedSpeed.put(p.getUniqueId(), curSpeed);
+                        savedSpeedTime.put(p.getUniqueId(), System.currentTimeMillis());
+                    }
+
+                    PotionEffect curStr = p.getPotionEffect(PotionEffectType.STRENGTH);
+                    if (curStr != null && !isBloodlustPassiveEffect(curStr, strAmp)) {
+                        savedStrength.put(p.getUniqueId(), curStr);
+                        savedStrengthTime.put(p.getUniqueId(), System.currentTimeMillis());
+                    }
+                }
+
                 if (kills >= 1) {
                     PotionEffect curSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-                    if (curSpeed == null || curSpeed.getAmplifier() <= speedAmp) {
+                    if (curSpeed == null || isBloodlustPassiveEffect(curSpeed, speedAmp) || curSpeed.getAmplifier() < speedAmp) {
                         p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, speedAmp, false, false, true));
                     }
                 }
                 if (kills >= 4) {
                     PotionEffect curStr = p.getPotionEffect(PotionEffectType.STRENGTH);
-                    if (curStr == null || curStr.getAmplifier() <= strAmp) {
+                    if (curStr == null || isBloodlustPassiveEffect(curStr, strAmp) || curStr.getAmplifier() < strAmp) {
                         p.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, strAmp, false, false, true));
                     }
                 }
@@ -78,6 +96,38 @@ public class PassiveAuraTask extends BukkitRunnable {
                     }
                     if (isBloodlustPassiveEffect(activeStrength, strAmp)) {
                         p.removePotionEffect(PotionEffectType.STRENGTH);
+                    }
+
+                    if (savedSpeed.containsKey(p.getUniqueId())) {
+                        PotionEffect old = savedSpeed.remove(p.getUniqueId());
+                        Long startTime = savedSpeedTime.remove(p.getUniqueId());
+                        if (old != null && startTime != null && !dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {
+                            if (old.getDuration() == PotionEffect.INFINITE_DURATION) {
+                                p.addPotionEffect(old);
+                            } else {
+                                long elapsed = (System.currentTimeMillis() - startTime) / 50L;
+                                int rem = old.getDuration() - (int) elapsed;
+                                if (rem > 0) {
+                                    p.addPotionEffect(new PotionEffect(old.getType(), rem, old.getAmplifier(), old.isAmbient(), old.hasParticles(), old.hasIcon()));
+                                }
+                            }
+                        }
+                    }
+
+                    if (savedStrength.containsKey(p.getUniqueId())) {
+                        PotionEffect old = savedStrength.remove(p.getUniqueId());
+                        Long startTime = savedStrengthTime.remove(p.getUniqueId());
+                        if (old != null && startTime != null) {
+                            if (old.getDuration() == PotionEffect.INFINITE_DURATION) {
+                                p.addPotionEffect(old);
+                            } else {
+                                long elapsed = (System.currentTimeMillis() - startTime) / 50L;
+                                int rem = old.getDuration() - (int) elapsed;
+                                if (rem > 0) {
+                                    p.addPotionEffect(new PotionEffect(old.getType(), rem, old.getAmplifier(), old.isAmbient(), old.hasParticles(), old.hasIcon()));
+                                }
+                            }
+                        }
                     }
 
                     wasHolding.put(p.getUniqueId(), false);

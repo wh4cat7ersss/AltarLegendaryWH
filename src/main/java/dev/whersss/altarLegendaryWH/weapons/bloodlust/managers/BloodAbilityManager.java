@@ -27,6 +27,8 @@ public class BloodAbilityManager {
     private final AltarLegendaryWH plugin;
     private final BloodBossBarManager bossBarManager;
     private final Set<UUID> activePuddles = new HashSet<>();
+    private final Map<UUID, List<PotionEffect>> savedBloodTrailEffects = new HashMap<>();
+    private final Map<UUID, Long> bloodTrailStartTime = new HashMap<>();
     private final Random random = new Random();
 
     private final BlockData bloodBlockData = Bukkit.createBlockData(Material.REDSTONE_BLOCK);
@@ -209,6 +211,16 @@ public class BloodAbilityManager {
         int maxTicks = plugin.getWeaponsConfig().getInt("bloodlust.blood-trail.duration", 20) * 20;
 
         activePuddles.add(p.getUniqueId());
+        bloodTrailStartTime.put(p.getUniqueId(), System.currentTimeMillis());
+
+        List<PotionEffect> toSave = new ArrayList<>();
+        for (PotionEffect pe : p.getActivePotionEffects()) {
+            if (pe.getType() == PotionEffectType.SPEED && dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {
+                continue;
+            }
+            toSave.add(pe);
+        }
+        savedBloodTrailEffects.put(p.getUniqueId(), toSave);
 
         p.getWorld().playSound(p.getLocation(), "bloodlust.dive", 1f, 1f);
         p.getAttribute(Attribute.SCALE).setBaseValue(0.3);
@@ -275,6 +287,23 @@ public class BloodAbilityManager {
         PotionEffect speed = p.getPotionEffect(PotionEffectType.SPEED);
         if (speed != null && speed.getAmplifier() == 3 && speed.getDuration() <= 40) {
             p.removePotionEffect(PotionEffectType.SPEED);
+        }
+
+        Long startTime = bloodTrailStartTime.remove(p.getUniqueId());
+        List<PotionEffect> saved = savedBloodTrailEffects.remove(p.getUniqueId());
+
+        if (saved != null && startTime != null) {
+            long elapsedTicks = (System.currentTimeMillis() - startTime) / 50L;
+            for (PotionEffect old : saved) {
+                if (old.getDuration() == PotionEffect.INFINITE_DURATION) {
+                    p.addPotionEffect(old);
+                } else {
+                    int rem = old.getDuration() - (int) elapsedTicks;
+                    if (rem > 0) {
+                        p.addPotionEffect(new PotionEffect(old.getType(), rem, old.getAmplifier(), old.isAmbient(), old.hasParticles(), old.hasIcon()));
+                    }
+                }
+            }
         }
 
         if (forceJump) {
@@ -534,6 +563,8 @@ public class BloodAbilityManager {
             if (p != null) cancelBloodTrail(p, false);
         }
         activePuddles.clear();
+        savedBloodTrailEffects.clear();
+        bloodTrailStartTime.clear();
     }
 }
 

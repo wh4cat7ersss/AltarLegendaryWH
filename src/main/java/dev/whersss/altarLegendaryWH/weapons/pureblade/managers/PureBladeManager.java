@@ -307,10 +307,7 @@ public class PureBladeManager {
         int duration = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.speed-duration", 5) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.speed-amplifier", 10);
 
-        PotionEffect currentSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
-            p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-        }
+        dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.applyBurstSpeed(p, duration, amplifier, plugin);
 
         ItemStack slashItem = new ItemStack(Material.CLAY_BALL);
         ItemMeta meta = slashItem.getItemMeta();

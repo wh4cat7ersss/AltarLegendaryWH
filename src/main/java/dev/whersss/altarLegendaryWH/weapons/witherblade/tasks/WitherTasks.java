@@ -40,10 +40,7 @@ public class WitherTasks {
         int duration = plugin.getWeaponsConfig().getInt("wither-blade.dash.speed-duration", 4) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("wither-blade.dash.speed-amplifier", 1);
 
-        PotionEffect currentSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
-            p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-        }
+        dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.applyBurstSpeed(p, duration, amplifier, plugin);
 
         new BukkitRunnable() {
             int ticks = 0;

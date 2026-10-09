@@ -127,10 +127,7 @@ public class WindWeaverListener implements Listener {
         int duration = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.speed-duration", 3) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.speed-amplifier", 4) - 1;
 
-        PotionEffect currentSpeed = player.getPotionEffect(PotionEffectType.SPEED);
-        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-        }
+        dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.applyBurstSpeed(player, duration, amplifier, plugin);
 
         Location start = player.getLocation().add(0, 1.0, 0);
         for (int i = 0; i < 5; i++) {

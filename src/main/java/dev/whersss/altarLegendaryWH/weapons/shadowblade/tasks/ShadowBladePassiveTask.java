@@ -18,6 +18,8 @@ import java.util.UUID;
 
 public class ShadowBladePassiveTask extends BukkitRunnable {
 
+    private final Map<UUID, PotionEffect> savedSpeed = new HashMap<>();
+    private final Map<UUID, Long> savedSpeedTime = new HashMap<>();
     private final Map<UUID, Boolean> wasHolding = new HashMap<>();
     private final Particle.DustOptions subtleBlackDust = new Particle.DustOptions(Color.fromRGB(15, 15, 20), 1.35f);
 
@@ -31,6 +33,13 @@ public class ShadowBladePassiveTask extends BukkitRunnable {
             boolean isWeaponSpeed = curSpeed != null && curSpeed.getAmplifier() == 1 && curSpeed.getDuration() <= 80;
 
             if (isHolding) {
+                if (!wasHolding.getOrDefault(p.getUniqueId(), false) && curSpeed != null && !isWeaponSpeed) {
+                    if (!dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {
+                        savedSpeed.put(p.getUniqueId(), curSpeed);
+                        savedSpeedTime.put(p.getUniqueId(), System.currentTimeMillis());
+                    }
+                }
+
                 if (curSpeed == null || isWeaponSpeed || curSpeed.getAmplifier() < 1) {
                     p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false, true));
                 }
@@ -63,6 +72,22 @@ public class ShadowBladePassiveTask extends BukkitRunnable {
                 if (heldBefore) {
                     if (isWeaponSpeed) {
                         p.removePotionEffect(PotionEffectType.SPEED);
+                    }
+
+                    if (savedSpeed.containsKey(p.getUniqueId())) {
+                        PotionEffect old = savedSpeed.remove(p.getUniqueId());
+                        Long startTime = savedSpeedTime.remove(p.getUniqueId());
+                        if (old != null && startTime != null && !dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {
+                            if (old.getDuration() == PotionEffect.INFINITE_DURATION) {
+                                p.addPotionEffect(old);
+                            } else {
+                                long elapsed = (System.currentTimeMillis() - startTime) / 50L;
+                                int rem = old.getDuration() - (int) elapsed;
+                                if (rem > 0) {
+                                    p.addPotionEffect(new PotionEffect(old.getType(), rem, old.getAmplifier(), old.isAmbient(), old.hasParticles(), old.hasIcon()));
+                                }
+                            }
+                        }
                     }
 
                     wasHolding.put(p.getUniqueId(), false);

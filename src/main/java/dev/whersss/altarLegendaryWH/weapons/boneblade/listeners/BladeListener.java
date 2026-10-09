@@ -190,10 +190,7 @@ public class BladeListener implements Listener {
         int duration = plugin.getWeaponsConfig().getInt("bone-blade.dash.speed-duration", 3) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("bone-blade.dash.speed-amplifier", 2) - 1;
 
-        PotionEffect currentSpeed = player.getPotionEffect(PotionEffectType.SPEED);
-        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-        }
+        dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.applyBurstSpeed(player, duration, amplifier, plugin);
 
         new BukkitRunnable() {
             int ticks = 0;

@@ -266,7 +266,11 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                         : plugin.getItemsConfig().getInt("copper-armor.boots.speed-level", 3) - 1);
 
                 PotionEffect curSpeed = player.getPotionEffect(PotionEffectType.SPEED);
-                if (curSpeed == null || curSpeed.getAmplifier() <= desiredAmp || (curSpeed.getAmplifier() == 4 && !onCopper && curSpeed.getDuration() <= 40)) {
+                if (curSpeed != null && curSpeed.getAmplifier() == 4 && !onCopper) {
+                    player.removePotionEffect(PotionEffectType.SPEED);
+                    curSpeed = null;
+                }
+                if (curSpeed == null || curSpeed.getAmplifier() <= desiredAmp) {
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, desiredAmp, false, false, false));
                 }
 
