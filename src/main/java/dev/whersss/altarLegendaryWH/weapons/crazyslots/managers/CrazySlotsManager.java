@@ -306,14 +306,7 @@ public class CrazySlotsManager {
 
                 if (!hasItem) {
                     cancel();
-                    ItemStack clean = getCleanCrazySlots(instanceId);
-                    Map<Integer, ItemStack> leftover = player.getInventory().addItem(clean);
-                    if (!leftover.isEmpty()) {
-                        for (ItemStack rem : leftover.values()) {
-                            player.getWorld().dropItemNaturally(player.getLocation(), rem);
-                        }
-                    }
-                    endTransformationAndApplyCooldown(player, instanceId);
+                    revertItem(instanceId, true);
                 }
             }
         }.runTaskTimer(plugin, 10L, 10L);
@@ -478,8 +471,23 @@ public class CrazySlotsManager {
                 if (restored) break;
             }
         }
+        // 4. Search ItemFrames in loaded worlds
+        if (!restored) {
+            for (World w : Bukkit.getWorlds()) {
+                for (Entity ent : w.getEntities()) {
+                    if (ent instanceof org.bukkit.entity.ItemFrame frame) {
+                        if (hasTargetId(frame.getItem(), instanceId)) {
+                            frame.setItem(cleanOriginal.clone());
+                            restored = true;
+                            break;
+                        }
+                    }
+                }
+                if (restored) break;
+            }
+        }
 
-        // 4. Fallback: if not found anywhere, give directly to owner player if online
+        // 5. Fallback: if not found anywhere, give directly to owner player if online
         if (!restored && playerUUID != null) {
             Player owner = Bukkit.getPlayer(playerUUID);
             if (owner != null && owner.isOnline()) {

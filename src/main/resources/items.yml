@@ -60,9 +60,12 @@ copper-armor:
     copper-speed-level: 5
   leggings:
     min-fall-distance: 2.0
-    max-fall-distance: 300.0
+    max-fall-distance: 25.0
     min-explosion-power: 1.0
     max-explosion-power: 10.0
+    damage-multiplier: 6.0
+    radius-multiplier: 2.0
+    knockback-multiplier: 1.0
   chestplate:
     hits-for-lightning: 7
     ring-radius: 10.0

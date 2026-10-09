@@ -27,7 +27,6 @@ public class BloodAbilityManager {
     private final AltarLegendaryWH plugin;
     private final BloodBossBarManager bossBarManager;
     private final Set<UUID> activePuddles = new HashSet<>();
-    private final Map<UUID, Collection<PotionEffect>> savedEffects = new HashMap<>();
     private final Random random = new Random();
 
     private final BlockData bloodBlockData = Bukkit.createBlockData(Material.REDSTONE_BLOCK);
@@ -210,7 +209,6 @@ public class BloodAbilityManager {
         int maxTicks = plugin.getWeaponsConfig().getInt("bloodlust.blood-trail.duration", 20) * 20;
 
         activePuddles.add(p.getUniqueId());
-        savedEffects.put(p.getUniqueId(), new ArrayList<>(p.getActivePotionEffects()));
 
         p.getWorld().playSound(p.getLocation(), "bloodlust.dive", 1f, 1f);
         p.getAttribute(Attribute.SCALE).setBaseValue(0.3);
@@ -272,12 +270,13 @@ public class BloodAbilityManager {
         }
 
         p.removePotionEffect(PotionEffectType.INVISIBILITY);
-        p.removePotionEffect(PotionEffectType.SPEED);
         p.removePotionEffect(PotionEffectType.MINING_FATIGUE);
 
-        if (savedEffects.containsKey(p.getUniqueId())) {
-            savedEffects.remove(p.getUniqueId()).forEach(p::addPotionEffect);
+        PotionEffect speed = p.getPotionEffect(PotionEffectType.SPEED);
+        if (speed != null && speed.getAmplifier() == 3 && speed.getDuration() <= 40) {
+            p.removePotionEffect(PotionEffectType.SPEED);
         }
+
         if (forceJump) {
             p.setVelocity(p.getVelocity().setY(0.55));
             p.getWorld().spawnParticle(Particle.BLOCK, p.getLocation().add(0, 0.2, 0), 20, 0.3, 0.1, 0.3, 0, bloodBlockData);
@@ -535,7 +534,6 @@ public class BloodAbilityManager {
             if (p != null) cancelBloodTrail(p, false);
         }
         activePuddles.clear();
-        savedEffects.clear();
     }
 }
 

@@ -18,7 +18,6 @@ import java.util.UUID;
 
 public class ShadowBladePassiveTask extends BukkitRunnable {
 
-    private final Map<UUID, PotionEffect> savedSpeed = new HashMap<>();
     private final Map<UUID, Boolean> wasHolding = new HashMap<>();
     private final Particle.DustOptions subtleBlackDust = new Particle.DustOptions(Color.fromRGB(15, 15, 20), 1.35f);
 
@@ -32,12 +31,8 @@ public class ShadowBladePassiveTask extends BukkitRunnable {
             boolean isWeaponSpeed = curSpeed != null && curSpeed.getAmplifier() == 1 && curSpeed.getDuration() <= 80;
 
             if (isHolding) {
-                if (!isWeaponSpeed && curSpeed != null) {
-                    savedSpeed.put(p.getUniqueId(), curSpeed);
-                }
-
                 if (curSpeed == null || isWeaponSpeed || curSpeed.getAmplifier() < 1) {
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 1, false, false, true));
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false, true));
                 }
 
                 wasHolding.put(p.getUniqueId(), true);
@@ -68,10 +63,6 @@ public class ShadowBladePassiveTask extends BukkitRunnable {
                 if (heldBefore) {
                     if (isWeaponSpeed) {
                         p.removePotionEffect(PotionEffectType.SPEED);
-                    }
-
-                    if (savedSpeed.containsKey(p.getUniqueId())) {
-                        p.addPotionEffect(savedSpeed.remove(p.getUniqueId()));
                     }
 
                     wasHolding.put(p.getUniqueId(), false);

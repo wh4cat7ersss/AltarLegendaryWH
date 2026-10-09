@@ -127,20 +127,9 @@ public class WindWeaverListener implements Listener {
         int duration = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.speed-duration", 3) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("windweaver.wind-leap.speed-amplifier", 4) - 1;
 
-        PotionEffect oldSpeed = player.getPotionEffect(PotionEffectType.SPEED);
-        boolean hadSpeed = oldSpeed != null && oldSpeed.getAmplifier() < amplifier;
-
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-
-        if (hadSpeed) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (player.isOnline()) {
-                        player.addPotionEffect(oldSpeed);
-                    }
-                }
-            }.runTaskLater(plugin, duration);
+        PotionEffect currentSpeed = player.getPotionEffect(PotionEffectType.SPEED);
+        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
         }
 
         Location start = player.getLocation().add(0, 1.0, 0);

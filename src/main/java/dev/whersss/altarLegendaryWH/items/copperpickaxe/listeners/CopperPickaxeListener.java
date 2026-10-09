@@ -3,6 +3,7 @@ package dev.whersss.altarLegendaryWH.items.copperpickaxe.listeners;
 import dev.whersss.altarLegendaryWH.AltarLegendaryWH;
 import dev.whersss.altarLegendaryWH.items.copperpickaxe.CopperPickaxeItem;
 import dev.whersss.altarLegendaryWH.utils.TextUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -95,8 +96,13 @@ public class CopperPickaxeListener implements Listener {
             return;
         }
 
+        Block origin = event.getBlock();
+        if (origin.getType() == Material.BEDROCK || origin.getType().getHardness() < 0.0f) {
+            return;
+        }
+
         BlockFace face = lastFace.getOrDefault(player.getUniqueId(), BlockFace.SELF);
-        List<Block> area = computeArea(event.getBlock(), face);
+        List<Block> area = computeArea(origin, face);
         Set<Material> blocked = getBlockedMaterials();
 
         clearPreview(player);
@@ -110,6 +116,8 @@ public class CopperPickaxeListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
+        if (event.isCancelled()) return;
+
         Player player = event.getPlayer();
         ItemStack tool = player.getInventory().getItemInMainHand();
 
@@ -117,14 +125,29 @@ public class CopperPickaxeListener implements Listener {
             return;
         }
 
+        Block origin = event.getBlock();
+        if (origin.getType() == Material.BEDROCK || origin.getType().getHardness() < 0.0f) {
+            event.setCancelled(true);
+            return;
+        }
+
         BlockFace face = lastFace.getOrDefault(player.getUniqueId(), BlockFace.SELF);
-        List<Block> area = computeArea(event.getBlock(), face);
-        World world = event.getBlock().getWorld();
+        List<Block> area = computeArea(origin, face);
+        World world = origin.getWorld();
         Set<Material> blocked = getBlockedMaterials();
 
         clearPreview(player);
         for (Block block : area) {
-            if (block.getType().isAir() || blocked.contains(block.getType())) {
+            if (block.equals(origin)) {
+                continue;
+            }
+            if (block.getType().isAir() || block.getType() == Material.BEDROCK || block.getType().getHardness() < 0.0f || blocked.contains(block.getType())) {
+                continue;
+            }
+
+            BlockBreakEvent subEvent = new BlockBreakEvent(block, player);
+            Bukkit.getPluginManager().callEvent(subEvent);
+            if (subEvent.isCancelled()) {
                 continue;
             }
 
@@ -142,6 +165,8 @@ public class CopperPickaxeListener implements Listener {
 
     private Set<Material> getBlockedMaterials() {
         Set<Material> materials = new HashSet<>();
+        materials.add(Material.BEDROCK);
+        materials.add(Material.BARRIER);
         for (String entry : plugin.getItemsConfig().getStringList("copper-pickaxe.not-breakable-3x3")) {
             Material material = Material.matchMaterial(entry.toUpperCase(Locale.ROOT));
             if (material != null) {

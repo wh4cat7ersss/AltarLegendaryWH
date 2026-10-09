@@ -99,19 +99,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
     private boolean isTeammate(Player p1, Player p2) {
         if (p1 == null || p2 == null) return false;
         if (p1.equals(p2)) return true;
-        if (plugin.getFriendManager() != null && plugin.getFriendManager().isFriend(p1.getUniqueId(), p2.getUniqueId())) {
-            return true;
-        }
-        try {
-            org.bukkit.scoreboard.Scoreboard sb = p1.getScoreboard();
-            if (sb != null) {
-                org.bukkit.scoreboard.Team t1 = sb.getEntryTeam(p1.getName());
-                if (t1 != null && t1.hasEntry(p2.getName())) {
-                    return true;
-                }
-            }
-        } catch (Throwable ignored) {}
-        return false;
+        return plugin.getFriendManager() != null && plugin.getFriendManager().isFriend(p1.getUniqueId(), p2.getUniqueId());
     }
 
     private boolean isVisibleOnlyToOwner() {
@@ -231,10 +219,21 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                         updateVisibleGlows(player);
                     }
                 } else if (player.isSneaking()) {
+                    int maxTicks = getChargeHoldTicks();
                     int ticks = sneakTicks.getOrDefault(playerId, 0) + 1;
                     sneakTicks.put(playerId, ticks);
 
-                    if (ticks >= getChargeHoldTicks()) {
+                    int percent = (int) Math.min(100, (ticks * 100.0 / maxTicks));
+                    int bars = (int) Math.min(10, (ticks * 10.0 / maxTicks));
+                    StringBuilder barStr = new StringBuilder("&6[");
+                    for (int b = 0; b < 10; b++) {
+                        if (b < bars) barStr.append("&e■");
+                        else barStr.append("&7□");
+                    }
+                    barStr.append("&6] &e").append(plugin.tr("Медное зрение", "Copper Vision")).append(": &f").append(percent).append("%");
+                    player.sendActionBar(dev.whersss.altarLegendaryWH.utils.TextUtils.legacy(barStr.toString()));
+
+                    if (ticks >= maxTicks) {
                         startHelmetAbility(player);
                         updateVisibleGlows(player);
                     } else if (ticks % getChargeSoundIntervalTicks() == 0) {
@@ -266,7 +265,10 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                 int desiredAmp = Math.max(0, onCopper ? plugin.getItemsConfig().getInt("copper-armor.boots.copper-speed-level", 5) - 1
                         : plugin.getItemsConfig().getInt("copper-armor.boots.speed-level", 3) - 1);
 
-                applyInfinite(player, PotionEffectType.SPEED, desiredAmp);
+                PotionEffect curSpeed = player.getPotionEffect(PotionEffectType.SPEED);
+                if (curSpeed == null || curSpeed.getAmplifier() <= desiredAmp || (curSpeed.getAmplifier() == 4 && !onCopper && curSpeed.getDuration() <= 40)) {
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, desiredAmp, false, false, false));
+                }
 
                 Location particleLoc = player.getLocation().add(0, 0.05, 0);
                 player.getWorld().spawnParticle(Particle.FLAME, particleLoc, 1, 0.0, 0.0, 0.0, 0.01);
@@ -308,6 +310,10 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
         glowingTargets.remove(player.getUniqueId());
     }
     private void removeBootsSpeed(Player player) {
+        PotionEffect cur = player.getPotionEffect(PotionEffectType.SPEED);
+        if (cur != null && cur.getDuration() <= 40 && cur.getAmplifier() <= 4) {
+            player.removePotionEffect(PotionEffectType.SPEED);
+        }
         removeIfInfinite(player, PotionEffectType.SPEED);
     }
 }

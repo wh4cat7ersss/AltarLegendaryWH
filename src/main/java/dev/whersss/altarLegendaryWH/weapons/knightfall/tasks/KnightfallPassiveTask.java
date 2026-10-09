@@ -20,7 +20,6 @@ import java.util.UUID;
 public class KnightfallPassiveTask extends BukkitRunnable {
 
     private final AltarLegendaryWH plugin;
-    private final Map<UUID, PotionEffect> savedSpeed = new HashMap<>();
     private final Map<UUID, Boolean> wasHolding = new HashMap<>();
 
     public KnightfallPassiveTask(AltarLegendaryWH plugin) {
@@ -60,12 +59,8 @@ public class KnightfallPassiveTask extends BukkitRunnable {
             boolean isWeaponSpeed = curSpeed != null && curSpeed.getAmplifier() == 1 && curSpeed.getDuration() <= 80;
 
             if (isHoldingKnightfall) {
-                if (!isWeaponSpeed && curSpeed != null) {
-                    savedSpeed.put(p.getUniqueId(), curSpeed);
-                }
-
                 if (curSpeed == null || isWeaponSpeed || curSpeed.getAmplifier() < 1) {
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, 1, false, false, true));
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false, true));
                 }
 
                 wasHolding.put(p.getUniqueId(), true);
@@ -75,10 +70,6 @@ public class KnightfallPassiveTask extends BukkitRunnable {
                 if (heldBefore) {
                     if (isWeaponSpeed) {
                         p.removePotionEffect(PotionEffectType.SPEED);
-                    }
-
-                    if (savedSpeed.containsKey(p.getUniqueId())) {
-                        p.addPotionEffect(savedSpeed.remove(p.getUniqueId()));
                     }
 
                     wasHolding.put(p.getUniqueId(), false);

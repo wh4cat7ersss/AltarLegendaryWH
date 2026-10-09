@@ -31,6 +31,11 @@ public class FriendListTabCompleter implements TabCompleter {
 
         if (args.length == 1) {
             completions.addAll(Arrays.asList("add", "remove", "list"));
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                if (!online.equals(p)) {
+                    completions.add(online.getName());
+                }
+            }
         } else if (args.length == 2) {
             if (args[0].equalsIgnoreCase("add")) {
                 for (Player online : Bukkit.getOnlinePlayers()) {

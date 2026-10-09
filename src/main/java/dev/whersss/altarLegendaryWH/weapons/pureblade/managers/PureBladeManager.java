@@ -307,20 +307,9 @@ public class PureBladeManager {
         int duration = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.speed-duration", 5) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("pure-blade.cyclone-slash.speed-amplifier", 10);
 
-        PotionEffect oldSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-        boolean hadSpeed = oldSpeed != null && oldSpeed.getAmplifier() < amplifier;
-
-        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-
-        if (hadSpeed) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (p.isOnline()) {
-                        p.addPotionEffect(oldSpeed);
-                    }
-                }
-            }.runTaskLater(plugin, duration);
+        PotionEffect currentSpeed = p.getPotionEffect(PotionEffectType.SPEED);
+        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
+            p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
         }
 
         ItemStack slashItem = new ItemStack(Material.CLAY_BALL);

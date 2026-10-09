@@ -40,28 +40,9 @@ public class WitherTasks {
         int duration = plugin.getWeaponsConfig().getInt("wither-blade.dash.speed-duration", 4) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("wither-blade.dash.speed-amplifier", 1);
 
-        PotionEffect oldSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false), true);
-
-        if (oldSpeed != null) {
-            int remainingTicks = oldSpeed.getDuration() - duration;
-            if (remainingTicks > 0) {
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    if (p.isOnline()) {
-                        PotionEffect current = p.getPotionEffect(PotionEffectType.SPEED);
-                        if (current == null || current.getAmplifier() <= oldSpeed.getAmplifier()) {
-                            p.addPotionEffect(new PotionEffect(
-                                    PotionEffectType.SPEED,
-                                    remainingTicks,
-                                    oldSpeed.getAmplifier(),
-                                    oldSpeed.isAmbient(),
-                                    oldSpeed.hasParticles(),
-                                    oldSpeed.hasIcon()
-                            ), true);
-                        }
-                    }
-                }, duration);
-            }
+        PotionEffect currentSpeed = p.getPotionEffect(PotionEffectType.SPEED);
+        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
+            p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
         }
 
         new BukkitRunnable() {

@@ -32,9 +32,39 @@ public class FriendListCommand implements CommandExecutor {
 
         if (args.length == 0) {
             p.sendMessage(TextUtils.legacy("§eПомощь по друзьям:"));
-            p.sendMessage(TextUtils.legacy("§f/friendlist add <ник> §7- Добавить друга (макс 2)"));
-            p.sendMessage(TextUtils.legacy("§f/friendlist remove <ник> §7- Удалить друга"));
-            p.sendMessage(TextUtils.legacy("§f/friendlist list §7- Список друзей"));
+            p.sendMessage(TextUtils.legacy("§f/" + label + " <ник> §7- Добавить/удалить друга"));
+            p.sendMessage(TextUtils.legacy("§f/" + label + " add <ник> §7- Добавить друга (макс 2)"));
+            p.sendMessage(TextUtils.legacy("§f/" + label + " remove <ник> §7- Удалить друга"));
+            p.sendMessage(TextUtils.legacy("§f/" + label + " list §7- Список друзей"));
+            return true;
+        }
+
+        if (args.length == 1 && !args[0].equalsIgnoreCase("list") && !args[0].equalsIgnoreCase("add") && !args[0].equalsIgnoreCase("remove") && !args[0].equalsIgnoreCase("help")) {
+            Player targetAdd = Bukkit.getPlayer(args[0]);
+            if (targetAdd == null) {
+                OfflinePlayer offline = Bukkit.getOfflinePlayer(args[0]);
+                if (fm.isFriend(p.getUniqueId(), offline.getUniqueId())) {
+                    fm.removeFriend(p.getUniqueId(), offline.getUniqueId());
+                    p.sendMessage(TextUtils.legacy("§aИгрок §e" + offline.getName() + " §aудален из френдлиста."));
+                    return true;
+                }
+                p.sendMessage(TextUtils.legacy("§cИгрок не найден (он должен быть онлайн для добавления)."));
+                return true;
+            }
+            if (targetAdd.equals(p)) {
+                p.sendMessage(TextUtils.legacy("§cВы не можете добавить самого себя."));
+                return true;
+            }
+            if (fm.isFriend(p.getUniqueId(), targetAdd.getUniqueId())) {
+                fm.removeFriend(p.getUniqueId(), targetAdd.getUniqueId());
+                p.sendMessage(TextUtils.legacy("§aИгрок §e" + targetAdd.getName() + " §aудален из френдлиста."));
+                return true;
+            }
+            if (fm.addFriend(p.getUniqueId(), targetAdd.getUniqueId())) {
+                p.sendMessage(TextUtils.legacy("§aВы добавили §e" + targetAdd.getName() + " §aв френдлист! Легендарные оружия его больше не заденут."));
+            } else {
+                p.sendMessage(TextUtils.legacy("§cУ вас уже максимум друзей (2/2). Удалите кого-то сначала."));
+            }
             return true;
         }
 

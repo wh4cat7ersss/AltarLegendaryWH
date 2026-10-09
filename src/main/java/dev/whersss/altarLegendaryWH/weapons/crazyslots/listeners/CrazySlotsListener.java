@@ -129,6 +129,17 @@ public class CrazySlotsListener implements Listener {
 
         boolean isTopContainer = isExternalContainer(topInv);
 
+        ItemStack curItem = event.getCurrentItem();
+        ItemStack cursorItem = event.getCursor();
+        if (isBundle(curItem) && manager.isTransformedItem(cursorItem)) {
+            event.setCancelled(true);
+            return;
+        }
+        if (isBundle(cursorItem) && manager.isTransformedItem(curItem)) {
+            event.setCancelled(true);
+            return;
+        }
+
         // Block placing transformed weapon into modification stations (anvil, grindstone, smithing, etc.)
         if (isModificationStation(topInv)) {
             if (clickedInv != null && clickedInv.equals(topInv)) {
@@ -314,6 +325,32 @@ public class CrazySlotsListener implements Listener {
                  FURNACE, BLAST_FURNACE, SMOKER, BREWING, CHISELED_BOOKSHELF, JUKEBOX, CRAFTER -> true;
             default -> (holder instanceof Container || holder instanceof DoubleChest || holder instanceof Entity);
         };
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInteractEntity(org.bukkit.event.player.PlayerInteractEntityEvent event) {
+        if (event.getRightClicked() instanceof org.bukkit.entity.ItemFrame frame) {
+            Player player = event.getPlayer();
+            ItemStack item = player.getInventory().getItem(event.getHand());
+            if (item != null && manager.isTransformedItem(item)) {
+                UUID instanceId = manager.getTransformedInstanceId(item);
+                if (instanceId != null) {
+                    event.setCancelled(true);
+                    if (frame.getItem().getType().isAir()) {
+                        ItemStack cleanCrazySlots = manager.getCleanCrazySlots(instanceId);
+                        frame.setItem(cleanCrazySlots);
+                        player.getInventory().setItem(event.getHand(), null);
+                        player.updateInventory();
+                        manager.endTransformationAndApplyCooldown(player, instanceId);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isBundle(ItemStack item) {
+        if (item == null) return false;
+        return item.getType().name().endsWith("BUNDLE");
     }
 
     private boolean isModificationStation(Inventory inventory) {

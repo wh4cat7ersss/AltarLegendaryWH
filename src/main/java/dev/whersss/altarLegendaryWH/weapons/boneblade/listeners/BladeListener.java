@@ -45,8 +45,8 @@ public class BladeListener implements Listener {
     private final Set<UUID> stunnedEntities = new HashSet<>();
     private final Random random = new Random();
 
-    private final Particle.DustOptions BONE_COLOR = new Particle.DustOptions(Color.fromRGB(168, 164, 144), 1.4f);
-    private final Particle.DustOptions RING_BONE_COLOR = new Particle.DustOptions(Color.fromRGB(168, 164, 144), 0.75f);
+    private final Particle.DustOptions BONE_COLOR = new Particle.DustOptions(Color.fromRGB(183, 168, 134), 1.8f);
+    private final Particle.DustOptions RING_BONE_COLOR = new Particle.DustOptions(Color.fromRGB(183, 168, 134), 0.9f);
 
     public BladeListener(AltarLegendaryWH plugin) {
         this.plugin = plugin;
@@ -190,20 +190,9 @@ public class BladeListener implements Listener {
         int duration = plugin.getWeaponsConfig().getInt("bone-blade.dash.speed-duration", 3) * 20;
         int amplifier = plugin.getWeaponsConfig().getInt("bone-blade.dash.speed-amplifier", 2) - 1;
 
-        PotionEffect oldSpeed = player.getPotionEffect(PotionEffectType.SPEED);
-        boolean hadSpeed = oldSpeed != null && oldSpeed.getAmplifier() < amplifier;
-
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
-
-        if (hadSpeed) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    if (player.isOnline()) {
-                        player.addPotionEffect(oldSpeed);
-                    }
-                }
-            }.runTaskLater(plugin, duration);
+        PotionEffect currentSpeed = player.getPotionEffect(PotionEffectType.SPEED);
+        if (currentSpeed == null || currentSpeed.getAmplifier() < amplifier) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, amplifier, false, false));
         }
 
         new BukkitRunnable() {
@@ -219,6 +208,7 @@ public class BladeListener implements Listener {
                     return;
                 }
                 Location loc = player.getLocation().add(0, 0.8, 0);
+                player.getWorld().spawnParticle(Particle.DUST, loc, 5, 0.25, 0.25, 0.25, 0.02, BONE_COLOR);
                 spawnSmallFallingBone(loc.clone().add(random.nextDouble() - 0.5, -0.2, random.nextDouble() - 0.5), false);
 
                 for (Entity entity : player.getWorld().getNearbyEntities(player.getLocation(), 1.5, 1.5, 1.5)) {
@@ -405,18 +395,11 @@ public class BladeListener implements Listener {
                 Location center = target.getLocation();
 
                 if (radius > 0.05) {
-                    for (int i = 0; i < 16; i++) {
-                        double pAngle = angle + (2 * Math.PI / 16) * i;
+                    for (int i = 0; i < 15; i++) {
+                        double pAngle = (2 * Math.PI / 15) * i;
                         double px = Math.cos(pAngle) * radius;
                         double pz = Math.sin(pAngle) * radius;
-                        Location pLoc = center.clone().add(px, heightY, pz);
-                        target.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, RING_BONE_COLOR);
-
-                        if (i % 2 == 0) {
-                            double tangentX = -Math.sin(pAngle);
-                            double tangentZ = Math.cos(pAngle);
-                            target.getWorld().spawnParticle(Particle.BLOCK, pLoc, 0, tangentX, 0.0, tangentZ, 0.2, Material.BONE_BLOCK.createBlockData());
-                        }
+                        target.getWorld().spawnParticle(Particle.DUST, center.clone().add(px, heightY, pz), 1, 0, 0, 0, 0, RING_BONE_COLOR);
                     }
                 }
 
@@ -441,7 +424,7 @@ public class BladeListener implements Listener {
 
     private void playImpactExplosion(Location loc) {
         loc.getWorld().playSound(loc, Sound.ENTITY_SKELETON_STEP, 1.0f, 0.5f);
-        loc.getWorld().spawnParticle(Particle.DUST, loc, 35, 0.6, 0.6, 0.6, 0.15, BONE_COLOR);
+        loc.getWorld().spawnParticle(Particle.DUST, loc, 15, 0.4, 0.4, 0.4, 0.1, BONE_COLOR);
 
         for (int i = 0; i < 45; i++) {
             ItemDisplay bone = loc.getWorld().spawn(loc, ItemDisplay.class);

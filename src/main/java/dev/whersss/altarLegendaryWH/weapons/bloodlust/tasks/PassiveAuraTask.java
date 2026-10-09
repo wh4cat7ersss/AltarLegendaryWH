@@ -18,8 +18,6 @@ public class PassiveAuraTask extends BukkitRunnable {
     private final AltarLegendaryWH plugin;
     private final Map<UUID, Integer> trackerCooldowns = new HashMap<>();
 
-    private final Map<UUID, PotionEffect> savedSpeed = new HashMap<>();
-    private final Map<UUID, PotionEffect> savedStrength = new HashMap<>();
     private final Map<UUID, Boolean> wasHolding = new HashMap<>();
 
     public PassiveAuraTask(AltarLegendaryWH plugin) {
@@ -38,21 +36,23 @@ public class PassiveAuraTask extends BukkitRunnable {
             if (isHoldingBloodlust) {
                 int kills = BloodLustListener.getKills(item);
 
-                if (!heldBefore) {
-                    PotionEffect curSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-                    if (curSpeed != null) savedSpeed.put(p.getUniqueId(), curSpeed);
-
-                    PotionEffect curStr = p.getPotionEffect(PotionEffectType.STRENGTH);
-                    if (curStr != null) savedStrength.put(p.getUniqueId(), curStr);
-
-                    wasHolding.put(p.getUniqueId(), true);
-                }
-
                 int speedAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.speed-amplifier", 1);
                 int strAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.strength-amplifier", 0);
 
-                if (kills >= 1) p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 60, speedAmp, false, false, true));
-                if (kills >= 4) p.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 60, strAmp, false, false, true));
+                if (kills >= 1) {
+                    PotionEffect curSpeed = p.getPotionEffect(PotionEffectType.SPEED);
+                    if (curSpeed == null || curSpeed.getAmplifier() <= speedAmp) {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, speedAmp, false, false, true));
+                    }
+                }
+                if (kills >= 4) {
+                    PotionEffect curStr = p.getPotionEffect(PotionEffectType.STRENGTH);
+                    if (curStr == null || curStr.getAmplifier() <= strAmp) {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, strAmp, false, false, true));
+                    }
+                }
+
+                wasHolding.put(p.getUniqueId(), true);
 
                 if (kills >= 2) {
                     int cooldown = trackerCooldowns.getOrDefault(p.getUniqueId(), 0);
@@ -78,13 +78,6 @@ public class PassiveAuraTask extends BukkitRunnable {
                     }
                     if (isBloodlustPassiveEffect(activeStrength, strAmp)) {
                         p.removePotionEffect(PotionEffectType.STRENGTH);
-                    }
-
-                    if (savedSpeed.containsKey(p.getUniqueId())) {
-                        p.addPotionEffect(savedSpeed.remove(p.getUniqueId()));
-                    }
-                    if (savedStrength.containsKey(p.getUniqueId())) {
-                        p.addPotionEffect(savedStrength.remove(p.getUniqueId()));
                     }
 
                     wasHolding.put(p.getUniqueId(), false);

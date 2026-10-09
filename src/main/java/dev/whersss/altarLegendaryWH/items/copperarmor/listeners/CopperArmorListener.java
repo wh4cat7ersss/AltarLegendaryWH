@@ -74,18 +74,24 @@ public class CopperArmorListener implements Listener {
                         p.getWorld().spawnParticle(Particle.CLOUD, loc, 0, vx, vy, vz, 0.2);
                     }
 
-                    double explosionRadius = power * 2.5;
+                    double damageMult = plugin.getItemsConfig().getDouble("copper-armor.leggings.damage-multiplier", 6.0);
+                    double radiusMult = plugin.getItemsConfig().getDouble("copper-armor.leggings.radius-multiplier", 2.0);
+                    double knockbackMult = plugin.getItemsConfig().getDouble("copper-armor.leggings.knockback-multiplier", 1.0);
+
+                    double explosionRadius = power * radiusMult;
                     for (Entity ent : loc.getWorld().getNearbyEntities(loc, explosionRadius, explosionRadius, explosionRadius)) {
                         if (ent instanceof LivingEntity victim && !victim.equals(p)) {
+                            if (victim instanceof Player vp && plugin.getFriendManager().isFriend(p.getUniqueId(), vp.getUniqueId())) continue;
                             double dist = victim.getLocation().distance(loc);
                             if (dist > explosionRadius) continue;
 
                             double damageFactor = 1.0 - (dist / explosionRadius);
-                            final double finalDamage = power * 6.0 * damageFactor;
+                            final double finalDamage = power * damageMult * damageFactor;
+                            victim.setNoDamageTicks(0);
                             CombatUtils.runSyntheticDamage(() -> victim.damage(finalDamage, p));
 
                             Vector knockback = victim.getLocation().toVector().subtract(loc.toVector()).normalize();
-                            knockback.multiply(power * 0.8 * damageFactor).setY(power * 0.4);
+                            knockback.multiply(power * 0.8 * knockbackMult * damageFactor).setY(power * 0.4);
                             victim.setVelocity(victim.getVelocity().add(knockback));
                         }
                     }
@@ -166,11 +172,16 @@ public class CopperArmorListener implements Listener {
     private void spawnCustomLightning(Location loc, double damage, Player owner, LivingEntity guaranteedTarget) {
         loc.getWorld().strikeLightningEffect(loc);
         if (guaranteedTarget != null && guaranteedTarget.isValid()) {
-            CombatUtils.runSyntheticDamage(() -> guaranteedTarget.damage(damage, owner));
+            if (!(guaranteedTarget instanceof Player gp && plugin.getFriendManager().isFriend(owner.getUniqueId(), gp.getUniqueId()))) {
+                guaranteedTarget.setNoDamageTicks(0);
+                CombatUtils.runSyntheticDamage(() -> guaranteedTarget.damage(damage, owner));
+            }
         }
         for (Entity ent : loc.getWorld().getNearbyEntities(loc, 1.5, 2.0, 1.5)) {
             if (ent instanceof LivingEntity victim && !victim.equals(owner)) {
                 if (victim.equals(guaranteedTarget)) continue;
+                if (victim instanceof Player vp && plugin.getFriendManager().isFriend(owner.getUniqueId(), vp.getUniqueId())) continue;
+                victim.setNoDamageTicks(0);
                 CombatUtils.runSyntheticDamage(() -> victim.damage(damage, owner));
             }
         }

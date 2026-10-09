@@ -140,6 +140,124 @@ public class ItemProtectionListener implements Listener {
         }
     }
 
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
+    public void onEnderChestClick(org.bukkit.event.inventory.InventoryClickEvent event) {
+        if (event.getView() == null) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+
+        org.bukkit.inventory.Inventory topInv = event.getView().getTopInventory();
+        org.bukkit.inventory.Inventory clickedInv = event.getClickedInventory();
+
+        ItemStack curItem = event.getCurrentItem();
+        ItemStack cursor = event.getCursor();
+
+        // Block placing in bundles
+        if (isBundle(curItem) && isLegendary(cursor)) {
+            event.setCancelled(true);
+            player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                    "Легендарные предметы нельзя помещать в мешочек!",
+                    "Legendary items cannot be put into a bundle!"
+            )));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            return;
+        }
+        if (isBundle(cursor) && isLegendary(curItem)) {
+            event.setCancelled(true);
+            player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                    "Легендарные предметы нельзя помещать в мешочек!",
+                    "Legendary items cannot be put into a bundle!"
+            )));
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            return;
+        }
+
+        // Block placing in Ender Chest
+        if (topInv.getType() == org.bukkit.event.inventory.InventoryType.ENDER_CHEST) {
+            if (event.isShiftClick()) {
+                if (isLegendary(curItem)) {
+                    event.setCancelled(true);
+                    player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                            "Легендарные предметы нельзя помещать в Эндер-сундук!",
+                            "Legendary items cannot be put into an Ender Chest!"
+                    )));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
+            }
+
+            if (clickedInv != null && clickedInv.equals(topInv)) {
+                if (isLegendary(cursor)) {
+                    event.setCancelled(true);
+                    player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                            "Легендарные предметы нельзя помещать в Эндер-сундук!",
+                            "Legendary items cannot be put into an Ender Chest!"
+                    )));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
+
+                if (event.getClick() == org.bukkit.event.inventory.ClickType.NUMBER_KEY) {
+                    int hotbarSlot = event.getHotbarButton();
+                    if (hotbarSlot >= 0 && hotbarSlot < 9) {
+                        ItemStack hotbarItem = player.getInventory().getItem(hotbarSlot);
+                        if (isLegendary(hotbarItem)) {
+                            event.setCancelled(true);
+                            player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                                    "Легендарные предметы нельзя помещать в Эндер-сундук!",
+                                    "Legendary items cannot be put into an Ender Chest!"
+                            )));
+                            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                            return;
+                        }
+                    }
+                }
+
+                if (event.getClick() == org.bukkit.event.inventory.ClickType.SWAP_OFFHAND) {
+                    ItemStack offhand = player.getInventory().getItemInOffHand();
+                    if (isLegendary(offhand)) {
+                        event.setCancelled(true);
+                        player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                                "Легендарные предметы нельзя помещать в Эндер-сундук!",
+                                "Legendary items cannot be put into an Ender Chest!"
+                        )));
+                        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = org.bukkit.event.EventPriority.HIGH)
+    public void onEnderChestDrag(org.bukkit.event.inventory.InventoryDragEvent event) {
+        if (event.getView() == null) return;
+        org.bukkit.inventory.Inventory topInv = event.getView().getTopInventory();
+        if (topInv.getType() != org.bukkit.event.inventory.InventoryType.ENDER_CHEST) return;
+
+        ItemStack oldCursor = event.getOldCursor();
+        if (!isLegendary(oldCursor)) return;
+
+        int topSize = topInv.getSize();
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot < topSize) {
+                event.setCancelled(true);
+                if (event.getWhoClicked() instanceof Player player) {
+                    player.sendMessage(TextUtils.legacy("§c§l[!] §f" + plugin.tr(
+                            "Легендарные предметы нельзя помещать в Эндер-сундук!",
+                            "Legendary items cannot be put into an Ender Chest!"
+                    )));
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                }
+                return;
+            }
+        }
+    }
+
+    private boolean isBundle(ItemStack item) {
+        if (item == null) return false;
+        return item.getType().name().endsWith("BUNDLE");
+    }
+
     private int countLegendaryWeapons(PlayerInventory inventory) {
         int count = 0;
         for (ItemStack item : inventory.getContents()) {
