@@ -14,37 +14,37 @@ symbols:
 weapons:
   bone_blade:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3000
+    custom-model-data: 1
     item-model: ""
     tooltip-style: "minecraft:bone"
 
   bloodlust:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3001
+    custom-model-data: 3
     item-model: ""
     tooltip-style: "minecraft:red"
 
   nightpiercer:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3009
+    custom-model-data: 5
     item-model: ""
     tooltip-style: "minecraft:red"
 
   vulcan_crossbow:
     material: "CROSSBOW"
-    custom-model-data: 3000
+    custom-model-data: 1
     item-model: ""
     tooltip-style: "minecraft:vulcan"
 
   pale_gun:
     material: "CROSSBOW"
-    custom-model-data: 3001
+    custom-model-data: 2
     item-model: ""
     tooltip-style: "minecraft:gold"
 
   pure_blade:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3008
+    custom-model-data: 7
     item-model: ""
     tooltip-style: "minecraft:pure"
 
@@ -53,48 +53,48 @@ weapons:
     tooltip-style: "minecraft:pure"
     levels:
       level-1:
-        custom-model-data: 3001
+        custom-model-data: 1
         item-model: ""
       level-2:
-        custom-model-data: 3002
+        custom-model-data: 2
         item-model: ""
       level-3:
-        custom-model-data: 3003
+        custom-model-data: 3
         item-model: ""
 
   shadow_blade:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3007
+    custom-model-data: 10
     item-model: ""
     tooltip-style: "minecraft:pure"
 
   windweaver:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3006
+    custom-model-data: 12
     item-model: ""
     tooltip-style: "minecraft:pure"
 
   hyperion:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3005
+    custom-model-data: 6
     item-model: ""
     tooltip-style: "minecraft:gold"
 
   wither_blade:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3003
+    custom-model-data: 9
     item-model: ""
     tooltip-style: "minecraft:pure"
 
   earth_gauntlet:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3004
+    custom-model-data: 8
     item-model: ""
     tooltip-style: "minecraft:earth"
 
   cutlass:
     material: "NETHERITE_SWORD"
-    custom-model-data: 3002
+    custom-model-data: 11
     item-model: ""
     tooltip-style: "minecraft:tidebreaker"
 
@@ -114,4 +114,4 @@ weapons:
     material: "CLAY_BALL"
     custom-model-data: 4
     item-model: ""
-    tooltip-style: "minecraft:pure"
+    tooltip-style: "minecraft:gold"

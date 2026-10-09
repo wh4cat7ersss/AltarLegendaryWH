@@ -10,10 +10,16 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -39,8 +45,8 @@ public class BladeListener implements Listener {
     private final Set<UUID> stunnedEntities = new HashSet<>();
     private final Random random = new Random();
 
-    private final Particle.DustOptions BONE_COLOR = new Particle.DustOptions(Color.fromRGB(183, 178, 157), 1.5f);
-    private final Particle.DustOptions RING_BONE_COLOR = new Particle.DustOptions(Color.fromRGB(183, 178, 157), 0.75f);
+    private final Particle.DustOptions BONE_COLOR = new Particle.DustOptions(Color.fromRGB(168, 164, 144), 1.4f);
+    private final Particle.DustOptions RING_BONE_COLOR = new Particle.DustOptions(Color.fromRGB(168, 164, 144), 0.75f);
 
     public BladeListener(AltarLegendaryWH plugin) {
         this.plugin = plugin;
@@ -90,6 +96,48 @@ public class BladeListener implements Listener {
     @EventHandler
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         stunnedEntities.remove(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!stunnedEntities.contains(event.getPlayer().getUniqueId())) return;
+        ItemStack item = event.getItem();
+        if (item != null && item.getType() == Material.ENDER_PEARL) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (!stunnedEntities.contains(event.getPlayer().getUniqueId())) return;
+        ItemStack item = event.getPlayer().getInventory().getItem(event.getHand());
+        if (item != null && item.getType() == Material.ENDER_PEARL) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onProjectileLaunch(ProjectileLaunchEvent event) {
+        if (event.getEntity() instanceof EnderPearl pearl) {
+            if (pearl.getShooter() instanceof Player p && stunnedEntities.contains(p.getUniqueId())) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
+                && stunnedEntities.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST, ignoreCancelled = false)
@@ -171,7 +219,8 @@ public class BladeListener implements Listener {
                     return;
                 }
                 Location loc = player.getLocation().add(0, 0.8, 0);
-                spawnSmallFallingBone(loc.clone().add(random.nextDouble() - 0.5, -0.2, random.nextDouble() - 0.5), true);
+                loc.getWorld().spawnParticle(Particle.DUST, loc, 3, 0.25, 0.25, 0.25, 0.05, BONE_COLOR);
+                spawnSmallFallingBone(loc.clone().add(random.nextDouble() - 0.5, -0.2, random.nextDouble() - 0.5), false);
 
                 for (Entity entity : player.getWorld().getNearbyEntities(player.getLocation(), 1.5, 1.5, 1.5)) {
                     if (entity instanceof LivingEntity target && target != player && !hitDuringDash.contains(target.getUniqueId())) {
@@ -184,6 +233,9 @@ public class BladeListener implements Listener {
                         target.setVelocity(target.getVelocity().add(new Vector(0, knockbackY, 0)));
 
                         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_SKELETON_HURT, 1.0f, 0.8f);
+                        Location tHitLoc = target.getLocation().add(0, 1, 0);
+                        target.getWorld().spawnParticle(Particle.DUST, tHitLoc, 18, 0.5, 0.5, 0.5, 0.1, BONE_COLOR);
+                        target.getWorld().spawnParticle(Particle.BLOCK, tHitLoc, 12, 0.4, 0.4, 0.4, 0.1, Material.BONE_BLOCK.createBlockData());
 
                         new BukkitRunnable() {
                             int kTicks = 0;
@@ -194,10 +246,9 @@ public class BladeListener implements Listener {
                                     return;
                                 }
                                 Location tLoc = target.getLocation().add(0, 1, 0);
-                                target.getWorld().spawnParticle(Particle.DUST, tLoc, 8, 0.4, 0.4, 0.4, 0.1, BONE_COLOR);
-
                                 if (kTicks % 3 == 0) {
-                                    spawnSmallFallingBone(tLoc.clone().add(random.nextDouble() - 0.5, random.nextDouble() - 0.5, random.nextDouble() - 0.5), true);
+                                    target.getWorld().spawnParticle(Particle.DUST, tLoc, 5, 0.3, 0.3, 0.3, 0.05, BONE_COLOR);
+                                    spawnSmallFallingBone(tLoc.clone().add(random.nextDouble() - 0.5, random.nextDouble() - 0.5, random.nextDouble() - 0.5), false);
                                 }
                                 kTicks++;
                             }
@@ -232,8 +283,14 @@ public class BladeListener implements Listener {
                 Location previousLoc = currentLoc.clone();
                 currentLoc.add(dir);
 
-                for (int i = 0; i < 3; i++) {
-                    spawnSmallFallingBone(currentLoc.clone().add(random.nextDouble() - 0.5, random.nextDouble() - 0.5, random.nextDouble() - 0.5), true);
+                // Dust and bone block particles along the projectile path
+                currentLoc.getWorld().spawnParticle(Particle.DUST, currentLoc, 6, 0.22, 0.22, 0.22, 0.02, BONE_COLOR);
+                currentLoc.getWorld().spawnParticle(Particle.BLOCK, currentLoc, 2, 0.15, 0.15, 0.15, 0.02, Material.BONE_BLOCK.createBlockData());
+
+                // Bones flying forward in a line (matching user's screenshot)
+                for (int i = 0; i < 2; i++) {
+                    Location bSpawn = currentLoc.clone().add((random.nextDouble() - 0.5) * 0.35, (random.nextDouble() - 0.5) * 0.35, (random.nextDouble() - 0.5) * 0.35);
+                    spawnProjectileBone(bSpawn, dir);
                 }
 
                 RayTraceResult ray = currentLoc.getWorld().rayTraceBlocks(previousLoc, dir, dir.length() + 0.5, FluidCollisionMode.NEVER, true);
@@ -297,18 +354,18 @@ public class BladeListener implements Listener {
 
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, 1.0f, 1.0f);
 
-        BlockDisplay[] blocks = new BlockDisplay[3];
-        Vector3f[] rotationSpeeds = new Vector3f[3];
+        ItemDisplay[] bones = new ItemDisplay[3];
 
         for (int i = 0; i < 3; i++) {
-            blocks[i] = target.getWorld().spawn(target.getLocation().add(0, 1.0, 0), BlockDisplay.class);
-            plugin.getVisualCleanupManager().track(blocks[i]);
-            blocks[i].setBlock(Material.BONE_BLOCK.createBlockData());
-            blocks[i].setTeleportDuration(1);
-            rotationSpeeds[i] = new Vector3f((random.nextFloat() * 0.25f) - 0.125f, (random.nextFloat() * 0.25f) - 0.125f, (random.nextFloat() * 0.25f) - 0.125f);
+            bones[i] = target.getWorld().spawn(target.getLocation().add(0, 1.0, 0), ItemDisplay.class);
+            plugin.getVisualCleanupManager().track(bones[i]);
+            bones[i].setItemStack(new ItemStack(Material.BONE));
+            bones[i].setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+            bones[i].setTeleportDuration(1);
+            bones[i].setInterpolationDuration(1);
 
-            Transformation trans = new Transformation(new Vector3f(-0.15f, 0, -0.15f), new Quaternionf(), new Vector3f(0.0f, 0.0f, 0.0f), new Quaternionf());
-            blocks[i].setTransformation(trans);
+            Transformation trans = new Transformation(new Vector3f(0f, 0f, 0f), new Quaternionf(), new Vector3f(0.01f, 0.01f, 0.01f), new Quaternionf());
+            bones[i].setTransformation(trans);
         }
 
         new BukkitRunnable() {
@@ -319,7 +376,9 @@ public class BladeListener implements Listener {
                 boolean isSpectator = (target instanceof Player p && p.getGameMode() == GameMode.SPECTATOR);
 
                 if (!target.isValid() || isSpectator || (target instanceof Player && !((Player) target).isOnline()) || ticks >= stunTicks) {
-                    for (BlockDisplay b : blocks) b.remove();
+                    for (ItemDisplay b : bones) {
+                        if (b != null && b.isValid()) b.remove();
+                    }
                     stunnedEntities.remove(target.getUniqueId());
                     if (!(target instanceof Player)) {
                         target.setAI(true);
@@ -332,48 +391,71 @@ public class BladeListener implements Listener {
                     target.setInvulnerable(false);
                 }
 
-                double currentScale = 0.35;
-                double targetRadius = 1.2;
+                double baseScale = 0.72;
+                double currentScale = baseScale;
+                double targetRadius = 1.25;
                 double heightY = 1.0;
 
                 if (ticks < 10) {
-                    currentScale = (ticks / 10.0) * 0.35;
+                    currentScale = (ticks / 10.0) * baseScale;
                 } else if (ticks > stunTicks - 10) {
-                    currentScale = ((stunTicks - ticks) / 10.0) * 0.35;
+                    currentScale = ((stunTicks - ticks) / 10.0) * baseScale;
                 }
 
-                double radius = (currentScale / 0.35) * targetRadius;
+                double radius = (currentScale / baseScale) * targetRadius;
 
                 if (ticks >= 10 && ticks <= stunTicks - 10) {
-                    double wave = Math.sin(ticks * 0.2) * 0.22;
+                    double wave = Math.sin(ticks * 0.2) * 0.18;
                     radius += wave;
-                    currentScale += wave * 0.15;
+                    currentScale += wave * 0.12;
                 }
 
-                double angle = ticks * 0.25;
+                double angle = ticks * 0.22;
                 Location center = target.getLocation();
 
                 if (radius > 0.05) {
-                    for (int i = 0; i < 15; i++) {
-                        double pAngle = (2 * Math.PI / 15) * i;
+                    for (int i = 0; i < 16; i++) {
+                        double pAngle = angle + (2 * Math.PI / 16) * i;
                         double px = Math.cos(pAngle) * radius;
                         double pz = Math.sin(pAngle) * radius;
-                        target.getWorld().spawnParticle(Particle.DUST, center.clone().add(px, heightY, pz), 1, 0, 0, 0, 0, RING_BONE_COLOR);
+                        Location pLoc = center.clone().add(px, heightY, pz);
+                        target.getWorld().spawnParticle(Particle.DUST, pLoc, 1, 0, 0, 0, 0, RING_BONE_COLOR);
+
+                        if (i % 2 == 0) {
+                            double tangentX = -Math.sin(pAngle);
+                            double tangentZ = Math.cos(pAngle);
+                            target.getWorld().spawnParticle(Particle.BLOCK, pLoc, 0, tangentX, 0.0, tangentZ, 0.2, Material.BONE_BLOCK.createBlockData());
+                        }
                     }
                 }
 
                 for (int i = 0; i < 3; i++) {
                     double offset = (2.0 * Math.PI / 3.0) * i;
+                    double boneAngle = angle + offset;
 
-                    blocks[i].setInterpolationDelay(0);
-                    blocks[i].setInterpolationDuration(1);
+                    double bx = Math.cos(boneAngle) * radius;
+                    double bz = Math.sin(boneAngle) * radius;
+                    Location boneLoc = center.clone().add(bx, heightY, bz);
 
-                    Transformation t = blocks[i].getTransformation();
-                    t.getScale().set((float) Math.max(0.01, currentScale), (float) Math.max(0.01, currentScale), (float) Math.max(0.01, currentScale));
-                    t.getLeftRotation().rotateXYZ(rotationSpeeds[i].x, rotationSpeeds[i].y, rotationSpeeds[i].z);
-                    blocks[i].setTransformation(t);
+                    double tangentX = -Math.sin(boneAngle);
+                    double tangentZ = Math.cos(boneAngle);
+                    boneLoc.setDirection(new Vector(tangentX, 0, tangentZ));
 
-                    blocks[i].teleport(center.clone().add(Math.cos(angle + offset) * radius, heightY, Math.sin(angle + offset) * radius));
+                    bones[i].setInterpolationDelay(0);
+                    bones[i].setInterpolationDuration(1);
+
+                    Transformation t = bones[i].getTransformation();
+                    float s = (float) Math.max(0.01, currentScale);
+                    t.getScale().set(s, s, s);
+
+                    Quaternionf q = new Quaternionf()
+                            .rotateY((float) (Math.PI / 2.0))
+                            .rotateX((float) Math.toRadians(25))
+                            .rotateZ((float) (ticks * 0.15f + i));
+                    t.getLeftRotation().set(q);
+                    bones[i].setTransformation(t);
+
+                    bones[i].teleport(boneLoc);
                 }
 
                 ticks++;
@@ -383,19 +465,23 @@ public class BladeListener implements Listener {
 
     private void playImpactExplosion(Location loc) {
         loc.getWorld().playSound(loc, Sound.ENTITY_SKELETON_STEP, 1.0f, 0.5f);
-        loc.getWorld().spawnParticle(Particle.DUST, loc, 15, 0.4, 0.4, 0.4, 0.1, BONE_COLOR);
+        loc.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 0.6f, 1.4f);
+        loc.getWorld().spawnParticle(Particle.DUST, loc, 40, 0.7, 0.7, 0.7, 0.15, BONE_COLOR);
+        loc.getWorld().spawnParticle(Particle.BLOCK, loc, 25, 0.6, 0.6, 0.6, 0.15, Material.BONE_BLOCK.createBlockData());
 
-        for (int i = 0; i < 45; i++) {
+        for (int i = 0; i < 35; i++) {
             ItemDisplay bone = loc.getWorld().spawn(loc, ItemDisplay.class);
             plugin.getVisualCleanupManager().track(bone);
             bone.setItemStack(new ItemStack(Material.BONE));
             bone.setInterpolationDuration(1);
             bone.setTeleportDuration(1);
+            bone.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
             Transformation t = bone.getTransformation();
-            t.getScale().set(0.46f, 0.46f, 0.46f);
+            float s = 0.42f + random.nextFloat() * 0.15f;
+            t.getScale().set(s, s, s);
             bone.setTransformation(t);
 
-            Vector v = new Vector((random.nextDouble() - 0.5) * 0.3, random.nextDouble() * 0.5, (random.nextDouble() - 0.5) * 0.3);
+            Vector v = new Vector((random.nextDouble() - 0.5) * 0.45, random.nextDouble() * 0.4 + 0.1, (random.nextDouble() - 0.5) * 0.45);
             Vector3f rot = new Vector3f(random.nextFloat() * 0.4f, random.nextFloat() * 0.4f, random.nextFloat() * 0.4f);
 
             new BukkitRunnable() {
@@ -412,7 +498,7 @@ public class BladeListener implements Listener {
                     bone.setTransformation(trans);
                     bone.teleport(c);
 
-                    if (c.getY() < -64 || life++ > 60) {
+                    if (c.getY() < -64 || life++ > 40) {
                         bone.remove();
                         cancel();
                     }
@@ -421,12 +507,57 @@ public class BladeListener implements Listener {
         }
     }
 
+    private void spawnProjectileBone(Location loc, Vector dir) {
+        ItemDisplay bone = loc.getWorld().spawn(loc, ItemDisplay.class);
+        plugin.getVisualCleanupManager().track(bone);
+        bone.setItemStack(new ItemStack(Material.BONE));
+        bone.setInterpolationDuration(1);
+        bone.setTeleportDuration(1);
+        bone.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+
+        Transformation t = bone.getTransformation();
+        float scaleVal = 0.55f + random.nextFloat() * 0.2f;
+        t.getScale().set(scaleVal, scaleVal, scaleVal);
+
+        Quaternionf rot = new Quaternionf()
+                .rotateY((float) (random.nextDouble() * Math.PI * 2))
+                .rotateX((float) ((random.nextDouble() - 0.5) * Math.PI))
+                .rotateZ((float) ((random.nextDouble() - 0.5) * Math.PI));
+        t.getLeftRotation().set(rot);
+        bone.setTransformation(t);
+
+        Vector vel = dir.clone().normalize().multiply(0.85 + random.nextDouble() * 0.35)
+                .add(new Vector((random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.12));
+
+        Vector3f tumble = new Vector3f((random.nextFloat() - 0.5f) * 0.25f, (random.nextFloat() - 0.5f) * 0.25f, (random.nextFloat() - 0.5f) * 0.25f);
+
+        new BukkitRunnable() {
+            int life = 0;
+            Location c = loc.clone();
+
+            @Override
+            public void run() {
+                c.add(vel);
+                Transformation trans = bone.getTransformation();
+                trans.getLeftRotation().rotateXYZ(tumble.x, tumble.y, tumble.z);
+                bone.setTransformation(trans);
+                bone.teleport(c);
+
+                if (c.getY() < -64 || life++ > 16) {
+                    bone.remove();
+                    cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 0, 1);
+    }
+
     private void spawnSmallFallingBone(Location loc, boolean hasTrail) {
         ItemDisplay bone = loc.getWorld().spawn(loc, ItemDisplay.class);
         plugin.getVisualCleanupManager().track(bone);
         bone.setItemStack(new ItemStack(Material.BONE));
         bone.setInterpolationDuration(1);
         bone.setTeleportDuration(1);
+        bone.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
         Transformation t = bone.getTransformation();
         t.getScale().set(0.4025f, 0.4025f, 0.4025f);
         bone.setTransformation(t);
@@ -447,10 +578,6 @@ public class BladeListener implements Listener {
                 bone.setTransformation(trans);
                 bone.teleport(c);
 
-                if (hasTrail) {
-                    c.getWorld().spawnParticle(Particle.DUST, c, 1, 0.05, 0.05, 0.05, 0.0, BONE_COLOR);
-                }
-
                 if (c.getY() < -64 || life++ > 40) {
                     bone.remove();
                     cancel();
@@ -462,6 +589,7 @@ public class BladeListener implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent e) {
         LivingEntity victim = e.getEntity();
+        stunnedEntities.remove(victim.getUniqueId());
         if (victim.getKiller() == null) return;
         Player killer = victim.getKiller();
         ItemStack item = killer.getInventory().getItemInMainHand();
@@ -469,7 +597,8 @@ public class BladeListener implements Listener {
         if (isBoneBlade(item)) {
             Location loc = victim.getLocation().add(0, 1, 0);
             victim.getWorld().playSound(loc, Sound.ENTITY_SKELETON_DEATH, 1.2f, 0.8f);
-            victim.getWorld().spawnParticle(Particle.DUST, loc, 20, 0.4, 0.4, 0.4, 0.1, BONE_COLOR);
+            victim.getWorld().spawnParticle(Particle.DUST, loc, 25, 0.5, 0.5, 0.5, 0.1, BONE_COLOR);
+            victim.getWorld().spawnParticle(Particle.BLOCK, loc, 15, 0.4, 0.4, 0.4, 0.1, Material.BONE_BLOCK.createBlockData());
             for (int i = 0; i < 8; i++) spawnSmallFallingBone(loc.clone().add(random.nextDouble() - 0.5, random.nextDouble() - 0.5, random.nextDouble() - 0.5), false);
         }
     }
