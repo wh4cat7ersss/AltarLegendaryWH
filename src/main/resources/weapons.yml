@@ -116,6 +116,9 @@ knightfall:
     flight-speed: 1.7
     return-speed: 1.7
     interpolation-ticks: 2
+  knightfall-damage-cap:
+    enabled: true
+    max-damage-hearts: 6.0
 
 shadow-blade:
   leap:

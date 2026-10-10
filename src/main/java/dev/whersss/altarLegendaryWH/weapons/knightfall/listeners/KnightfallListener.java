@@ -13,6 +13,7 @@ import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -205,6 +206,95 @@ public class KnightfallListener implements Listener {
                 }
             }
         }
+    }
+
+    private static final double HEALTH_POINTS_PER_HEART = 2.0;
+    private static final int DAMAGE_SEARCH_ITERATIONS = 40;
+
+    private boolean isDamageCapEnabled() {
+        var cfg = plugin.getWeaponsConfig();
+        if (cfg.contains("knightfall.knightfall-damage-cap.enabled")) {
+            return cfg.getBoolean("knightfall.knightfall-damage-cap.enabled", true);
+        }
+        if (cfg.contains("knightfall.damage-cap.enabled")) {
+            return cfg.getBoolean("knightfall.damage-cap.enabled", true);
+        }
+        if (cfg.contains("knightfall-damage-cap.enabled")) {
+            return cfg.getBoolean("knightfall-damage-cap.enabled", true);
+        }
+        return true;
+    }
+
+    private double getDamageCapHearts() {
+        var cfg = plugin.getWeaponsConfig();
+        if (cfg.contains("knightfall.knightfall-damage-cap.max-damage-hearts")) {
+            return cfg.getDouble("knightfall.knightfall-damage-cap.max-damage-hearts", 6.0);
+        }
+        if (cfg.contains("knightfall.knightfall-damage-cap.damage-cap")) {
+            return cfg.getDouble("knightfall.knightfall-damage-cap.damage-cap", 6.0);
+        }
+        if (cfg.contains("knightfall.damage-cap.max-damage-hearts")) {
+            return cfg.getDouble("knightfall.damage-cap.max-damage-hearts", 6.0);
+        }
+        if (cfg.contains("knightfall.damage-cap.damage-cap")) {
+            return cfg.getDouble("knightfall.damage-cap.damage-cap", 6.0);
+        }
+        if (cfg.contains("knightfall-damage-cap.max-damage-hearts")) {
+            return cfg.getDouble("knightfall-damage-cap.max-damage-hearts", 6.0);
+        }
+        if (cfg.contains("knightfall-damage-cap.damage-cap")) {
+            return cfg.getDouble("knightfall-damage-cap.damage-cap", 6.0);
+        }
+        return 6.0;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onKnightfallDamageCap(EntityDamageByEntityEvent event) {
+        if (!isDamageCapEnabled()) {
+            return;
+        }
+
+        if (!(event.getEntity() instanceof Player) || !(event.getDamager() instanceof Player attacker)) {
+            return;
+        }
+
+        ItemStack item = attacker.getInventory().getItemInMainHand();
+        if (!isKnightfall(item)) {
+            return;
+        }
+
+        double configuredHearts = getDamageCapHearts();
+        if (!Double.isFinite(configuredHearts) || configuredHearts < 0.0) {
+            configuredHearts = 6.0;
+        }
+
+        double maxDamage = configuredHearts * HEALTH_POINTS_PER_HEART;
+        if (event.getFinalDamage() > maxDamage) {
+            capFinalDamage(event, maxDamage);
+        }
+    }
+
+    private void capFinalDamage(EntityDamageByEntityEvent event, double limit) {
+        if (limit <= 0.0) {
+            event.setDamage(0.0);
+            return;
+        }
+
+        double low = 0.0;
+        double high = event.getDamage();
+
+        for (int i = 0; i < DAMAGE_SEARCH_ITERATIONS; i++) {
+            double candidate = (low + high) / 2.0;
+            event.setDamage(candidate);
+
+            if (event.getFinalDamage() > limit) {
+                high = candidate;
+            } else {
+                low = candidate;
+            }
+        }
+
+        event.setDamage(low);
     }
 }
 
