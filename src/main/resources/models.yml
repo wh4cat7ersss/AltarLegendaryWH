@@ -103,6 +103,10 @@ weapons:
     custom-model-data: 4
     item-model: "minecraft:netherite_sword"
     tooltip-style: "minecraft:frost"
+    projectile:
+      material: "NETHERITE_AXE"
+      custom-model-data: 1
+      item-model: ""
 
   paladins_battle_axe:
     material: "NETHERITE_AXE"

@@ -8,6 +8,7 @@ import org.bukkit.FluidCollisionMode;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
@@ -60,8 +61,34 @@ public class FrostScytheTask extends BukkitRunnable {
         this.display = (ItemDisplay) owner.getWorld().spawnEntity(owner.getEyeLocation(), EntityType.ITEM_DISPLAY);
         plugin.getVisualCleanupManager().track(display);
 
-        ItemStack visualItem = item.clone();
-        FrostListener.setScytheModel(visualItem, false);
+        Material projMat = Material.NETHERITE_AXE;
+        int projCmd = 1;
+        String projModel = "";
+        if (plugin.getModelsConfig() != null) {
+            String matStr = plugin.getModelsConfig().getString("weapons.frost_scythe.projectile.material");
+            if (matStr != null && !matStr.isBlank()) {
+                try {
+                    projMat = Material.valueOf(matStr.toUpperCase().trim());
+                } catch (IllegalArgumentException ignored) {}
+            }
+            projCmd = plugin.getModelsConfig().getInt("weapons.frost_scythe.projectile.custom-model-data", 1);
+            projModel = plugin.getModelsConfig().getString("weapons.frost_scythe.projectile.item-model", "");
+        }
+
+        ItemStack visualItem = new ItemStack(projMat);
+        ItemMeta meta = visualItem.getItemMeta();
+        if (meta != null) {
+            if (projCmd > 0) {
+                meta.setCustomModelData(projCmd);
+            }
+            if (projModel != null && !projModel.isBlank()) {
+                NamespacedKey key = NamespacedKey.fromString(projModel.trim());
+                if (key != null) {
+                    meta.setItemModel(key);
+                }
+            }
+            visualItem.setItemMeta(meta);
+        }
 
         display.setItemStack(visualItem);
         display.setInterpolationDuration(MOTION_INTERPOLATION_TICKS);

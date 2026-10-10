@@ -180,7 +180,7 @@ public class BladeListener implements Listener {
             @Override
             public void run() {
                 if (player.isOnline()) {
-                    player.playSound(player.getLocation(), Sound.ENTITY_SKELETON_DEATH, 1.0f, 1.5f);
+                    player.playSound(player.getLocation(), Sound.ENTITY_SKELETON_DEATH, 1.0f, 1.2f);
                 }
             }
         }.runTaskLater(plugin, 2L);

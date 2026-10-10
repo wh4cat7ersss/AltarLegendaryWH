@@ -108,7 +108,7 @@ public class FrostAbilityManager {
 
         ItemStack throwItem = scytheItem.clone();
 
-        throwItem.setType(Material.NETHERITE_SWORD);
+        throwItem.setType(Material.TRIDENT);
         dev.whersss.altarLegendaryWH.weapons.frostscythe.listeners.FrostListener.setScytheModel(throwItem, false);
 
         if (plugin.getCrazySlotsManager() != null && plugin.getCrazySlotsManager().isTransformedItem(throwItem)) {
