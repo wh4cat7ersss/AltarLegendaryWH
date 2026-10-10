@@ -221,13 +221,11 @@ public class FrostScytheTask extends BukkitRunnable {
                     returnItem = plugin.getCrazySlotsManager().getCleanCrazySlots(instId);
                     plugin.getCrazySlotsManager().endTransformationAndApplyCooldown(owner, instId);
                 } else {
-                    boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
-                    returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
+                    returnItem.setType(Material.TRIDENT);
                     FrostListener.setScytheModel(returnItem, false);
                 }
             } else {
-                boolean isCooldown = abilityManager.isOnCooldown(owner, "ScytheThrow");
-                returnItem.setType(isCooldown ? Material.NETHERITE_SWORD : Material.TRIDENT);
+                returnItem.setType(Material.TRIDENT);
                 FrostListener.setScytheModel(returnItem, false);
             }
 

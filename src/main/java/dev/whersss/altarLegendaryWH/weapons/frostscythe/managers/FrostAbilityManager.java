@@ -103,7 +103,8 @@ public class FrostAbilityManager {
             return;
         }
 
-        bossBarManager.setCooldown(p, "ScytheThrow", "§b§lsᴄʏᴛʜᴇ ᴛʜʀᴏᴡ", 30);
+        int throwCd = plugin.getWeaponsConfig().getInt("frost-scythe.throw.cooldown", 45);
+        bossBarManager.setCooldown(p, "ScytheThrow", "§b§lsᴄʏᴛʜᴇ ᴛʜʀᴏᴡ", throwCd);
 
         ItemStack throwItem = scytheItem.clone();
 
@@ -133,7 +134,8 @@ public class FrostAbilityManager {
             return;
         }
         if (isOnCooldown(p, "CommandOfIce")) return;
-        bossBarManager.setCooldown(p, "CommandOfIce", "§b§lᴄᴏᴍᴍᴀɴᴅ ᴏғ ɪᴄᴇ", 45);
+        int cd = plugin.getWeaponsConfig().getInt("frost-scythe.ice-command.cooldown", 45);
+        bossBarManager.setCooldown(p, "CommandOfIce", "§b§lᴄᴏᴍᴍᴀɴᴅ ᴏғ ɪᴄᴇ", cd);
 
         p.getWorld().playSound(p.getLocation(), Sound.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM, 1.0f, 1.0f);
 
@@ -189,8 +191,18 @@ public class FrostAbilityManager {
                         iceBlocks.add(block);
                     }
 
-                    Vector pDir = p.getLocation().getDirection().setY(0).normalize();
-                    Vector pRight = pDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
+                    Vector pDir = p.getLocation().getDirection().setY(0);
+                    if (pDir.lengthSquared() < 1e-4 || Double.isNaN(pDir.getX())) {
+                        pDir = new Vector(1, 0, 0);
+                    } else {
+                        pDir.normalize();
+                    }
+                    Vector pRight = pDir.clone().crossProduct(new Vector(0, 1, 0));
+                    if (pRight.lengthSquared() < 1e-4 || Double.isNaN(pRight.getX())) {
+                        pRight = new Vector(0, 0, 1);
+                    } else {
+                        pRight.normalize();
+                    }
                     Location pLoc = p.getLocation();
 
                     for (int i = 0; i < iceBlocks.size(); i++) {
@@ -259,9 +271,19 @@ public class FrostAbilityManager {
 
                 distanceTraveled += speed;
 
-                Vector dynamicDir = p.getEyeLocation().getDirection().normalize();
-                Vector dynamicRight = dynamicDir.clone().crossProduct(new Vector(0, 1, 0)).normalize();
-                if (dynamicRight.lengthSquared() == 0) dynamicRight = new Vector(1, 0, 0);
+                Vector dynamicDir = p.getEyeLocation().getDirection();
+                if (dynamicDir.lengthSquared() < 1e-4 || Double.isNaN(dynamicDir.getX())) {
+                    dynamicDir = new Vector(0, 0, 1);
+                } else {
+                    dynamicDir.normalize();
+                }
+
+                Vector dynamicRight = dynamicDir.clone().crossProduct(new Vector(0, 1, 0));
+                if (dynamicRight.lengthSquared() < 1e-4 || Double.isNaN(dynamicRight.getX())) {
+                    dynamicRight = new Vector(1, 0, 0);
+                } else {
+                    dynamicRight.normalize();
+                }
 
                 Location current = p.getLocation().clone()
                         .add(dynamicRight.clone().multiply(offset.getX()))
@@ -306,7 +328,7 @@ public class FrostAbilityManager {
                         }
 
                         breakIce(current);
-                        CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.ice-command.damage", 10.0), p));
+                        CombatUtils.runSyntheticDamage(() -> victim.damage(plugin.getWeaponsConfig().getDouble("frost-scythe.ice-command.damage", 15.0), p));
                         applyFreeze(p, victim, 5, 2);
                         block.remove();
                         this.cancel();

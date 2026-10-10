@@ -9,6 +9,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Trident;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -19,6 +20,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
@@ -134,10 +136,20 @@ public class FrostListener implements Listener {
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         ItemStack item = e.getItem();
+        if (item == null) {
+            item = (e.getHand() == EquipmentSlot.OFF_HAND) ? p.getInventory().getItemInOffHand() : p.getInventory().getItemInMainHand();
+        }
 
         if (!isFrostScythe(item)) return;
 
-        if (e.isCancelled()) return;
+        if (e.getHand() == EquipmentSlot.OFF_HAND && isFrostScythe(p.getInventory().getItemInMainHand())) {
+            return;
+        }
+
+        if (item.getType() != Material.TRIDENT) {
+            morphScythe(item, Material.TRIDENT);
+            p.updateInventory();
+        }
 
         if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
             e.setCancelled(true);
@@ -148,17 +160,13 @@ public class FrostListener implements Listener {
         if (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             if (p.isSneaking()) {
                 e.setCancelled(true);
+                e.setUseItemInHand(Event.Result.DENY);
                 abilityManager.castCommandOfIce(p);
+                return;
             } else {
                 if (abilityManager.isOnCooldown(p, "ScytheThrow")) {
-                    if (item.getType() == Material.TRIDENT) {
-                        morphScythe(item, Material.NETHERITE_SWORD);
-                        p.updateInventory();
-                        startCooldownCheck(p);
-                    }
-                    if (item.getType() == Material.TRIDENT) {
-                        e.setCancelled(true);
-                    }
+                    e.setCancelled(true);
+                    e.setUseItemInHand(Event.Result.DENY);
                 } else {
                     if (item.getType() == Material.TRIDENT) {
                         setScytheModel(item, true);
@@ -196,6 +204,33 @@ public class FrostListener implements Listener {
     }
 
     @EventHandler
+    public void onInteractEntity(PlayerInteractEntityEvent e) {
+        Player p = e.getPlayer();
+        EquipmentSlot hand = e.getHand();
+        ItemStack item = (hand == EquipmentSlot.OFF_HAND) ? p.getInventory().getItemInOffHand() : p.getInventory().getItemInMainHand();
+
+        if (!isFrostScythe(item)) return;
+
+        if (hand == EquipmentSlot.OFF_HAND && isFrostScythe(p.getInventory().getItemInMainHand())) {
+            return;
+        }
+
+        if (item.getType() != Material.TRIDENT) {
+            morphScythe(item, Material.TRIDENT);
+            p.updateInventory();
+        }
+
+        if (p.isSneaking()) {
+            e.setCancelled(true);
+            if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+                plugin.getWorldGuardManager().notifyDenied(p);
+                return;
+            }
+            abilityManager.castCommandOfIce(p);
+        }
+    }
+
+    @EventHandler
     public void onSlotChange(PlayerItemHeldEvent e) {
         Player p = e.getPlayer();
         ItemStack oldItem = p.getInventory().getItem(e.getPreviousSlot());
@@ -207,12 +242,30 @@ public class FrostListener implements Listener {
 
     @EventHandler
     public void onHandSwap(PlayerSwapHandItemsEvent e) {
+        Player p = e.getPlayer();
         ItemStack main = e.getMainHandItem();
         ItemStack off = e.getOffHandItem();
 
-        if (isFrostScythe(main)) setScytheModel(main, false);
-        if (isFrostScythe(off)) setScytheModel(off, false);
-        e.getPlayer().updateInventory();
+        boolean isMain = isFrostScythe(main);
+        boolean isOff = isFrostScythe(off);
+
+        if (!isMain && !isOff) return;
+
+        if (isMain) setScytheModel(main, false);
+        if (isOff) setScytheModel(off, false);
+
+        if (p.isSneaking()) {
+            e.setCancelled(true);
+            if (plugin.getWorldGuardManager() != null && !plugin.getWorldGuardManager().canUseAbilities(p)) {
+                plugin.getWorldGuardManager().notifyDenied(p);
+                return;
+            }
+            abilityManager.castCommandOfIce(p);
+            p.updateInventory();
+            return;
+        }
+
+        p.updateInventory();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -271,8 +324,7 @@ public class FrostListener implements Listener {
     public void onDrop(PlayerDropItemEvent e) {
         ItemStack item = e.getItemDrop().getItemStack();
         if (isFrostScythe(item)) {
-            morphScythe(item, Material.NETHERITE_SWORD);
-            e.getItemDrop().setItemStack(item);
+            setScytheModel(item, false);
             forceResetHands(e.getPlayer());
         }
     }
@@ -281,7 +333,7 @@ public class FrostListener implements Listener {
     public void onDeath(PlayerDeathEvent e) {
         for (ItemStack item : e.getDrops()) {
             if (isFrostScythe(item)) {
-                morphScythe(item, Material.NETHERITE_SWORD);
+                setScytheModel(item, false);
             }
         }
     }
@@ -293,12 +345,10 @@ public class FrostListener implements Listener {
             ItemStack itemStack = itemEntity.getItemStack();
 
             if (isFrostScythe(itemStack)) {
-                if (abilityManager.isOnCooldown(p, "ScytheThrow")) {
-                    morphScythe(itemStack, Material.NETHERITE_SWORD);
-                } else {
+                if (itemStack.getType() != Material.TRIDENT) {
                     morphScythe(itemStack, Material.TRIDENT);
+                    itemEntity.setItemStack(itemStack);
                 }
-                itemEntity.setItemStack(itemStack);
                 startCooldownCheck(p);
             }
         }
