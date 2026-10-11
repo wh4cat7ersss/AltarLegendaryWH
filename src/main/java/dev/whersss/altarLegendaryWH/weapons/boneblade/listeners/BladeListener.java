@@ -7,11 +7,13 @@ import dev.whersss.altarLegendaryWH.utils.WeaponFactory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.title.Title;
+import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
@@ -23,8 +25,6 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
@@ -78,39 +78,47 @@ public class BladeListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerMove(PlayerMoveEvent event) {
-        if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
-            Location from = event.getFrom();
-            Location to = event.getTo();
+        if (!stunnedEntities.contains(event.getPlayer().getUniqueId())) return;
+        Location from = event.getFrom();
+        Location to = event.getTo();
 
-            if (to != null && (from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ())) {
-                Location newLoc = from.clone();
-                newLoc.setPitch(to.getPitch());
-                newLoc.setYaw(to.getYaw());
-                event.setTo(newLoc);
-            }
+        if (to != null && (from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ())) {
+            Location newLoc = from.clone();
+            newLoc.setPitch(to.getPitch());
+            newLoc.setYaw(to.getYaw());
+            event.setTo(newLoc);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerJump(PlayerJumpEvent event) {
+        if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
-        Player p = event.getPlayer();
-        if (stunnedEntities.remove(p.getUniqueId())) {
-            p.removePotionEffect(PotionEffectType.SLOWNESS);
-            p.removePotionEffect(PotionEffectType.JUMP_BOOST);
-            removeEssentialsGodMode(p);
-        }
+        stunnedEntities.remove(event.getPlayer().getUniqueId());
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (!stunnedEntities.contains(event.getPlayer().getUniqueId())) return;
         ItemStack item = event.getItem();
@@ -119,7 +127,7 @@ public class BladeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         if (!stunnedEntities.contains(event.getPlayer().getUniqueId())) return;
         ItemStack item = event.getPlayer().getInventory().getItem(event.getHand());
@@ -128,7 +136,7 @@ public class BladeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onProjectileLaunch(ProjectileLaunchEvent event) {
         if (event.getEntity() instanceof EnderPearl pearl) {
             if (pearl.getShooter() instanceof Player p && stunnedEntities.contains(p.getUniqueId())) {
@@ -137,13 +145,11 @@ public class BladeListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
-            if (event.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL) {
-                event.setCancelled(true);
-            }
-            removeEssentialsGodMode(event.getPlayer());
+        if (event.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
+                && stunnedEntities.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 
@@ -158,7 +164,6 @@ public class BladeListener implements Listener {
             if (p.isInvulnerable()) {
                 p.setInvulnerable(false);
             }
-            removeEssentialsGodMode(p);
         } else {
             if (event.getEntity().isInvulnerable()) {
                 event.getEntity().setInvulnerable(false);
@@ -307,38 +312,6 @@ public class BladeListener implements Listener {
         }.runTaskTimer(plugin, 0, 1);
     }
 
-    private void removeEssentialsGodMode(Player player) {
-        if (player == null) return;
-        try {
-            org.bukkit.plugin.Plugin ess = Bukkit.getPluginManager().getPlugin("Essentials");
-            if (ess != null) {
-                java.lang.reflect.Method getUser = ess.getClass().getMethod("getUser", Player.class);
-                Object user = getUser.invoke(ess, player);
-                if (user != null) {
-                    try {
-                        java.lang.reflect.Method isGod = user.getClass().getMethod("isGodModeEnabled");
-                        if (Boolean.TRUE.equals(isGod.invoke(user))) {
-                            java.lang.reflect.Method setGod = user.getClass().getMethod("setGodModeEnabled", boolean.class);
-                            setGod.invoke(user, false);
-                        }
-                    } catch (Throwable ignored) {
-                    }
-                    try {
-                        java.lang.reflect.Method resetInvul = user.getClass().getMethod("resetInvulnerabilityAfterTeleport");
-                        resetInvul.invoke(user);
-                    } catch (Throwable ignored) {
-                    }
-                    try {
-                        java.lang.reflect.Method setTeleportInvul = user.getClass().getMethod("setTeleportInvulnerability", boolean.class);
-                        setTeleportInvul.invoke(user, false);
-                    } catch (Throwable ignored) {
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-    }
-
     private void applyBoneStun(LivingEntity target) {
         stunnedEntities.add(target.getUniqueId());
         int stunTicks = plugin.getWeaponsConfig().getInt("bone-blade.cage.stun-duration", 4) * 20;
@@ -346,12 +319,7 @@ public class BladeListener implements Listener {
         target.setInvulnerable(false);
         target.setNoDamageTicks(0);
 
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, stunTicks, 255, false, false, false));
-        target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, stunTicks, 128, false, false, false));
-        target.setVelocity(new Vector(0, Math.min(0, target.getVelocity().getY()), 0));
-
         if (target instanceof Player p) {
-            removeEssentialsGodMode(p);
             Component titleText = TextUtils.legacy(plugin.tr("&eОглушен!", "&eStunned!"));
             Title title = Title.title(titleText, TextUtils.empty(), Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(stunTicks * 50L / 2), Duration.ofMillis(250)));
             p.showTitle(title);
@@ -385,19 +353,11 @@ public class BladeListener implements Listener {
                 if (!target.isValid() || isSpectator || (target instanceof Player && !((Player) target).isOnline()) || ticks >= stunTicks) {
                     for (BlockDisplay b : blocks) b.remove();
                     stunnedEntities.remove(target.getUniqueId());
-                    target.removePotionEffect(PotionEffectType.SLOWNESS);
-                    target.removePotionEffect(PotionEffectType.JUMP_BOOST);
-                    if (target instanceof Player p) {
-                        removeEssentialsGodMode(p);
-                    } else {
+                    if (!(target instanceof Player)) {
                         target.setAI(true);
                     }
                     cancel();
                     return;
-                }
-
-                if (target instanceof Player player) {
-                    removeEssentialsGodMode(player);
                 }
 
                 if (target.isInvulnerable() && (!(target instanceof Player player) || player.getGameMode() != GameMode.CREATIVE)) {
@@ -530,10 +490,7 @@ public class BladeListener implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent e) {
         LivingEntity victim = e.getEntity();
-        if (stunnedEntities.remove(victim.getUniqueId())) {
-            victim.removePotionEffect(PotionEffectType.SLOWNESS);
-            victim.removePotionEffect(PotionEffectType.JUMP_BOOST);
-        }
+        stunnedEntities.remove(victim.getUniqueId());
         if (victim.getKiller() == null) return;
         Player killer = victim.getKiller();
         ItemStack item = killer.getInventory().getItemInMainHand();
