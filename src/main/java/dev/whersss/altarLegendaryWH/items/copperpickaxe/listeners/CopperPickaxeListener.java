@@ -42,6 +42,7 @@ public class CopperPickaxeListener implements Listener {
     private final Map<UUID, BlockFace> lastFace = new HashMap<>();
     private final Map<UUID, List<Block>> previewBlocks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> previewTasks = new HashMap<>();
+    private final Set<UUID> active3x3Breaks = new HashSet<>();
 
     public CopperPickaxeListener(AltarLegendaryWH plugin) {
         this.plugin = plugin;
@@ -86,6 +87,7 @@ public class CopperPickaxeListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         clearPreview(event.getPlayer());
         lastFace.remove(event.getPlayer().getUniqueId());
+        active3x3Breaks.remove(event.getPlayer().getUniqueId());
     }
     @EventHandler
     public void onBlockDamage(BlockDamageEvent event) {
@@ -119,6 +121,10 @@ public class CopperPickaxeListener implements Listener {
         if (event.isCancelled()) return;
 
         Player player = event.getPlayer();
+        if (active3x3Breaks.contains(player.getUniqueId())) {
+            return;
+        }
+
         ItemStack tool = player.getInventory().getItemInMainHand();
 
         if (!CopperPickaxeItem.isCopperPickaxe(tool) || !CopperPickaxeItem.isModeEnabled(tool)) {
@@ -137,29 +143,34 @@ public class CopperPickaxeListener implements Listener {
         Set<Material> blocked = getBlockedMaterials();
 
         clearPreview(player);
-        for (Block block : area) {
-            if (block.equals(origin)) {
-                continue;
-            }
-            if (block.getType().isAir() || block.getType() == Material.BEDROCK || block.getType().getHardness() < 0.0f || blocked.contains(block.getType())) {
-                continue;
-            }
+        active3x3Breaks.add(player.getUniqueId());
+        try {
+            for (Block block : area) {
+                if (block.equals(origin)) {
+                    continue;
+                }
+                if (block.getType().isAir() || block.getType() == Material.BEDROCK || block.getType().getHardness() < 0.0f || blocked.contains(block.getType())) {
+                    continue;
+                }
 
-            BlockBreakEvent subEvent = new BlockBreakEvent(block, player);
-            Bukkit.getPluginManager().callEvent(subEvent);
-            if (subEvent.isCancelled()) {
-                continue;
-            }
+                BlockBreakEvent subEvent = new BlockBreakEvent(block, player);
+                Bukkit.getPluginManager().callEvent(subEvent);
+                if (subEvent.isCancelled()) {
+                    continue;
+                }
 
-            SoundGroup soundGroup = block.getBlockSoundGroup();
-            BlockData blockData = block.getBlockData();
-            Location center = block.getLocation().add(0.5, 0.5, 0.5);
+                SoundGroup soundGroup = block.getBlockSoundGroup();
+                BlockData blockData = block.getBlockData();
+                Location center = block.getLocation().add(0.5, 0.5, 0.5);
 
-            boolean broken = block.breakNaturally(tool);
-            if (broken) {
-                world.playSound(center, soundGroup.getBreakSound(), soundGroup.getVolume(), 1.1f);
-                world.spawnParticle(Particle.BLOCK, center, 40, 0.3, 0.3, 0.3, 0, blockData);
+                boolean broken = block.breakNaturally(tool);
+                if (broken) {
+                    world.playSound(center, soundGroup.getBreakSound(), soundGroup.getVolume(), 1.1f);
+                    world.spawnParticle(Particle.BLOCK, center, 40, 0.3, 0.3, 0.3, 0, blockData);
+                }
             }
+        } finally {
+            active3x3Breaks.remove(player.getUniqueId());
         }
     }
 
