@@ -95,7 +95,12 @@ public class BladeListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
-        stunnedEntities.remove(event.getPlayer().getUniqueId());
+        Player p = event.getPlayer();
+        if (stunnedEntities.remove(p.getUniqueId())) {
+            p.removePotionEffect(PotionEffectType.SLOWNESS);
+            p.removePotionEffect(PotionEffectType.JUMP_BOOST);
+            removeEssentialsGodMode(p);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -134,9 +139,11 @@ public class BladeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        if (event.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL
-                && stunnedEntities.contains(event.getPlayer().getUniqueId())) {
-            event.setCancelled(true);
+        if (stunnedEntities.contains(event.getPlayer().getUniqueId())) {
+            if (event.getCause() == PlayerTeleportEvent.TeleportCause.ENDER_PEARL) {
+                event.setCancelled(true);
+            }
+            removeEssentialsGodMode(event.getPlayer());
         }
     }
 
@@ -151,6 +158,7 @@ public class BladeListener implements Listener {
             if (p.isInvulnerable()) {
                 p.setInvulnerable(false);
             }
+            removeEssentialsGodMode(p);
         } else {
             if (event.getEntity().isInvulnerable()) {
                 event.getEntity().setInvulnerable(false);
@@ -300,16 +308,30 @@ public class BladeListener implements Listener {
     }
 
     private void removeEssentialsGodMode(Player player) {
+        if (player == null) return;
         try {
             org.bukkit.plugin.Plugin ess = Bukkit.getPluginManager().getPlugin("Essentials");
             if (ess != null) {
                 java.lang.reflect.Method getUser = ess.getClass().getMethod("getUser", Player.class);
                 Object user = getUser.invoke(ess, player);
                 if (user != null) {
-                    java.lang.reflect.Method isGod = user.getClass().getMethod("isGodModeEnabled");
-                    if (Boolean.TRUE.equals(isGod.invoke(user))) {
-                        java.lang.reflect.Method setGod = user.getClass().getMethod("setGodModeEnabled", boolean.class);
-                        setGod.invoke(user, false);
+                    try {
+                        java.lang.reflect.Method isGod = user.getClass().getMethod("isGodModeEnabled");
+                        if (Boolean.TRUE.equals(isGod.invoke(user))) {
+                            java.lang.reflect.Method setGod = user.getClass().getMethod("setGodModeEnabled", boolean.class);
+                            setGod.invoke(user, false);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        java.lang.reflect.Method resetInvul = user.getClass().getMethod("resetInvulnerabilityAfterTeleport");
+                        resetInvul.invoke(user);
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        java.lang.reflect.Method setTeleportInvul = user.getClass().getMethod("setTeleportInvulnerability", boolean.class);
+                        setTeleportInvul.invoke(user, false);
+                    } catch (Throwable ignored) {
                     }
                 }
             }
@@ -323,6 +345,10 @@ public class BladeListener implements Listener {
 
         target.setInvulnerable(false);
         target.setNoDamageTicks(0);
+
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, stunTicks, 255, false, false, false));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, stunTicks, 128, false, false, false));
+        target.setVelocity(new Vector(0, Math.min(0, target.getVelocity().getY()), 0));
 
         if (target instanceof Player p) {
             removeEssentialsGodMode(p);
@@ -359,11 +385,19 @@ public class BladeListener implements Listener {
                 if (!target.isValid() || isSpectator || (target instanceof Player && !((Player) target).isOnline()) || ticks >= stunTicks) {
                     for (BlockDisplay b : blocks) b.remove();
                     stunnedEntities.remove(target.getUniqueId());
-                    if (!(target instanceof Player)) {
+                    target.removePotionEffect(PotionEffectType.SLOWNESS);
+                    target.removePotionEffect(PotionEffectType.JUMP_BOOST);
+                    if (target instanceof Player p) {
+                        removeEssentialsGodMode(p);
+                    } else {
                         target.setAI(true);
                     }
                     cancel();
                     return;
+                }
+
+                if (target instanceof Player player) {
+                    removeEssentialsGodMode(player);
                 }
 
                 if (target.isInvulnerable() && (!(target instanceof Player player) || player.getGameMode() != GameMode.CREATIVE)) {
@@ -496,7 +530,10 @@ public class BladeListener implements Listener {
     @EventHandler
     public void onDeath(EntityDeathEvent e) {
         LivingEntity victim = e.getEntity();
-        stunnedEntities.remove(victim.getUniqueId());
+        if (stunnedEntities.remove(victim.getUniqueId())) {
+            victim.removePotionEffect(PotionEffectType.SLOWNESS);
+            victim.removePotionEffect(PotionEffectType.JUMP_BOOST);
+        }
         if (victim.getKiller() == null) return;
         Player killer = victim.getKiller();
         ItemStack item = killer.getInventory().getItemInMainHand();
