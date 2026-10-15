@@ -247,6 +247,7 @@ public class AltarLegendaryWH extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CutlassListener(cutlassManager), this);
 
         getServer().getPluginManager().registerEvents(new CopperPickaxeListener(this), this);
+        getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils(), this);
 
         altarLanguageManager = new AltarLanguageManager(this);
         altarLanguageManager.reload();
@@ -432,6 +433,7 @@ public class AltarLegendaryWH extends JavaPlugin {
 
         if (cleanDamageManager != null) cleanDamageManager.clear();
         if (copperArmorTask != null) copperArmorTask.cleanup();
+        dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.cleanupAll();
         TextUtils.clearBossBars();
 
         VulcanCooldownManager.clearAllBars();
