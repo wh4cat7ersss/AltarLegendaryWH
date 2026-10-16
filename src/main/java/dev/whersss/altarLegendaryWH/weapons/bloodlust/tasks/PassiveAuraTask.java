@@ -59,13 +59,13 @@ public class PassiveAuraTask extends BukkitRunnable {
 
                 if (kills >= 1) {
                     PotionEffect curSpeed = p.getPotionEffect(PotionEffectType.SPEED);
-                    if (curSpeed == null || isBloodlustPassiveEffect(curSpeed, speedAmp) || curSpeed.getAmplifier() < speedAmp) {
+                    if (curSpeed == null || isBloodlustPassiveEffect(curSpeed, speedAmp) || curSpeed.getAmplifier() <= speedAmp) {
                         p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, speedAmp, false, false, true));
                     }
                 }
                 if (kills >= 4) {
                     PotionEffect curStr = p.getPotionEffect(PotionEffectType.STRENGTH);
-                    if (curStr == null || isBloodlustPassiveEffect(curStr, strAmp) || curStr.getAmplifier() < strAmp) {
+                    if (curStr == null || isBloodlustPassiveEffect(curStr, strAmp) || curStr.getAmplifier() <= strAmp) {
                         p.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 40, strAmp, false, false, true));
                     }
                 }
@@ -91,14 +91,17 @@ public class PassiveAuraTask extends BukkitRunnable {
                     int speedAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.speed-amplifier", 1);
                     int strAmp = plugin.getWeaponsConfig().getInt("bloodlust.passive.strength-amplifier", 0);
 
-                    if (isBloodlustPassiveEffect(activeSpeed, speedAmp)) {
+                    ItemStack currentHeld = p.getInventory().getItemInMainHand();
+                    boolean switchedToSpeedWeapon = dev.whersss.altarLegendaryWH.utils.WeaponFactory.isHoldingPassiveSpeedWeapon(currentHeld);
+
+                    if (!switchedToSpeedWeapon && isBloodlustPassiveEffect(activeSpeed, speedAmp)) {
                         p.removePotionEffect(PotionEffectType.SPEED);
                     }
                     if (isBloodlustPassiveEffect(activeStrength, strAmp)) {
                         p.removePotionEffect(PotionEffectType.STRENGTH);
                     }
 
-                    if (savedSpeed.containsKey(p.getUniqueId())) {
+                    if (!switchedToSpeedWeapon && savedSpeed.containsKey(p.getUniqueId())) {
                         PotionEffect old = savedSpeed.remove(p.getUniqueId());
                         Long startTime = savedSpeedTime.remove(p.getUniqueId());
                         if (old != null && startTime != null && !dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {

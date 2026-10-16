@@ -40,7 +40,7 @@ public class ShadowBladePassiveTask extends BukkitRunnable {
                     }
                 }
 
-                if (curSpeed == null || isWeaponSpeed || curSpeed.getAmplifier() < 1) {
+                if (curSpeed == null || isWeaponSpeed || curSpeed.getAmplifier() <= 1) {
                     p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 40, 1, false, false, true));
                 }
 
@@ -70,11 +70,14 @@ public class ShadowBladePassiveTask extends BukkitRunnable {
                 boolean heldBefore = wasHolding.getOrDefault(p.getUniqueId(), false);
 
                 if (heldBefore) {
-                    if (isWeaponSpeed) {
+                    ItemStack currentHeld = p.getInventory().getItemInMainHand();
+                    boolean switchedToSpeedWeapon = dev.whersss.altarLegendaryWH.utils.WeaponFactory.isHoldingPassiveSpeedWeapon(currentHeld);
+
+                    if (!switchedToSpeedWeapon && isWeaponSpeed) {
                         p.removePotionEffect(PotionEffectType.SPEED);
                     }
 
-                    if (savedSpeed.containsKey(p.getUniqueId())) {
+                    if (!switchedToSpeedWeapon && savedSpeed.containsKey(p.getUniqueId())) {
                         PotionEffect old = savedSpeed.remove(p.getUniqueId());
                         Long startTime = savedSpeedTime.remove(p.getUniqueId());
                         if (old != null && startTime != null && !dev.whersss.altarLegendaryWH.utils.SpeedBuffUtils.isWearingCopperBoots(p)) {

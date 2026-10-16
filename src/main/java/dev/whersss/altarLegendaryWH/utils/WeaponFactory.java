@@ -79,7 +79,7 @@ public class WeaponFactory {
             if ("wither_blade".equalsIgnoreCase(weaponId) && pdc.has(plugin.getWitherKey(), PersistentDataType.BYTE)) return true;
             if ("paladins_battle_axe".equalsIgnoreCase(weaponId) && plugin.getPaladinsBattleAxeKey() != null && pdc.has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) return true;
             if ("knightfall".equalsIgnoreCase(weaponId) && pdc.has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
-            if ("bloodlust".equalsIgnoreCase(weaponId) && pdc.has(plugin.getKillsKey(), PersistentDataType.INTEGER) && item.getType() == Material.NETHERITE_SWORD && pdc.has(new NamespacedKey(plugin, "bloodlust"), PersistentDataType.BYTE)) return true;
+            if ("bloodlust".equalsIgnoreCase(weaponId) && item.getType() == Material.NETHERITE_SWORD && pdc.has(plugin.getKillsKey(), PersistentDataType.INTEGER)) return true;
             return false;
         }
 
@@ -111,7 +111,22 @@ public class WeaponFactory {
         if (pdc.has(plugin.getWitherKey(), PersistentDataType.BYTE)) return true;
         if (plugin.getPaladinsBattleAxeKey() != null && pdc.has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) return true;
         if (pdc.has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
+        if (item.getType() == Material.NETHERITE_SWORD && pdc.has(plugin.getKillsKey(), PersistentDataType.INTEGER)) return true;
 
+        return false;
+    }
+
+    public static boolean isHoldingPassiveSpeedWeapon(ItemStack item) {
+        if (item == null || item.getType().isAir() || !item.hasItemMeta()) return false;
+        if (isAltarWeapon(item, "shadow_blade")) return true;
+        if (isAltarWeapon(item, "bloodlust")) {
+            int kills = item.getItemMeta().getPersistentDataContainer().getOrDefault(AltarLegendaryWH.getInstance().getKillsKey(), PersistentDataType.INTEGER, 0);
+            return kills >= 1;
+        }
+        if (isAltarWeapon(item, "knightfall")) {
+            int kills = item.getItemMeta().getPersistentDataContainer().getOrDefault(AltarLegendaryWH.getInstance().getKillsKey(), PersistentDataType.INTEGER, 0);
+            return kills >= 6;
+        }
         return false;
     }
 
