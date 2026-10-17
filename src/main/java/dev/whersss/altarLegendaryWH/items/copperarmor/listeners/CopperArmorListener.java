@@ -64,7 +64,6 @@ public class CopperArmorListener implements Listener {
                     p.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 
                     p.getWorld().spawnParticle(Particle.EXPLOSION_EMITTER, loc, 1, 0, 0, 0, 0);
-                    p.getWorld().spawnParticle(Particle.GUST_EMITTER_LARGE, loc, 1, 0, 0, 0, 0);
 
                     int cloudCount = (int) (power * 30);
                     for (int i = 0; i < cloudCount; i++) {
@@ -90,8 +89,13 @@ public class CopperArmorListener implements Listener {
                             victim.setNoDamageTicks(0);
                             CombatUtils.runSyntheticDamage(() -> victim.damage(finalDamage, p));
 
-                            Vector knockback = victim.getLocation().toVector().subtract(loc.toVector()).normalize();
-                            knockback.multiply(power * 0.8 * knockbackMult * damageFactor).setY(power * 0.4);
+                            Vector knockback = victim.getLocation().toVector().subtract(loc.toVector());
+                            knockback.setY(0);
+                            if (knockback.lengthSquared() > 0.0001) {
+                                knockback.normalize().multiply(power * 0.8 * knockbackMult * damageFactor);
+                            } else {
+                                knockback = new Vector(0, 0, 0);
+                            }
                             victim.setVelocity(victim.getVelocity().add(knockback));
                         }
                     }
