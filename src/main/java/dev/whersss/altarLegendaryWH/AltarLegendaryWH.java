@@ -227,9 +227,9 @@ public class AltarLegendaryWH extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FrostListener(frostAbilityManager), this);
         getServer().getPluginManager().registerEvents(new PureBladeListener(pureBladeManager), this);
         getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.weapons.knightfall.listeners.KnightfallListener(this, knightfallManager), this);
-        new KnightfallPassiveTask(this).runTaskTimer(this, 0L, 20L);
+        new KnightfallPassiveTask(this).runTaskTimer(this, 0L, 1L);
         getServer().getPluginManager().registerEvents(new ShadowBladeListener(this, shadowBladeManager), this);
-        new ShadowBladePassiveTask().runTaskTimer(this, 0L, 2L);
+        new ShadowBladePassiveTask().runTaskTimer(this, 0L, 1L);
         getServer().getPluginManager().registerEvents(windWeaverListener, this);
         getServer().getPluginManager().registerEvents(new dev.whersss.altarLegendaryWH.items.wardenheart.listeners.WardenHeartDropListener(this), this);
 

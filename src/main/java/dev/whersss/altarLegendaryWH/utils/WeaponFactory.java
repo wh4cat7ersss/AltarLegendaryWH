@@ -80,6 +80,7 @@ public class WeaponFactory {
             if ("paladins_battle_axe".equalsIgnoreCase(weaponId) && plugin.getPaladinsBattleAxeKey() != null && pdc.has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) return true;
             if ("knightfall".equalsIgnoreCase(weaponId) && pdc.has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
             if ("bloodlust".equalsIgnoreCase(weaponId) && item.getType() == Material.NETHERITE_SWORD && pdc.has(plugin.getKillsKey(), PersistentDataType.INTEGER)) return true;
+            if ("shadow_blade".equalsIgnoreCase(weaponId) && item.getType() == Material.NETHERITE_SWORD && meta.hasCustomModelData() && (meta.getCustomModelData() == 10 || meta.getCustomModelData() == 3007)) return true;
             return false;
         }
 
@@ -112,6 +113,7 @@ public class WeaponFactory {
         if (plugin.getPaladinsBattleAxeKey() != null && pdc.has(plugin.getPaladinsBattleAxeKey(), PersistentDataType.BYTE)) return true;
         if (pdc.has(plugin.getKnightfallTierKey(), PersistentDataType.INTEGER)) return true;
         if (item.getType() == Material.NETHERITE_SWORD && pdc.has(plugin.getKillsKey(), PersistentDataType.INTEGER)) return true;
+        if (item.getType() == Material.NETHERITE_SWORD && meta.hasCustomModelData() && (meta.getCustomModelData() == 10 || meta.getCustomModelData() == 3007)) return true;
 
         return false;
     }

@@ -30,6 +30,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
     private final Map<UUID, Integer> activeTicks = new HashMap<>();
     private final Map<UUID, Set<UUID>> glowingTargets = new HashMap<>();
     private final Map<UUID, Map<PotionEffectType, Integer>> managedEffects = new HashMap<>();
+    private final Set<UUID> hadBoots = new HashSet<>();
 
     public CopperArmorTask(AltarLegendaryWH plugin) {
         this.plugin = plugin;
@@ -257,6 +258,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
             }
 
             if (isCopperArmor(player.getInventory().getBoots(), "boots")) {
+                hadBoots.add(player.getUniqueId());
                 applyInfinite(player, PotionEffectType.FIRE_RESISTANCE);
                 Material blockFeet = player.getLocation().getBlock().getType();
                 Material blockBelow = player.getLocation().subtract(0, 0.1, 0).getBlock().getType();
@@ -278,7 +280,9 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                 player.getWorld().spawnParticle(Particle.FLAME, particleLoc, 1, 0.0, 0.0, 0.0, 0.01);
             } else {
                 removeIfInfinite(player, PotionEffectType.FIRE_RESISTANCE);
-                removeBootsSpeed(player);
+                if (hadBoots.remove(player.getUniqueId())) {
+                    removeBootsSpeed(player);
+                }
             }
         }
     }
@@ -296,6 +300,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
         sneakTicks.clear();
         activeTicks.clear();
         glowingTargets.clear();
+        hadBoots.clear();
     }
 
     private void cleanupPlayer(Player player) {
@@ -309,15 +314,18 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                 removeIfInfinite(player, type);
             }
         }
+        hadBoots.remove(player.getUniqueId());
         sneakTicks.remove(player.getUniqueId());
         activeTicks.remove(player.getUniqueId());
         glowingTargets.remove(player.getUniqueId());
     }
     private void removeBootsSpeed(Player player) {
-        PotionEffect cur = player.getPotionEffect(PotionEffectType.SPEED);
-        if (cur != null && cur.getDuration() <= 40 && cur.getAmplifier() <= 4) {
-            player.removePotionEffect(PotionEffectType.SPEED);
-        }
         removeIfInfinite(player, PotionEffectType.SPEED);
+        if (!dev.whersss.altarLegendaryWH.utils.WeaponFactory.isHoldingPassiveSpeedWeapon(player.getInventory().getItemInMainHand())) {
+            PotionEffect cur = player.getPotionEffect(PotionEffectType.SPEED);
+            if (cur != null && cur.getDuration() <= 40 && cur.getAmplifier() <= 4) {
+                player.removePotionEffect(PotionEffectType.SPEED);
+            }
+        }
     }
 }
