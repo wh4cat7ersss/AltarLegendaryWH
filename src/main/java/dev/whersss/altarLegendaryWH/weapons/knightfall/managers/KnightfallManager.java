@@ -12,10 +12,12 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.GameMode;
 import org.bukkit.WorldBorder;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
@@ -340,6 +342,40 @@ public class KnightfallManager {
         }.runTaskTimer(plugin, 1L, 1L);
     }
 
+    private boolean isEntityInsidePlayer(Player player, Entity entity, Location startDirLoc) {
+        if (entity == null || player == null) return false;
+        try {
+            if (player.getBoundingBox().expand(0.35).overlaps(entity.getBoundingBox())) {
+                return true;
+            }
+            if (entity.getBoundingBox().contains(startDirLoc.toVector()) || entity.getBoundingBox().contains(player.getLocation().toVector())) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        if (entity.getLocation().distanceSquared(player.getLocation()) < 1.44 || entity.getLocation().distanceSquared(startDirLoc) < 1.44) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isValidHookTarget(Player player, Entity entity, Location startDirLoc) {
+        if (entity == null || entity.equals(player) || !entity.isValid() || entity.isDead()) {
+            return false;
+        }
+        if (entity instanceof Player pTarget) {
+            if (pTarget.getGameMode() == GameMode.SPECTATOR || !player.canSee(pTarget)) {
+                return false;
+            }
+        }
+        if (entity instanceof ArmorStand as && (as.isMarker() || !as.isVisible())) {
+            return false;
+        }
+        if (isEntityInsidePlayer(player, entity, startDirLoc)) {
+            return false;
+        }
+        return true;
+    }
+
     public void useHook(Player player) {
 
         int charges = getCharges(player);
@@ -350,11 +386,11 @@ public class KnightfallManager {
         double maxDist = plugin.getWeaponsConfig().getDouble("knightfall.grapple.range", 25.0);
         RayTraceResult narrowTrace = player.getWorld().rayTrace(
                 startDirLoc, dir, maxDist, org.bukkit.FluidCollisionMode.NEVER, true, 0.3,
-                entity -> !entity.equals(player) && !(entity instanceof Projectile)
+                entity -> isValidHookTarget(player, entity, startDirLoc) && !(entity instanceof Projectile)
         );
         RayTraceResult wideTrace = player.getWorld().rayTrace(
                 startDirLoc, dir, maxDist, org.bukkit.FluidCollisionMode.NEVER, true, 2.0,
-                entity -> entity instanceof Projectile && !entity.equals(player)
+                entity -> entity instanceof Projectile && isValidHookTarget(player, entity, startDirLoc)
         );
         RayTraceResult rayTrace = null;
         if (narrowTrace != null && wideTrace != null) {
@@ -379,6 +415,7 @@ public class KnightfallManager {
             }
         } else if (rayTrace.getHitEntity() != null) {
             Entity hitEnt = rayTrace.getHitEntity();
+            if (!isValidHookTarget(player, hitEnt, startDirLoc)) return;
             if (hitEnt instanceof LivingEntity || hitEnt instanceof Projectile) {
                 targetLoc = hitEnt.getLocation().add(0, hitEnt.getHeight() / 2, 0);
                 isFloor = true;
@@ -558,15 +595,18 @@ public class KnightfallManager {
                 if (state == flyingState) {
                     LivingEntity targetVictim = null;
                     for (Entity target : curr.getWorld().getNearbyEntities(curr, 1.4, 1.4, 1.4)) {
-                        if (target.equals(player) || target.equals(display) || target.isDead()) continue;
+                        if (target.equals(player) || target.equals(display) || target.isDead() || !target.isValid()) continue;
+                        if (target instanceof Player targetPlayer) {
+                            if (targetPlayer.getGameMode() == GameMode.SPECTATOR || !player.canSee(targetPlayer)) continue;
+                            if (plugin.getFriendManager().isFriend(player.getUniqueId(), targetPlayer.getUniqueId())) continue;
+                        }
+                        if (target instanceof ArmorStand as && (as.isMarker() || !as.isVisible())) continue;
+                        if (traveled < 1.5 && isEntityInsidePlayer(player, target, start)) continue;
                         if (target instanceof LivingEntity entity) {
-                            if (!(entity instanceof Player targetPlayer)
-                                    || !plugin.getFriendManager().isFriend(player.getUniqueId(), targetPlayer.getUniqueId())) {
-                                if (plugin.getWorldGuardManager() == null
-                                        || plugin.getWorldGuardManager().canAffectTarget(player, entity)) {
-                                    targetVictim = entity;
-                                    break;
-                                }
+                            if (plugin.getWorldGuardManager() == null
+                                    || plugin.getWorldGuardManager().canAffectTarget(player, entity)) {
+                                targetVictim = entity;
+                                break;
                             }
                         }
                     }
