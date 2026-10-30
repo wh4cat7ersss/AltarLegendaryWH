@@ -175,12 +175,12 @@ public class KnightfallListener implements Listener {
 
                 p.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, p.getLocation().add(0, 1, 0), 100, 0.5, 1.0, 0.5);
 
-                p.sendActionBar(TextUtils.legacy(plugin.tr("&6Оружие успешно улучшено.", "&6Weapon upgraded successfully.")));
-                p.sendMessage(TextUtils.legacy(plugin.tr("§6Оружие успешно улучшено.", "§6Weapon upgraded successfully.")));
+                TextUtils.sendActionBar(p, TextUtils.legacy(plugin.tr("&6Оружие успешно улучшено.", "&6Weapon upgraded successfully.")));
+                TextUtils.sendMessage(p, TextUtils.legacy(plugin.tr("§6Оружие успешно улучшено.", "§6Weapon upgraded successfully.")));
 
-                if (targetTier == 1) p.sendMessage(TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Абордажный Крюк Падшего Рыцаря.", "§eYou can now use knightfall's grappling hook.")));
-                if (targetTier == 2) p.sendMessage(TextUtils.legacy(plugin.tr("§eПадший рыцарь теперь имеет чары Плотность II.", "§eknightfall now has Density II.")));
-                if (targetTier == 3) p.sendMessage(TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Бросок Молота Падшего Рыцаря.", "§eYou can now use knightfall's hammer throw.")));
+                if (targetTier == 1) TextUtils.sendMessage(p, TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Абордажный Крюк Падшего Рыцаря.", "§eYou can now use knightfall's grappling hook.")));
+                if (targetTier == 2) TextUtils.sendMessage(p, TextUtils.legacy(plugin.tr("§eПадший рыцарь теперь имеет чары Плотность II.", "§eknightfall now has Density II.")));
+                if (targetTier == 3) TextUtils.sendMessage(p, TextUtils.legacy(plugin.tr("§eТеперь вы можете использовать Бросок Молота Падшего Рыцаря.", "§eYou can now use knightfall's hammer throw.")));
 
                 return;
             }

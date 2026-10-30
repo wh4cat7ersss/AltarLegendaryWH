@@ -49,7 +49,7 @@ public class BloodLustListener implements Listener {
                 int kills = getKills(item) + 1;
                 updateItemLore(item, kills);
 
-                p.sendActionBar(TextUtils.legacy(plugin.tr("&cЖажда крови пополняется новыми жертвами", "&cʙʟᴏᴏᴅʟᴜsᴛ feeds on new victims")));
+                TextUtils.sendActionBar(p, TextUtils.legacy(plugin.tr("&cЖажда крови пополняется новыми жертвами", "&cʙʟᴏᴏᴅʟᴜsᴛ feeds on new victims")));
                 abilityManager.playKillVisual(p, e.getEntity().getLocation());
             }
         }
@@ -77,7 +77,7 @@ public class BloodLustListener implements Listener {
 
         if (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) {
             if (p.isSneaking()) {
-                p.sendActionBar(TextUtils.legacy(plugin.tr("&cЖажда крови имеет &4&l" + getKills(item) + " &cубийств", "&cʙʟᴏᴏᴅʟᴜsᴛ has &4&l" + getKills(item) + " &ckills")));
+                TextUtils.sendActionBar(p, TextUtils.legacy(plugin.tr("&cЖажда крови имеет &4&l" + getKills(item) + " &cубийств", "&cʙʟᴏᴏᴅʟᴜsᴛ has &4&l" + getKills(item) + " &ckills")));
             }
         }
     }

@@ -264,7 +264,7 @@ public class WindWeaverListener implements Listener {
             @Override
             public void run() {
                 if (player.isOnline()) {
-                    player.sendActionBar(TextUtils.legacy(" "));
+                    TextUtils.sendActionBar(player, TextUtils.legacy(" "));
                 }
             }
         }.runTaskLater(plugin, 20L);
@@ -302,7 +302,7 @@ public class WindWeaverListener implements Listener {
         }
 
         String percentText = percent >= 100 ? "&a&l100%" : (percent < 30 ? "&c" + percent + "%" : "&a" + percent + "%");
-        player.sendActionBar(TextUtils.legacy(percentText + " " + bar));
+        TextUtils.sendActionBar(player, TextUtils.legacy(percentText + " " + bar));
     }
 
     private void startCooldownBar(Player player, int seconds, String title, Map<UUID, BossBar> barMap, Map<UUID, Long> cooldowns) {

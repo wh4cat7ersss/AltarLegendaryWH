@@ -70,7 +70,7 @@ public class CopperPickaxeListener implements Listener {
         String status = enabled
                 ? "&a" + plugin.tr("Включено", "Enabled")
                 : "&c" + plugin.tr("Выключено", "Disabled");
-        player.sendActionBar(TextUtils.legacy("&63x3 " + plugin.tr("Копание: ", "Mining: ") + status));
+        TextUtils.sendActionBar(player, TextUtils.legacy("&63x3 " + plugin.tr("Копание: ", "Mining: ") + status));
         player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 1.0f, 2.0f);
         plugin.getServer().getScheduler().runTask(plugin, player::updateInventory);
     }

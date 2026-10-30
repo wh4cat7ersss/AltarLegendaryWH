@@ -13,11 +13,33 @@ import java.util.List;
 
 public class AltarHelpDialog {
 
+    private static final boolean IS_DIALOG_SUPPORTED;
+
+    static {
+        boolean supported = false;
+        try {
+            Class.forName("io.papermc.paper.dialog.Dialog");
+            supported = true;
+        } catch (Throwable ignored) {
+        }
+        IS_DIALOG_SUPPORTED = supported;
+    }
+
     public static void open(Player player, AltarLegendaryWH plugin) {
         boolean ru = !plugin.isEnglish();
 
-        try {
-            // Attempt native Paper 1.21.6+ Dialog API
+        if (IS_DIALOG_SUPPORTED) {
+            try {
+                PaperDialogHolder.open(player, plugin, ru);
+                return;
+            } catch (Throwable ignored) {
+            }
+        }
+        sendChatFallback(player, ru);
+    }
+
+    private static class PaperDialogHolder {
+        static void open(Player player, AltarLegendaryWH plugin, boolean ru) {
             io.papermc.paper.dialog.Dialog dialog = io.papermc.paper.dialog.Dialog.create(factory -> {
                 Component title = TextUtils.shadow(Component.text(
                         ru ? "AltarLegendaryWH — Руководство" : "AltarLegendaryWH — Tutorial Guide",
@@ -81,7 +103,7 @@ public class AltarHelpDialog {
                         §7• §f/al show weapons §7— visual menu of all legendary weapons
                         §7• §f/al show items §7— menu of cores, shards and copper armor
                         §7• §f/al give <weapon> <player> [kills] §7— give specific weapon
-                        §7• §f/al cooldownreset <player> §7— reset player ability cooldowns
+                        §7• §f/al cooldown reset <player> §7— reset player ability cooldowns
 
                         §e§l3. Paladin's Battle Axe:§r
                         §7• [Offhand] §6ᴇᴀʀᴛʜsʜᴀᴛᴛᴇʀ §7— summons a giant spectral axe,
@@ -154,15 +176,12 @@ public class AltarHelpDialog {
             });
 
             player.showDialog(dialog);
-        } catch (Throwable t) {
-            // Fallback for environments or clients where native Dialog UI is unavailable
-            sendChatFallback(player, ru);
         }
     }
 
     public static void sendChatFallback(Player player, boolean ru) {
         if (ru) {
-            player.sendMessage(TextUtils.legacy("""
+            TextUtils.sendMessage(player, TextUtils.legacy("""
                     §6§l================== [AltarLegendaryWH — Обучение] ==================§r
                     §e1. Алтари Спавна (/al altar):
                     §7• §f/al altar give <игрок> §7— выдать спавнер алтаря
@@ -184,7 +203,7 @@ public class AltarHelpDialog {
                     §7• Команды: §f/friendlist §7или §f/trust <add|remove|list>
                     §6§l================================================================§r"""));
         } else {
-            player.sendMessage(TextUtils.legacy("""
+            TextUtils.sendMessage(player, TextUtils.legacy("""
                     §6§l================ [AltarLegendaryWH — Tutorial] ================§r
                     §e1. Spawn Altars (/al altar):
                     §7• §f/al altar give <player> §7— give altar placer item

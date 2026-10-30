@@ -322,7 +322,7 @@ public class BladeListener implements Listener {
         if (target instanceof Player p) {
             Component titleText = TextUtils.legacy(plugin.tr("&eОглушен!", "&eStunned!"));
             Title title = Title.title(titleText, TextUtils.empty(), Title.Times.times(Duration.ofMillis(250), Duration.ofMillis(stunTicks * 50L / 2), Duration.ofMillis(250)));
-            p.showTitle(title);
+            TextUtils.showTitle(p, title);
         } else {
             target.setAI(false);
         }

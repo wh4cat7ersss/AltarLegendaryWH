@@ -1,9 +1,9 @@
 name: AltarLegendaryWH
 version: '${project.version}'
 main: dev.whersss.altarLegendaryWH.AltarLegendaryWH
-api-version: '1.21'
+api-version: '${minecraft.api.version}'
 authors: [WHersss]
-description: Legendary weapons, copper armor and combat abilities for Paper 1.21.11
+description: Legendary weapons, copper armor and combat abilities for Paper, Purpur and Spigot (${minecraft.api.version})
 softdepend: [WorldGuard]
 commands:
   altarlegendary:

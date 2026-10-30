@@ -107,7 +107,7 @@ public class KnightfallManager {
                     }
                     cancel();
                 } else {
-                    player.sendActionBar(TextUtils.legacy(
+                    TextUtils.sendActionBar(player, TextUtils.legacy(
                             plugin.tr("&c[ &c&lнᴇʙидимоᴄᴛь &c]", "&c[ &c&lɪɴᴠɪsɪʙɪʟɪᴛʏ &c]")));
                     ticks++;
                 }

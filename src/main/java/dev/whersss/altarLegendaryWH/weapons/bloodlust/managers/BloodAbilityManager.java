@@ -250,7 +250,7 @@ public class BloodAbilityManager {
                 }
 
                 if (ticks % 20 == 0) {
-                    p.sendActionBar(TextUtils.legacy(plugin.tr("§cНажмите §e[ПРЫЖОК] §cдля выхода", "§cPress §e[JUMP] §cto exit")));
+                    TextUtils.sendActionBar(p, TextUtils.legacy(plugin.tr("§cНажмите §e[ПРЫЖОК] §cдля выхода", "§cPress §e[JUMP] §cto exit")));
                     p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 30, 0, false, false));
                     p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 3, false, false));
                     p.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 30, 3, false, false));

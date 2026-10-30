@@ -16,8 +16,20 @@ import java.util.WeakHashMap;
 final class ShadowBossBar implements org.bukkit.boss.BossBar {
 
     private static final Set<ShadowBossBar> ACTIVE_BARS = Collections.newSetFromMap(new WeakHashMap<>());
+    private static final boolean IS_PAPER_AUDIENCE;
+
+    static {
+        boolean paper = false;
+        try {
+            Player.class.getMethod("showBossBar", BossBar.class);
+            paper = true;
+        } catch (Throwable ignored) {
+        }
+        IS_PAPER_AUDIENCE = paper;
+    }
 
     private final BossBar delegate;
+    private final org.bukkit.boss.BossBar bukkitFallback;
     private final Set<Player> players = new LinkedHashSet<>();
     private final Set<BarFlag> flags = EnumSet.noneOf(BarFlag.class);
     private String title;
@@ -30,6 +42,12 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
         this.color = color;
         this.style = style;
         this.delegate = BossBar.bossBar(TextUtils.legacy(title), 1.0f, adventureColor(color), adventureOverlay(style));
+        org.bukkit.boss.BossBar fb = null;
+        try {
+            fb = org.bukkit.Bukkit.createBossBar(title, color, style);
+        } catch (Throwable ignored) {
+        }
+        this.bukkitFallback = fb;
         ACTIVE_BARS.add(this);
     }
 
@@ -42,6 +60,12 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
     public void setTitle(String title) {
         this.title = title;
         delegate.name(TextUtils.legacy(title));
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.setTitle(title);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
@@ -53,6 +77,12 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
     public void setColor(BarColor color) {
         this.color = color;
         delegate.color(adventureColor(color));
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.setColor(color);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
@@ -64,18 +94,36 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
     public void setStyle(BarStyle style) {
         this.style = style;
         delegate.overlay(adventureOverlay(style));
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.setStyle(style);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
     public void removeFlag(BarFlag flag) {
         flags.remove(flag);
         delegate.removeFlag(adventureFlag(flag));
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.removeFlag(flag);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
     public void addFlag(BarFlag flag) {
         flags.add(flag);
         delegate.addFlag(adventureFlag(flag));
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.addFlag(flag);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
@@ -86,6 +134,12 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
     @Override
     public void setProgress(double progress) {
         delegate.progress((float) progress);
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.setProgress(progress);
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
@@ -95,18 +149,51 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
 
     @Override
     public void addPlayer(Player player) {
-        if (players.add(player) && visible) player.showBossBar(delegate);
+        if (players.add(player) && visible) {
+            if (IS_PAPER_AUDIENCE) {
+                try {
+                    player.showBossBar(delegate);
+                } catch (Throwable ignored) {
+                    if (bukkitFallback != null) bukkitFallback.addPlayer(player);
+                }
+            } else if (bukkitFallback != null) {
+                bukkitFallback.addPlayer(player);
+            }
+        }
     }
 
     @Override
     public void removePlayer(Player player) {
-        if (players.remove(player)) player.hideBossBar(delegate);
+        if (players.remove(player)) {
+            if (IS_PAPER_AUDIENCE) {
+                try {
+                    player.hideBossBar(delegate);
+                } catch (Throwable ignored) {
+                    if (bukkitFallback != null) bukkitFallback.removePlayer(player);
+                }
+            } else if (bukkitFallback != null) {
+                bukkitFallback.removePlayer(player);
+            }
+        }
     }
 
     @Override
     public void removeAll() {
-        for (Player player : List.copyOf(players)) player.hideBossBar(delegate);
+        for (Player player : List.copyOf(players)) {
+            if (IS_PAPER_AUDIENCE) {
+                try {
+                    player.hideBossBar(delegate);
+                } catch (Throwable ignored) {
+                }
+            }
+        }
         players.clear();
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.removeAll();
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     @Override
@@ -119,8 +206,33 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
         if (this.visible == visible) return;
         this.visible = visible;
         for (Player player : players) {
-            if (visible) player.showBossBar(delegate);
-            else player.hideBossBar(delegate);
+            if (visible) {
+                if (IS_PAPER_AUDIENCE) {
+                    try {
+                        player.showBossBar(delegate);
+                    } catch (Throwable ignored) {
+                        if (bukkitFallback != null) bukkitFallback.addPlayer(player);
+                    }
+                } else if (bukkitFallback != null) {
+                    bukkitFallback.addPlayer(player);
+                }
+            } else {
+                if (IS_PAPER_AUDIENCE) {
+                    try {
+                        player.hideBossBar(delegate);
+                    } catch (Throwable ignored) {
+                        if (bukkitFallback != null) bukkitFallback.removePlayer(player);
+                    }
+                } else if (bukkitFallback != null) {
+                    bukkitFallback.removePlayer(player);
+                }
+            }
+        }
+        if (bukkitFallback != null) {
+            try {
+                bukkitFallback.setVisible(visible);
+            } catch (Throwable ignored) {
+            }
         }
     }
 
@@ -139,14 +251,15 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
         setVisible(false);
     }
 
-
     static void removePlayerFromAll(Player player) {
         if (player == null) return;
         for (ShadowBossBar bar : List.copyOf(ACTIVE_BARS)) {
             bar.removePlayer(player);
-            try {
-                player.hideBossBar(bar.delegate);
-            } catch (Throwable ignored) {
+            if (IS_PAPER_AUDIENCE) {
+                try {
+                    player.hideBossBar(bar.delegate);
+                } catch (Throwable ignored) {
+                }
             }
         }
     }
@@ -155,15 +268,18 @@ final class ShadowBossBar implements org.bukkit.boss.BossBar {
         List<Player> online = List.copyOf(org.bukkit.Bukkit.getOnlinePlayers());
         for (ShadowBossBar bar : List.copyOf(ACTIVE_BARS)) {
             bar.removeAll();
-            for (Player p : online) {
-                try {
-                    p.hideBossBar(bar.delegate);
-                } catch (Throwable ignored) {
+            if (IS_PAPER_AUDIENCE) {
+                for (Player p : online) {
+                    try {
+                        p.hideBossBar(bar.delegate);
+                    } catch (Throwable ignored) {
+                    }
                 }
             }
         }
         ACTIVE_BARS.clear();
     }
+
     private static BossBar.Color adventureColor(BarColor color) {
         return switch (color) {
             case PINK -> BossBar.Color.PINK;

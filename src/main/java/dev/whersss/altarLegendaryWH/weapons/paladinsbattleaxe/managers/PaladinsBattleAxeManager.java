@@ -720,7 +720,7 @@ public class PaladinsBattleAxeManager {
 
                 double absorbed = absorbedDamage.getOrDefault(uuid, 0.0);
                 String valStr = (absorbed == Math.floor(absorbed)) ? String.valueOf((int) absorbed) : String.format(Locale.US, "%.1f", absorbed);
-                player.sendActionBar(TextUtils.shadow(TextUtils.legacy(
+                TextUtils.sendActionBar(player, TextUtils.shadow(TextUtils.legacy(
                         plugin.tr("&6поглощᴇно уронᴀ &e" + valStr, "&6ᴅᴀᴍᴀɢᴇ ᴀʙsᴏʀʙᴇᴅ &e" + valStr)
                 )));
 
@@ -741,7 +741,7 @@ public class PaladinsBattleAxeManager {
 
         String valStr = (absorbed == Math.floor(absorbed)) ? String.valueOf((int) absorbed) : String.format(Locale.US, "%.1f", absorbed);
         // Underline on release as requested!
-        player.sendActionBar(TextUtils.shadow(TextUtils.legacy(
+        TextUtils.sendActionBar(player, TextUtils.shadow(TextUtils.legacy(
                 plugin.tr("&6&nпоглощᴇно уронᴀ &e&n" + valStr, "&6&nᴅᴀᴍᴀɢᴇ ᴀʙsᴏʀʙᴇᴅ &e&n" + valStr)
         )));
 

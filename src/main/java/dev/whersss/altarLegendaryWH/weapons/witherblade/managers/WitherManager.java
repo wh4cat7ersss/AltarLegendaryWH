@@ -148,7 +148,7 @@ public class WitherManager {
                         for (int i = 0; i < 30; i++) {
                             bar.append(i < charge ? "&f|" : "&8|");
                         }
-                        player.sendActionBar(TextUtils.legacy(bar.toString()));
+                        TextUtils.sendActionBar(player, TextUtils.legacy(bar.toString()));
                     }
                 }
             }

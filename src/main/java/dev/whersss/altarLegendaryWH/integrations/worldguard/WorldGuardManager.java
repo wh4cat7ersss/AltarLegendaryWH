@@ -130,12 +130,12 @@ public class WorldGuardManager {
                         "Legendary weapon abilities are disabled in this safe zone!"),
                 NamedTextColor.RED
         ));
-        player.sendActionBar(msg);
+        TextUtils.sendActionBar(player, msg);
     }
 
     public void notifyDeniedChat(Player player) {
         if (player == null) return;
-        player.sendMessage(TextUtils.legacy("§c" + plugin.tr(
+        TextUtils.sendMessage(player, TextUtils.legacy("§c" + plugin.tr(
                 "Способности легендарного оружия отключены в этой зоне.",
                 "Legendary weapon abilities are disabled in this zone."
         )));

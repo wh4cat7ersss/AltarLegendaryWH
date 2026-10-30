@@ -48,7 +48,7 @@ public class KnightfallPassiveTask extends BukkitRunnable {
                             (kills >= 10 && tier < 3);
 
                     if (needsUpgrade) {
-                        p.sendActionBar(TextUtils.legacy(plugin.tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
+                        TextUtils.sendActionBar(p, TextUtils.legacy(plugin.tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
                     }
 
                     if (kills >= 6) {

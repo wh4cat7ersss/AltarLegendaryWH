@@ -1,4 +1,5 @@
 /target/
+/dist/
 /.idea/
 /.m2/
 /.agents/

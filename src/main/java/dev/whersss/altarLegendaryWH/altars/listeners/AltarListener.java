@@ -62,7 +62,7 @@ public class AltarListener implements Listener {
             event.getBlockPlaced().setType(Material.BARRIER, false);
             Altar altar = plugin.getAltarManager().createAltar(event.getBlockPlaced().getLocation());
             altar.spawnEntities();
-            event.getPlayer().sendMessage(plugin.getAltarLanguageManager().component(
+            dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(event.getPlayer(), plugin.getAltarLanguageManager().component(
                     "altar.placed", "id", String.valueOf(altar.getId())));
         });
     }
@@ -86,13 +86,13 @@ public class AltarListener implements Listener {
             String uses = altar.getMaxUses() == -1
                     ? plugin.getAltarLanguageManager().plain("altar.infinite_uses")
                     : altar.getCurrentUses() + "/" + altar.getMaxUses();
-            player.sendMessage(plugin.getAltarLanguageManager().component("altar.admin_info",
+            dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(player, plugin.getAltarLanguageManager().component("altar.admin_info",
                     "id", String.valueOf(altar.getId()), "uses", uses));
             return;
         }
 
         if (altar.getCooldownRemaining() > 0) {
-            player.sendMessage(plugin.getAltarLanguageManager().component("altar.still_on_cooldown"));
+            dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(player, plugin.getAltarLanguageManager().component("altar.still_on_cooldown"));
             return;
         }
 
@@ -126,8 +126,8 @@ public class AltarListener implements Listener {
         }
 
         if (!missingLines.isEmpty()) {
-            player.sendMessage(plugin.getAltarLanguageManager().component("craft.missing_header"));
-            for (Component line : missingLines) player.sendMessage(line);
+            dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(player, plugin.getAltarLanguageManager().component("craft.missing_header"));
+            for (Component line : missingLines) dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(player, line);
             return;
         }
 
@@ -267,7 +267,7 @@ public class AltarListener implements Listener {
 
         altar.removeAllEntities();
         plugin.getAltarManager().removeAltar(altar.getId());
-        event.getPlayer().sendMessage(plugin.getAltarLanguageManager().component(
+        dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(event.getPlayer(), plugin.getAltarLanguageManager().component(
                 "altar.removed", "id", String.valueOf(altar.getId())));
     }
 }

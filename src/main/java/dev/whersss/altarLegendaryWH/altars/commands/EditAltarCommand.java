@@ -541,7 +541,7 @@ public class EditAltarCommand implements CommandExecutor, TabCompleter {
 
     private void showHelp(CommandSender sender) {
         for (Component line : plugin.getAltarLanguageManager().components("help.lines")) {
-            sender.sendMessage(line);
+            dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(sender, line);
         }
     }
 
@@ -552,7 +552,7 @@ public class EditAltarCommand implements CommandExecutor, TabCompleter {
     }
 
     private void send(CommandSender sender, String key, String... replacements) {
-        sender.sendMessage(plugin.getAltarLanguageManager().component(key, replacements));
+        dev.whersss.altarLegendaryWH.utils.TextUtils.sendMessage(sender, plugin.getAltarLanguageManager().component(key, replacements));
     }
 
     private int tryParse(String value) {

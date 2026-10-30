@@ -297,7 +297,7 @@ public class AltarLegendaryWH extends JavaPlugin {
                                 (cmd >= 3003 || cmd == 3) ? 3 : (hasDensity ? 2 : ((cmd >= 3002 || cmd == 2) ? 1 : 0)));
 
                         if ((kills >= 4 && tier < 1) || (kills >= 8 && tier < 2) || (kills >= 10 && tier < 3)) {
-                            p.sendActionBar(TextUtils.legacy(tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
+                            TextUtils.sendActionBar(p, TextUtils.legacy(tr("&aНажмите &2[Смена руки] &aчтобы улучшить оружие.", "&aPress &2[OffHand] &ato upgrade the weapon.")));
                         }
                     }
                 }

@@ -232,7 +232,7 @@ public class CopperArmorTask extends BukkitRunnable implements Listener {
                         else barStr.append("&7□");
                     }
                     barStr.append("&6] &e").append(plugin.tr("Медное зрение", "Copper Vision")).append(": &f").append(percent).append("%");
-                    player.sendActionBar(dev.whersss.altarLegendaryWH.utils.TextUtils.legacy(barStr.toString()));
+                    dev.whersss.altarLegendaryWH.utils.TextUtils.sendActionBar(player, dev.whersss.altarLegendaryWH.utils.TextUtils.legacy(barStr.toString()));
 
                     if (ticks >= maxTicks) {
                         startHelmetAbility(player);

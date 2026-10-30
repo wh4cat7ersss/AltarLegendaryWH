@@ -428,13 +428,11 @@ public class WeaponFactory {
                     line("&8Нажмите &6(Смена Руки) &8для активаций &8&k6767676767676767", "&8Press &6(OffHand) &8to activate &8&k6767676767676767")
             ));
             item.setItemMeta(meta);
-            try {
-                item.setData(io.papermc.paper.datacomponent.DataComponentTypes.USE_COOLDOWN,
-                        io.papermc.paper.datacomponent.item.UseCooldown.useCooldown(1.0f)
-                                .cooldownGroup(new NamespacedKey(plugin, "pale_gun_group"))
-                                .build()
-                );
-            } catch (NoClassDefFoundError | NoSuchMethodError ignored) {
+            if (IS_PAPER_DATA_COMPONENT_SUPPORTED) {
+                try {
+                    PaperDataComponentHolder.applyPaleGunCooldown(item, new NamespacedKey(plugin, "pale_gun_group"));
+                } catch (Throwable ignored) {
+                }
             }
         }
         return item;
@@ -936,5 +934,27 @@ public class WeaponFactory {
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    private static final boolean IS_PAPER_DATA_COMPONENT_SUPPORTED;
+
+    static {
+        boolean supported = false;
+        try {
+            Class.forName("io.papermc.paper.datacomponent.DataComponentTypes");
+            supported = true;
+        } catch (Throwable ignored) {
+        }
+        IS_PAPER_DATA_COMPONENT_SUPPORTED = supported;
+    }
+
+    private static class PaperDataComponentHolder {
+        static void applyPaleGunCooldown(ItemStack item, NamespacedKey key) {
+            item.setData(io.papermc.paper.datacomponent.DataComponentTypes.USE_COOLDOWN,
+                    io.papermc.paper.datacomponent.item.UseCooldown.useCooldown(1.0f)
+                            .cooldownGroup(key)
+                            .build()
+            );
+        }
     }
 }
