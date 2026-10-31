@@ -16,17 +16,26 @@ if exist "C:\Program Files\Java\jdk-25.0.4" (
 if not exist dist mkdir dist
 
 echo.
-echo [1/3] Building for Paper/Purpur/Spigot 1.21.11 (Java 21 bytecode)...
-call mvn clean package -P1.21.11
+echo [1/4] Building UNIVERSAL jar (Java 21 bytecode, runs on 1.21.11 / 26.1 / 26.3, Java 21 / 25, Paper / Purpur / Spigot)...
+call mvn clean package -Puniversal
 if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Build failed for 1.21.11!
+    echo [ERROR] Build failed for universal jar!
     exit /b %ERRORLEVEL%
 )
-copy /y target\AltarLegendaryWH-1.4.2-1.21.11.jar dist\AltarLegendaryWH-1.4.2-1.21.11.jar >nul
-copy /y target\AltarLegendaryWH-1.4.2-1.21.11.jar dist\AltarLegendaryWH-1.4.2.jar >nul
+copy /y target\AltarLegendaryWH-1.4.2.jar dist\AltarLegendaryWH-1.4.2.jar >nul
+copy /y target\AltarLegendaryWH-1.4.2.jar dist\AltarLegendaryWH-1.4.2-1.21.11.jar >nul
 
 echo.
-echo [2/3] Building for Paper/Purpur/Spigot 26.1 (Java 25 bytecode)...
+echo [2/4] Building for 1.21.11 on Java 25 bytecode...
+call mvn clean package -P1.21.11-java25
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Build failed for 1.21.11-java25!
+    exit /b %ERRORLEVEL%
+)
+copy /y target\AltarLegendaryWH-1.4.2-1.21.11-java25.jar dist\AltarLegendaryWH-1.4.2-1.21.11-java25.jar >nul
+
+echo.
+echo [3/4] Building for Paper/Purpur/Spigot 26.1 (Java 25 bytecode)...
 call mvn clean package -P26.1
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Build failed for 26.1!
@@ -35,7 +44,7 @@ if %ERRORLEVEL% NEQ 0 (
 copy /y target\AltarLegendaryWH-1.4.2-26.1.jar dist\AltarLegendaryWH-1.4.2-26.1.jar >nul
 
 echo.
-echo [3/3] Building for Paper/Purpur/Spigot 26.3 (Java 25 bytecode)...
+echo [4/4] Building for Paper/Purpur/Spigot 26.3 (Java 25 bytecode)...
 call mvn clean package -P26.3
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Build failed for 26.3!
@@ -51,8 +60,9 @@ echo ========================================================
 echo   BUILD COMPLETED SUCCESSFULLY!
 echo ========================================================
 echo Built artifacts located in dist\ and target\:
-echo   - AltarLegendaryWH-1.4.2.jar         (Standard 1.21.11)
-echo   - AltarLegendaryWH-1.4.2-1.21.11.jar (Paper/Purpur/Spigot 1.21.11)
-echo   - AltarLegendaryWH-1.4.2-26.1.jar    (Paper/Purpur/Spigot 26.1)
-echo   - AltarLegendaryWH-1.4.2-26.3.jar    (Paper/Purpur/Spigot 26.3)
+echo   - AltarLegendaryWH-1.4.2.jar                [RECOMMENDED UNIVERSAL JAR]
+echo   - AltarLegendaryWH-1.4.2-1.21.11.jar        (Paper/Purpur/Spigot 1.21.11, Java 21)
+echo   - AltarLegendaryWH-1.4.2-1.21.11-java25.jar (Paper/Purpur/Spigot 1.21.11, Java 25)
+echo   - AltarLegendaryWH-1.4.2-26.1.jar           (Paper/Purpur/Spigot 26.1, Java 25)
+echo   - AltarLegendaryWH-1.4.2-26.3.jar           (Paper/Purpur/Spigot 26.3, Java 25)
 echo ========================================================

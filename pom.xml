@@ -21,7 +21,7 @@
 
     <profiles>
         <profile>
-            <id>1.21.11</id>
+            <id>universal</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -29,7 +29,25 @@
                 <paper.api.version>1.21.11-R0.1-SNAPSHOT</paper.api.version>
                 <minecraft.api.version>1.21</minecraft.api.version>
                 <java.version>21</java.version>
+                <jar.suffix></jar.suffix>
+            </properties>
+        </profile>
+        <profile>
+            <id>1.21.11</id>
+            <properties>
+                <paper.api.version>1.21.11-R0.1-SNAPSHOT</paper.api.version>
+                <minecraft.api.version>1.21</minecraft.api.version>
+                <java.version>21</java.version>
                 <jar.suffix>-1.21.11</jar.suffix>
+            </properties>
+        </profile>
+        <profile>
+            <id>1.21.11-java25</id>
+            <properties>
+                <paper.api.version>1.21.11-R0.1-SNAPSHOT</paper.api.version>
+                <minecraft.api.version>1.21</minecraft.api.version>
+                <java.version>25</java.version>
+                <jar.suffix>-1.21.11-java25</jar.suffix>
             </properties>
         </profile>
         <profile>
